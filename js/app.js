@@ -405,12 +405,13 @@
     const tabs = [
       ['result', 'Flow Result', sim.rows.length],
       ['diagram', 'Sequence Diagram'],
+      ['rules', 'Processing Rules'],
       ['debug', 'Extraction Debug', problems || null],
       ['logs', 'Mock Logs', state.mock.length],
       ['spl', 'Splunk Query'],
       ['harness', 'Splunk Test Harness'],
     ];
-    const views = { result: viewResult, diagram: viewDiagram, debug: viewDebug, logs: viewLogs, spl: viewSpl, harness: viewHarness };
+    const views = { result: viewResult, diagram: viewDiagram, rules: viewRules, debug: viewDebug, logs: viewLogs, spl: viewSpl, harness: viewHarness };
     withScroll(root, () => root.replaceChildren(
       tabBar(tabs, ui.outTab, id => { ui.outTab = id; saveUi(); renderOutput(); }),
       ...(issues.length ? [h('div', { class: 'banner' }, h('strong', {}, 'Check your config'), h('ul', {}, issues.map(x => h('li', {}, x))))] : []),
@@ -517,6 +518,55 @@
       h('h4', {}, 'PlantUML code'),
       h('pre', { class: 'code puml' }, puml),
       diagramPreview(puml, ui.diagramSession));
+  }
+
+  function viewRules() {
+    const a = SS.analyzeRules(cfg, state.sim.rows);
+    const s = a.summary;
+    if (!a.rules.length) return h('div', { class: 'empty' }, 'No flows to analyse. The Flow Result is empty; ' + (typeof emptyReason() === 'string' ? emptyReason() : 'see the Flow Result tab.'));
+    const md = () => SS.rulesMarkdown(a);
+    const copyBtn = btn('Copy as Markdown', () => copyText(md(), copyBtn), 'small primary');
+    const stat = (v, label, cls = '') => h('div', { class: 'stat ' + cls }, h('div', { class: 'stat-v' }, String(v)), h('div', { class: 'stat-l' }, label));
+    const typeChip = t => h('span', { class: 'chip ' + (t === 'Processing rule only' ? 'ok' : t === 'Calls downstream' ? 'info' : 'warn') }, t);
+    const list = items => items.length ? items.map(x => h('div', {}, x.label, h('span', { class: 'muted' }, ` ×${x.count}`))) : h('span', { class: 'muted' }, '—');
+
+    return h('div', {},
+      h('div', { class: 'toolbar' },
+        h('span', { class: 'muted' }, `Worked out from the Flow Result (${ui.source === 'pasted' ? 'pasted' : 'mock'} logs): what each API does downstream, which call patterns occur, and how long calls take.`),
+        h('span', { class: 'spacer' }), copyBtn,
+        btn('Download .md', () => download('ppl-work-smart-processing-rules.md', md() + '\n', 'text/markdown'), 'small')),
+      h('div', { class: 'stats' },
+        stat(s.sessions, 'sessions analysed'),
+        stat(s.entryApis, 'entry APIs'),
+        stat(s.processingOnly, 'processing rule only'),
+        stat(s.calls, 'calls in total'),
+        stat(s.timeouts, 'missing responses', s.timeouts ? 'warn' : ''),
+        s.orphans ? stat(s.orphans, 'responses without request', 'warn') : null),
+
+      h('h3', {}, `${a.rules[0].layerLabel} API rules`),
+      h('div', { class: 'table-wrap' }, h('table', { class: 'grid rules' },
+        h('thead', {}, h('tr', {}, ['API', 'Rule', 'Downstream calls', 'Calls', 'Elapsed', 'Params'].map(t => h('th', {}, t)))),
+        h('tbody', {}, a.rules.map(r => h('tr', { class: colorClass(layerIdx(r.layerId)) },
+          h('td', { class: 'mono' }, r.api),
+          h('td', {}, typeChip(r.type), r.timeouts ? h('div', { class: 'bad-text small' }, `${r.timeouts} missing response(s)`) : null),
+          h('td', {}, r.variants.map((v, i) => h('div', { class: 'variant' },
+            r.variants.length > 1 ? h('div', { class: 'muted small' }, `Pattern ${i + 1}: ${v.count}× (${v.share}%)`) : null,
+            v.tree.length ? h('pre', { class: 'tree' }, v.tree.join('\n')) : h('span', { class: 'muted' }, 'No downstream call')))),
+          h('td', { class: 'num' }, r.count),
+          h('td', { class: 'small nowrap' }, r.stats ? [h('div', {}, `avg ${r.stats.avg} ms`), h('div', { class: 'muted' }, `${r.stats.min}–${r.stats.max} ms`)] : h('span', { class: 'muted' }, '—')),
+          h('td', { class: 'mono small' }, r.params.join(', ') || h('span', { class: 'muted' }, '—'))))))),
+
+      a.catalogs.filter(c => c.layerId !== a.rules[0].layerId).map(c => [
+        h('h3', {}, `${c.layerLabel} catalogue`),
+        h('div', { class: 'table-wrap' }, h('table', { class: 'grid rules' },
+          h('thead', {}, h('tr', {}, ['API', 'Called by', 'Calls downstream', 'Calls', 'Elapsed', 'Missing'].map(t => h('th', {}, t)))),
+          h('tbody', {}, c.entries.map(e => h('tr', { class: colorClass(layerIdx(c.layerId)) },
+            h('td', { class: 'mono' }, e.api),
+            h('td', { class: 'small' }, list(e.calledBy)),
+            h('td', { class: 'small' }, list(e.calls)),
+            h('td', { class: 'num' }, e.count),
+            h('td', { class: 'small nowrap' }, e.stats ? [h('div', {}, `avg ${e.stats.avg} ms`), h('div', { class: 'muted' }, `${e.stats.min}–${e.stats.max} ms`)] : h('span', { class: 'muted' }, '—')),
+            h('td', { class: 'num' }, e.timeouts ? h('span', { class: 'bad-text' }, e.timeouts) : h('span', { class: 'muted' }, '—')))))))]));
   }
 
   // Canvas text measurement so the SVG layout fits labels exactly.

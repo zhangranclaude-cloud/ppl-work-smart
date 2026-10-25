@@ -4,7 +4,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 const ROOT = path.join(__dirname, '..');
-const ENGINE = ['util', 'defaults', 'generator', 'simulator', 'spl', 'plantuml', 'seqsvg'];
+const ENGINE = ['util', 'defaults', 'generator', 'simulator', 'spl', 'plantuml', 'seqsvg', 'rules'];
 
 function loadSS() {
   const ctx = { console };

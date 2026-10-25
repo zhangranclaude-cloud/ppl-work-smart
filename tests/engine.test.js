@@ -353,3 +353,75 @@ test('renderer draws self-calls as loops inside the canvas', () => {
     }
   }
 });
+
+test('processing rules: entry APIs, patterns and processing-rule-only calls', () => {
+  const cfg = SS.defaultConfig();
+  const a = SS.analyzeRules(cfg, SS.simulate(cfg, SS.generate(cfg)).rows);
+  const rule = api => a.rules.find(r => r.api === api);
+
+  assert.equal(a.summary.sessions, 6);
+  assert.equal(a.summary.timeouts, 1, 'the Host timeout scenario');
+  assert.equal(a.summary.orphans, 0);
+
+  const login = rule('/api/v1/auth/login');
+  assert.equal(login.count, 5);
+  assert.equal(login.type, 'Calls downstream');
+  assert.equal(login.variants.length, 1);
+  assert.deepEqual(plain(login.variants[0].tree), ['└─ Enterprise CustomerLogin', '   └─ Host CL01.A01']);
+  assert.ok(login.params.includes('TxnRefNo') && login.params.includes('HTTP'));
+  assert.ok(login.stats.min > 0 && login.stats.min <= login.stats.avg && login.stats.avg <= login.stats.max);
+
+  for (const api of ['/api/v1/rules/eligibility', '/api/v1/offers/personalised']) {
+    assert.equal(rule(api).type, 'Processing rule only', api);
+    assert.deepEqual(plain(rule(api).variants[0].tree), []);
+  }
+  assert.equal(a.summary.processingOnly, 2);
+
+  const transfer = rule('/api/v1/payment/transfer');
+  assert.equal(transfer.count, 2);
+  assert.equal(transfer.variants.length, 2, 'normal flow and Host-timeout flow');
+  assert.equal(transfer.timeouts, 1);
+  assert.ok(transfer.variants.some(v => v.tree.includes('   └─ Host FT01.A01,A02  (no response)')));
+});
+
+test('processing rules: per-layer catalogues know callers and callees', () => {
+  const cfg = SS.defaultConfig();
+  const a = SS.analyzeRules(cfg, SS.simulate(cfg, SS.generate(cfg)).rows);
+  assert.deepEqual(plain(a.catalogs.map(c => c.layerLabel)), ['eComm', 'Enterprise', 'Host', 'WS']);
+
+  const ent = a.catalogs.find(c => c.layerId === 'enterprise').entries;
+  const summary = ent.find(e => e.api === 'AccountSummary');
+  assert.deepEqual(plain(summary.calledBy), [{ label: 'eComm /api/v1/accounts/summary', count: 1 }]);
+  assert.deepEqual(plain(summary.calls.map(c => c.label)), ['WS https://enterprise-sit.internal/ws/customerProfile', 'Host AS01.A01', 'Host AS02.B01,B02']);
+  assert.equal(ent.find(e => e.api === 'UpdateProfile').calls.length, 0, 'Enterprise API without Host');
+
+  const ft = a.catalogs.find(c => c.layerId === 'host').entries.find(e => e.api === 'FT01.A01,A02');
+  assert.equal(ft.count, 2);
+  assert.equal(ft.timeouts, 1);
+  assert.equal(ft.stats.n, 1, 'only the answered call has a timing');
+});
+
+test('processing rules work on pasted logs and export as Markdown', () => {
+  const cfg = SS.defaultConfig();
+  const sid = '25afb1c5-ac47-4646-b96c-36f77f8d7cb1';
+  const text = [
+    `2026-10-25 09:00:00.000 x [ECOMM-Message] sessionId ${sid} Request endpoint="/a"`,
+    `2026-10-25 09:00:00.010 x [Enterprise-HostMessage] sessionIdentity ${sid} Request endpoint="E1"`,
+    `2026-10-25 09:00:00.050 x [Enterprise-HostMessage] sessionIdentity ${sid} Response endpoint="E1"`,
+    `2026-10-25 09:00:00.060 x [ECOMM-Message] sessionId ${sid} Response endpoint="/a"`,
+    `2026-10-25 09:00:01.000 x [ECOMM-Message] sessionId ${sid} Request endpoint="/b"`,
+    `2026-10-25 09:00:01.005 x [ECOMM-Message] sessionId ${sid} Response endpoint="/b"`,
+    `2026-10-25 09:00:02.000 x [Enterprise-HostMessage] sessionIdentity ${sid} Response endpoint="E9"`,
+  ].join('\n');
+  const a = SS.analyzeRules(cfg, SS.simulate(cfg, SS.parsePasted(text, cfg)).rows);
+  assert.equal(a.rules.find(r => r.api === '/a').type, 'Calls downstream');
+  assert.equal(a.rules.find(r => r.api === '/b').type, 'Processing rule only');
+  assert.equal(a.rules.find(r => r.api === '/a').stats.avg, 60);
+  assert.equal(a.summary.orphans, 1, 'response with no request');
+
+  const md = SS.rulesMarkdown(a);
+  assert.match(md, /^# Processing rules/);
+  assert.ok(md.includes('### eComm /b') && md.includes('- Rule: **Processing rule only**'));
+  assert.ok(md.includes('└─ Enterprise E1'));
+  assert.ok(md.includes('| E1 | 1 | eComm /a (1) |'));
+});

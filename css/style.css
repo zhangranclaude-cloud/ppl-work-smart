@@ -338,6 +338,16 @@ pre.code.puml { max-height: 300px; }
 .seq-svg .seq-head { fill: var(--text); }
 .seq-svg .seq-note { fill: var(--warn-bg); stroke: var(--warn); stroke-width: 1; }
 
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; margin-bottom: 6px; }
+.stat { border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; }
+.stat-v { font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.stat-l { font-size: 12px; color: var(--muted); }
+.stat.warn .stat-v { color: var(--warn); }
+.chip.info { background: var(--accent-weak); color: var(--accent); }
+table.rules td { vertical-align: top; }
+pre.tree { margin: 0; font: 12px/1.5 var(--mono); white-space: pre; }
+.variant + .variant { margin-top: 8px; padding-top: 6px; border-top: 1px dashed var(--border); }
+
 .legend { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
 .empty { padding: 40px 10px; text-align: center; color: var(--muted); }
 
@@ -353,3 +363,4 @@ pre.code.puml { max-height: 300px; }
 @media (max-width: 520px) {
   .grid2 { grid-template-columns: 1fr; }
 }
+table.rules .chip { white-space: nowrap; }

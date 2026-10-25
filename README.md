@@ -44,6 +44,7 @@ Step  EventTime                Flow                                          Par
 - **Editable log layers:** the classify, session, direction and API regexes and the log templates for each log type, so they can match your real format.
 - **Flow result and extraction debug:** an in-browser run of the generated query, with a self-test that checks every mock line was handled as intended.
 - **Sequence diagram:** turns the Flow Result into PlantUML code and **draws the diagram right below it**, one session at a time (App → eComm → Enterprise → WS / Host). By default a WS call is drawn as **internal processing of the Enterprise API** (a self-call on the Enterprise lifeline) rather than as its own participant; untick the option to give WS its own column. Params, elapsed time and timestamps can be shown on the arrows, and calls without a response are marked. The diagram is drawn in your browser by a small built-in renderer (`js/seqsvg.js`), so nothing is sent to a PlantUML server. You can copy the code, or download it as `.puml` or `.svg`.
+- **Processing rules:** analyses the Flow Result and works out the rules the flows follow. For each entry (eComm) API it shows whether it is **processing rule only** (no Enterprise call) or which Enterprise APIs it calls, and which WS and Host services those use, drawn as a tree. When the same API behaves differently it lists each pattern with how often it occurs. It also gives elapsed-time stats (avg, min, p95, max), the parameters seen and any missing responses, plus a catalogue for each layer showing who calls each API and what it calls. It works on pasted real logs too, and can be copied or downloaded as Markdown.
 - **SPL generator:** the production query, ready to paste into Splunk.
 - **Splunk test harness:** the same query with your test lines built in through `makeresults`, so the real query runs in Splunk without indexing anything.
 - **Bring your own logs:** paste real lines to check the regexes against them.
@@ -130,6 +131,7 @@ js/simulator.js         in-browser run of the query pipeline
 js/spl.js               SPL and test-harness builder
 js/plantuml.js          PlantUML sequence diagram from the flow
 js/seqsvg.js            local SVG renderer for that PlantUML
+js/rules.js             processing-rule analysis of the flow
 js/app.js               UI
 tests/                  engine and security tests (node:test)
 .github/                CI/CD workflow and Dependabot
