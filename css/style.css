@@ -364,3 +364,5 @@ pre.tree { margin: 0; font: 12px/1.5 var(--mono); white-space: pre; }
   .grid2 { grid-template-columns: 1fr; }
 }
 table.rules .chip { white-space: nowrap; }
+.tabs.subtabs { padding: 4px 8px 0 18px; background: var(--code-bg); }
+.tabs.subtabs .tab { padding: 6px 10px 7px; font-size: 13px; }

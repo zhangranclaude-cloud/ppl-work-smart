@@ -114,8 +114,8 @@
     return h('span', { class: 'badge ' + colorClass(i) }, i >= 0 ? cfg.layers[i].label : id);
   }
 
-  function tabBar(tabs, active, pick) {
-    return h('div', { class: 'tabs', role: 'tablist' }, tabs.map(([id, t, count]) =>
+  function tabBar(tabs, active, pick, extraClass = '') {
+    return h('div', { class: 'tabs ' + extraClass, role: 'tablist' }, tabs.map(([id, t, count]) =>
       h('button', { class: 'tab' + (id === active ? ' active' : ''), role: 'tab', 'aria-selected': id === active ? 'true' : 'false', onclick: () => pick(id) },
         t, count != null ? h('span', { class: 'count' }, count) : null)));
   }
@@ -367,7 +367,7 @@
     const opt = (v, t) => h('label', { class: 'radio' },
       h('input', { type: 'radio', name: 'src', checked: ui.source === v, onchange: () => { ui.source = v; saveUi(); runAll(); } }), t);
     return h('div', {},
-      h('p', { class: 'muted' }, 'Choose which logs go into the Flow Result, Extraction Debug and Splunk Test Harness tabs.'),
+      h('p', { class: 'muted' }, 'Choose which logs feed every output tab: Flow Result, Sequence Diagram, Processing Rule, and Extraction Debug and Splunk Test Harness under Extraction Log.'),
       h('div', { class: 'seg' }, opt('mock', 'Generated mock logs'), opt('pasted', 'Pasted logs')),
       h('div', { class: 'row' },
         btn('Copy mock logs into the box', () => {
@@ -402,27 +402,51 @@
     const sim = state.sim;
     const issues = [state.genError, ...sim.errors, ...SS.configIssues(cfg)].filter(Boolean);
     const problems = sim.debug.filter(d => d.mismatch).length;
+    normalizeTabs();
     const tabs = [
       ['result', 'Flow Result', sim.rows.length],
       ['diagram', 'Sequence Diagram'],
-      ['rules', 'Processing Rules'],
+      ['rules', 'Processing Rule'],
+      ['extraction', 'Extraction Log', problems || null],
+    ];
+    const subTabs = [
       ['debug', 'Extraction Debug', problems || null],
       ['logs', 'Mock Logs', state.mock.length],
       ['spl', 'Splunk Query'],
       ['harness', 'Splunk Test Harness'],
     ];
     const views = { result: viewResult, diagram: viewDiagram, rules: viewRules, debug: viewDebug, logs: viewLogs, spl: viewSpl, harness: viewHarness };
+    const inExtraction = ui.outTab === 'extraction';
+    const view = inExtraction ? views[ui.extTab] : views[ui.outTab];
     withScroll(root, () => root.replaceChildren(
-      tabBar(tabs, ui.outTab, id => { ui.outTab = id; saveUi(); renderOutput(); }),
+      tabBar(tabs, ui.outTab, openTab),
+      ...(inExtraction ? [tabBar(subTabs, ui.extTab, openTab, 'subtabs')] : []),
       ...(issues.length ? [h('div', { class: 'banner' }, h('strong', {}, 'Check your config'), h('ul', {}, issues.map(x => h('li', {}, x))))] : []),
-      h('div', { class: 'panel-body' }, (views[ui.outTab] || viewResult)())));
+      h('div', { class: 'panel-body' }, (view || viewResult)())));
+  }
+
+  const EXTRACTION_TABS = ['debug', 'logs', 'spl', 'harness'];
+
+  // Accepts a top-level tab or an Extraction Log sub-tab id.
+  function openTab(id) {
+    if (EXTRACTION_TABS.includes(id)) { ui.outTab = 'extraction'; ui.extTab = id; }
+    else ui.outTab = id;
+    saveUi();
+    renderOutput();
+  }
+
+  // Older saved UI state pointed straight at what are now sub-tabs.
+  function normalizeTabs() {
+    if (EXTRACTION_TABS.includes(ui.outTab)) { ui.extTab = ui.outTab; ui.outTab = 'extraction'; }
+    if (!['result', 'diagram', 'rules', 'extraction'].includes(ui.outTab)) ui.outTab = 'result';
+    if (!EXTRACTION_TABS.includes(ui.extTab)) ui.extTab = 'debug';
   }
 
   function selfTestChip() {
     if (ui.source === 'pasted') return h('span', { class: 'chip' }, 'Pasted logs: no expected result to compare');
     const bad = state.sim.debug.filter(d => d.mismatch).length;
     return bad
-      ? h('button', { class: 'chip warn', onclick: () => { ui.outTab = 'debug'; ui.onlyIssues = true; saveUi(); renderOutput(); } }, `⚠ ${bad} line(s) not handled as expected`)
+      ? h('button', { class: 'chip warn', onclick: () => { ui.onlyIssues = true; openTab('debug'); } }, `⚠ ${bad} line(s) not handled as expected`)
       : h('span', { class: 'chip ok' }, '✓ Every mock line handled as expected');
   }
 
@@ -475,7 +499,7 @@
       return 'No scenario is generating sessions. On the Scenario tab, tick at least one scenario that has calls and 1 or more sessions.';
     }
     if (ui.session) return 'Nothing for the selected session. Pick “All sessions” above.';
-    return 'Every input line was filtered out. Check Extraction Debug to see which regex missed.';
+    return 'Every input line was filtered out. Check Extraction Log → Extraction Debug to see which regex missed.';
   }
 
   function viewDiagram() {

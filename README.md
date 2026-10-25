@@ -50,6 +50,15 @@ Step  EventTime                Flow                                          Par
 - **Bring your own logs:** paste real lines to check the regexes against them.
 - **Private by design:** no backend, no network requests (enforced by CSP), and nothing leaves your browser. See [SECURITY.md](SECURITY.md).
 
+## Tabs
+
+| Tab | Shows |
+|---|---|
+| **Flow Result** | The flow table the query produces |
+| **Sequence Diagram** | PlantUML code with the diagram drawn below it |
+| **Processing Rule** | Rules worked out from the flow, plus a catalogue for each layer |
+| **Extraction Log** | Sub-tabs: **Extraction Debug** · **Mock Logs** · **Splunk Query** · **Splunk Test Harness** |
+
 ## Install
 
 There's nothing to build and no dependencies.
@@ -89,9 +98,9 @@ npm test        # engine and security tests (Node's built-in runner)
 
 1. **Scenario:** tick the scenarios to include, set sessions for each, and edit or add call flows.
 2. **Parameters:** add the values you want stamped on each line.
-3. **Log Layers:** make the regexes and templates match your real logs. Pasting real lines into **Input Logs** and watching **Extraction Debug** is the quickest way to do this.
-4. Check **Flow Result** (and the **Sequence Diagram** if you want a picture of it), then copy the **Splunk Query** to run on your indexes.
-5. To prove the query in real Splunk, copy the **Splunk Test Harness**, run it in Splunk Search, and compare the output with Flow Result.
+3. **Log Layers:** make the regexes and templates match your real logs. Pasting real lines into **Input Logs** and watching **Extraction Log → Extraction Debug** is the quickest way to do this.
+4. Check **Flow Result** (and the **Sequence Diagram** if you want a picture of it), then copy **Extraction Log → Splunk Query** to run on your indexes.
+5. To prove the query in real Splunk, copy **Extraction Log → Splunk Test Harness**, run it in Splunk Search, and compare the output with Flow Result.
 
 Your config saves in the browser automatically. Use **Settings → Export / Import config** to share it.
 
