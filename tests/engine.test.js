@@ -319,3 +319,37 @@ test('timeout notes render and the SVG export is well-formed and escaped', () =>
   assert.ok(svg.includes('/api/&lt;login&gt;&amp;'));
   assert.ok(!/<script|on\w+=/i.test(svg));
 });
+
+test('WS can be drawn as internal processing of the Enterprise API', () => {
+  const cfg = base();
+  const rows = SS.simulate(cfg, SS.generate(cfg)).rows;
+  const puml = SS.buildPlantUml(cfg, rows, { internal: ['ws'] });
+  const lines = puml.split('\n');
+
+  assert.ok(!puml.includes('participant "WS"'), 'no WS participant');
+  assert.ok(!/\bL_ws\b/.test(puml), 'nothing drawn on a WS lifeline');
+  assert.ok(lines.includes('L_enterprise -> L_enterprise : WS: https://enterprise-sit.internal/ws/accountInquiry [?]'));
+  assert.ok(lines.some(l => /^L_enterprise --> L_enterprise : WS: https:\/\/enterprise-sit\.internal\/ws\/limitCheck \[!\] \(\d+ ms\)$/.test(l)));
+  assert.ok(lines.some(l => /^L_enterprise -> L_host : FT01\.A01,A02 \[\?\]/.test(l)),
+    'Host is still called from Enterprise after the internal WS step');
+  assert.equal(lines.filter(l => l.startsWith('activate ')).length, lines.filter(l => l.startsWith('deactivate ')).length);
+
+  // Default output is unchanged: WS keeps its own participant.
+  assert.ok(SS.buildPlantUml(cfg, rows).includes('participant "WS" as L_ws'));
+});
+
+test('renderer draws self-calls as loops inside the canvas', () => {
+  const cfg = SS.defaultConfig();
+  const sim = SS.simulate(cfg, SS.generate(cfg));
+  for (const sid of SS.diagramSessions(sim.rows)) {
+    const d = SS.parsePlantUml(SS.buildPlantUml(cfg, sim.rows, { sessionId: sid, internal: ['ws'] }));
+    const selfCalls = d.items.filter(i => i.type === 'msg' && i.from === i.to).length;
+    const L = SS.layoutSequence(d);
+    const msgLines = L.shapes.filter(s => s.t === 'line' && /seq-msg/.test(s.c)).length;
+    assert.equal(msgLines, d.items.filter(i => i.type === 'msg').length + selfCalls * 2, 'three segments per self-call');
+    for (const s of L.shapes) {
+      const xs = s.t === 'poly' ? s.pts.map(p => p[0]) : [s.x ?? s.x1 ?? s.cx, s.x2 ?? s.x ?? s.cx];
+      for (const x of xs) assert.ok(x >= 0 && x <= L.width, 'inside the canvas');
+    }
+  }
+});

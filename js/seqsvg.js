@@ -51,13 +51,20 @@
 
     // Widen columns so every message label fits between its two lifelines.
     let num = 0;
-    const msgs = d.items.filter(it => it.type === 'msg').map(m => {
+    let selfRight = 0; // room needed right of the last lifeline for self-calls
+    const all = d.items.filter(it => it.type === 'msg').map(m => {
       num++;
       const a = idx[m.from], b = idx[m.to];
       const prefix = d.autonumber ? tw(String(num)) + 8 : 0;
       const w = Math.max(...m.text.map((t, k) => tw(t) + (k === 0 ? prefix : 0))) + 30;
       return { lo: Math.min(a, b), hi: Math.max(a, b), w };
-    }).filter(m => m.hi > m.lo).sort((x, y) => (x.hi - x.lo) - (y.hi - y.lo));
+    });
+    for (const m of all.filter(x => x.hi === x.lo)) {
+      const need = m.w + 30; // label sits right of the lifeline, beside the loop
+      if (m.lo < n - 1) gaps[m.lo] = Math.max(gaps[m.lo], need);
+      else selfRight = Math.max(selfRight, need);
+    }
+    const msgs = all.filter(m => m.hi > m.lo).sort((x, y) => (x.hi - x.lo) - (y.hi - y.lo));
     for (const m of msgs) {
       let sum = 0;
       for (let i = m.lo; i < m.hi; i++) sum += gaps[i];
@@ -67,7 +74,7 @@
     const xs = [];
     let x = MARGIN + (boxW[0] || 0) / 2;
     for (let i = 0; i < n; i++) { xs.push(x); x += gaps[i] || 0; }
-    let right = n ? xs[n - 1] + boxW[n - 1] / 2 : MARGIN;
+    let right = n ? Math.max(xs[n - 1] + boxW[n - 1] / 2, xs[n - 1] + selfRight) : MARGIN;
 
     const back = [], bars = [], fg = [];
     let y = MARGIN;
@@ -100,7 +107,39 @@
     num = 0;
 
     d.items.forEach((it, k) => {
-      if (it.type === 'msg') {
+      if (it.type === 'msg' && it.from === it.to) {
+        // Self-call: a loop out to the right of the lifeline and back.
+        num++;
+        const cx = xs[idx[it.from]];
+        const dep = depth(it.from);
+        const next = d.items[k + 1];
+        const edge = level => cx + 5 + level * 5; // right edge of the activation bar at this nesting level
+        const x0 = dep ? edge(dep - 1) : cx;
+        const xEnd = next && next.type === 'activate' && next.who === it.to ? edge(dep) : (dep > 1 ? edge(dep - 2) : cx);
+        const xr = Math.max(x0, xEnd) + 28;
+        const below = it.dashed && d.responseBelow;
+        const textH = it.text.length * LINE;
+        const yTop = below ? y + 4 : y + textH + 2;
+        const yBot = yTop + 14;
+        const textTop = below ? yBot + 4 : y;
+        it.text.forEach((line, li) => {
+          let lx = x0 + 8;
+          const ly = textTop + (li + 1) * LINE - 3;
+          if (li === 0 && d.autonumber) {
+            fg.push({ t: 'text', x: lx, y: ly, s: String(num), c: 'seq-num', a: 'start' });
+            lx += tw(String(num)) + 8;
+          }
+          fg.push({ t: 'text', x: lx, y: ly, s: line, c: 'seq-text', a: 'start' });
+        });
+        const cls = it.dashed ? 'seq-msg seq-dashed' : 'seq-msg';
+        fg.push({ t: 'line', x1: x0, y1: yTop, x2: xr, y2: yTop, c: cls });
+        fg.push({ t: 'line', x1: xr, y1: yTop, x2: xr, y2: yBot, c: cls });
+        fg.push({ t: 'line', x1: xr, y1: yBot, x2: xEnd + 2, y2: yBot, c: cls });
+        fg.push({ t: 'poly', pts: [[xEnd, yBot], [xEnd + 9, yBot - 4], [xEnd + 9, yBot + 4]], c: 'seq-head' });
+        right = Math.max(right, xr + 4);
+        lastArrowY = yBot;
+        y = (below ? textTop + textH : yBot) + 12;
+      } else if (it.type === 'msg') {
         num++;
         const a = idx[it.from], b = idx[it.to];
         const dir = xs[b] >= xs[a] ? 1 : -1;

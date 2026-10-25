@@ -481,10 +481,13 @@
     const rows = state.sim.rows;
     const sessions = SS.diagramSessions(rows);
     if (!sessions.includes(ui.diagramSession)) ui.diagramSession = sessions[0] || '';
-    ui.puml = Object.assign({ caller: 'App', params: true, time: false, elapsed: true, autonumber: true }, ui.puml || {});
+    ui.puml = Object.assign({ caller: 'App', params: true, time: false, elapsed: true, autonumber: true, wsInternal: true }, ui.puml || {});
     const opts = ui.puml;
     const names = scenarioNames();
-    const puml = SS.buildPlantUml(cfg, rows, { ...opts, sessionId: ui.diagramSession, label: names[ui.diagramSession] });
+    const puml = SS.buildPlantUml(cfg, rows, {
+      ...opts, sessionId: ui.diagramSession, label: names[ui.diagramSession], internal: opts.wsInternal ? ['ws'] : [],
+    });
+    const layerName = id => (cfg.layers.find(l => l.id === id) || { label: id }).label;
     const rerender = () => { saveUi(); renderOutput(); };
 
     const sel = h('select', { class: 'inp compact', onchange: e => { ui.diagramSession = e.target.value; rerender(); } },
@@ -507,6 +510,7 @@
         h('span', { class: 'spacer' }), copyBtn,
         btn('Download .puml', () => download(file, puml + '\n'), 'small')),
       h('div', { class: 'toolbar' },
+        opt('wsInternal', `${layerName('ws')} as internal process of ${layerName('enterprise')}`),
         opt('params', 'Params on arrows'), opt('elapsed', 'Elapsed time on responses'),
         opt('time', 'Timestamps'), opt('autonumber', 'Number the steps')),
       h('p', { class: 'muted' }, 'Built from the Flow Result, one session per diagram. Render it with the PlantUML extension in VS Code or IntelliJ, or with plantuml.jar. Nothing is sent to a PlantUML server.'),

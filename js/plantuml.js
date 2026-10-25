@@ -9,56 +9,54 @@
 
   SS.diagramSessions = rows => [...new Set(rows.map(r => r.sessionId).filter(Boolean))];
 
+  // opts.internal: layer ids drawn as internal processing of their caller (a self-call
+  // on the caller's lifeline) instead of as their own participant, e.g. ['ws'].
   SS.buildPlantUml = function (cfg, rows, opts = {}) {
-    const o = { caller: 'App', params: true, time: false, elapsed: true, autonumber: true, ...opts };
+    const o = { caller: 'App', params: true, time: false, elapsed: true, autonumber: true, internal: [], ...opts };
     const s = cfg.settings;
     const sessions = SS.diagramSessions(rows);
     const sid = o.sessionId && sessions.includes(o.sessionId) ? o.sessionId : (sessions[0] ?? null);
     const list = rows.filter(r => r.sessionId === sid && r.layerId);
+    const internal = new Set(o.internal || []);
 
-    const used = new Set(list.map(r => r.layerId));
-    const layers = cfg.layers
-      .map((l, i) => ({ l, i }))
-      .filter(x => used.has(x.l.id))
-      .sort((a, b) => (a.l.depth - b.l.depth) || (a.i - b.i))
-      .map(x => x.l);
-
-    const out = ['@startuml'];
-    out.push(`title Transaction flow${o.label ? ' - ' + text(o.label) : ''}${sid ? ' - session ' + sid : ''}`);
-    out.push('hide footbox');
-    out.push('skinparam responseMessageBelowArrow true');
-    if (o.autonumber) out.push('autonumber');
-    out.push('');
-    out.push(`actor "${text(o.caller) || 'App'}" as Caller`);
-    for (const l of layers) out.push(`participant "${text(l.label)}" as ${alias(l.id)}`);
-    out.push('');
+    const head = ['@startuml'];
+    head.push(`title Transaction flow${o.label ? ' - ' + text(o.label) : ''}${sid ? ' - session ' + sid : ''}`);
+    head.push('hide footbox');
+    head.push('skinparam responseMessageBelowArrow true');
+    if (o.autonumber) head.push('autonumber');
+    head.push('');
+    head.push(`actor "${text(o.caller) || 'App'}" as Caller`);
 
     if (!list.length) {
-      out.push("note over Caller : No flow rows to draw. Check the Flow Result tab.");
-      out.push('@enduml');
-      return out.join('\n');
+      return [...head, '', "note over Caller : No flow rows to draw. Check the Flow Result tab.", '@enduml'].join('\n');
     }
 
     const label = r => {
       const sym = r.direction === 'Request' ? s.requestSymbol : s.responseSymbol;
-      let m = `${o.time ? r.eventTime.slice(11) + '  ' : ''}${text(r.api)} [${text(sym)}]`;
+      const prefix = internal.has(r.layerId) ? text(r.layerLabel) + ': ' : '';
+      let m = `${o.time ? r.eventTime.slice(11) + '  ' : ''}${prefix}${text(r.api)} [${text(sym)}]`;
       if (o.elapsed && r.direction === 'Response' && r.elapsed != null) m += ` (${r.elapsed} ms)`;
-      if (o.params && r.params) m += '\\n' + text(r.params);
+      if (o.params && r.params) m += '\\n' + text(r.params); // PlantUML line break
       return m;
     };
+
+    const body = [];
+    const drawn = new Set();
+    const use = a => { if (a !== 'Caller') drawn.add(a); return a; };
     const unanswered = c => {
-      out.push(`note over ${alias(c.row.layerId)} : no response logged for ${text(c.row.api)}`);
-      out.push(`deactivate ${alias(c.row.layerId)}`);
+      body.push(`note over ${c.as} : no response logged for ${text(c.row.api)}`);
+      body.push(`deactivate ${c.as}`);
     };
 
+    // Each open call remembers which lifeline it is drawn on ("as").
     const stack = [];
     for (const r of list) {
-      const self = alias(r.layerId);
       if (r.direction === 'Request') {
-        const from = stack.length ? alias(stack[stack.length - 1].row.layerId) : 'Caller';
-        out.push(`${from} -> ${self} : ${label(r)}`);
-        out.push(`activate ${self}`);
-        stack.push({ row: r });
+        const from = stack.length ? stack[stack.length - 1].as : 'Caller';
+        const as = internal.has(r.layerId) && from !== 'Caller' ? from : alias(r.layerId);
+        body.push(`${use(from)} -> ${use(as)} : ${label(r)}`);
+        body.push(`activate ${as}`);
+        stack.push({ row: r, as });
         continue;
       }
       let idx = -1;
@@ -66,20 +64,28 @@
         if (stack[i].row.layerId === r.layerId && stack[i].row.pairKey === r.pairKey) { idx = i; break; }
       }
       if (idx === -1) {
-        const to = stack.length ? alias(stack[stack.length - 1].row.layerId) : 'Caller';
-        out.push(`${self} --> ${to} : ${label(r)}`);
-        out.push(`note right of ${self} : response without a logged request`);
+        const self = use(alias(r.layerId));
+        const to = stack.length ? stack[stack.length - 1].as : 'Caller';
+        body.push(`${self} --> ${use(to)} : ${label(r)}`);
+        body.push(`note right of ${self} : response without a logged request`);
         continue;
       }
       for (let i = stack.length - 1; i > idx; i--) unanswered(stack[i]);
-      const to = idx > 0 ? alias(stack[idx - 1].row.layerId) : 'Caller';
-      out.push(`${self} --> ${to} : ${label(r)}`);
-      out.push(`deactivate ${self}`);
+      const self = stack[idx].as;
+      const to = idx > 0 ? stack[idx - 1].as : 'Caller';
+      body.push(`${self} --> ${to} : ${label(r)}`);
+      body.push(`deactivate ${self}`);
       stack.length = idx;
     }
     for (let i = stack.length - 1; i >= 0; i--) unanswered(stack[i]);
 
-    out.push('@enduml');
-    return out.join('\n');
+    const layers = cfg.layers
+      .map((l, i) => ({ l, i }))
+      .filter(x => drawn.has(alias(x.l.id)))
+      .sort((a, b) => (a.l.depth - b.l.depth) || (a.i - b.i))
+      .map(x => x.l);
+    for (const l of layers) head.push(`participant "${text(l.label)}" as ${alias(l.id)}`);
+
+    return [...head, '', ...body, '@enduml'].join('\n');
   };
 })(window.SS);
