@@ -1,4 +1,4 @@
-"""Local dev server for Ppl Work Smart.
+"""Local dev server for Traceline.
 
 Same as `python -m http.server`, but tells the browser not to cache, so an
 edited script is always picked up on reload instead of an old cached copy.
@@ -24,7 +24,7 @@ def main():
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8080
     handler = functools.partial(NoCacheHandler, directory=ROOT)
     with http.server.ThreadingHTTPServer(("127.0.0.1", port), handler) as httpd:
-        print(f"Serving Ppl Work Smart at http://127.0.0.1:{port}/ (no-cache). Ctrl+C to stop.")
+        print(f"Serving Traceline at http://127.0.0.1:{port}/ (no-cache). Ctrl+C to stop.")
         httpd.serve_forever()
 
 

@@ -1,7 +1,7 @@
-# Ppl Work Smart
+# Traceline
 
-[![CI/CD](https://github.com/zhangranclaude-cloud/ppl-work-smart/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/zhangranclaude-cloud/ppl-work-smart/actions/workflows/ci-cd.yml)
-[![GitHub Pages](https://img.shields.io/badge/demo-GitHub%20Pages-222222?logo=githubpages&logoColor=white)](https://zhangranclaude-cloud.github.io/ppl-work-smart/)
+[![CI/CD](https://github.com/zhangranclaude-cloud/traceline/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/zhangranclaude-cloud/traceline/actions/workflows/ci-cd.yml)
+[![GitHub Pages](https://img.shields.io/badge/demo-GitHub%20Pages-222222?logo=githubpages&logoColor=white)](https://zhangranclaude-cloud.github.io/traceline/)
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?logo=html5&logoColor=white)
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?logo=css3&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-ES2020-F7DF1E?logo=javascript&logoColor=black)
@@ -13,9 +13,9 @@
 ![Dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)
 ![Privacy](https://img.shields.io/badge/data-stays%20in%20your%20browser-success)
 
-**Analyse any service flow in your Splunk logs.** Ppl Work Smart traces each request and response across your service layers, draws it as a sequence diagram, works out the processing rules the flows follow, and builds the Splunk query that does the same on your real indexes. It works on real log lines you paste in or on mock logs it generates, and it runs entirely in your browser.
+**Analyse any service flow in your Splunk logs.** Traceline traces each request and response across your service layers, draws it as a sequence diagram, works out the processing rules the flows follow, and builds the Splunk query that does the same on your real indexes. It works on real log lines you paste in or on mock logs it generates, and it runs entirely in your browser.
 
-**▶ Live app: https://zhangranclaude-cloud.github.io/ppl-work-smart/**
+**▶ Live app: https://zhangranclaude-cloud.github.io/traceline/**
 
 ## What it does
 
@@ -103,15 +103,15 @@ The UI follows a *Minimalism & Swiss* developer-tool style generated with the [u
 There's nothing to build and no dependencies.
 
 ```bash
-git clone https://github.com/zhangranclaude-cloud/ppl-work-smart.git
-cd ppl-work-smart
+git clone https://github.com/zhangranclaude-cloud/traceline.git
+cd traceline
 ```
 
 You need a modern browser (Edge, Chrome, Firefox, Safari). [Node.js](https://nodejs.org/) 20+ is only needed to run the tests, and `npm install` isn't required.
 
 ## Run
 
-**Online:** open the [live app](https://zhangranclaude-cloud.github.io/ppl-work-smart/).
+**Online:** open the [live app](https://zhangranclaude-cloud.github.io/traceline/).
 
 **Locally:** pick one.
 

@@ -7,6 +7,9 @@ Thumbs.db
 .vscode/
 .idea/
 # local exports that may contain real log data
+traceline-*.json
 ppl-work-smart-*.json
+traceline-*.csv
 ppl-work-smart-*.csv
+traceline-*.puml
 ppl-work-smart-*.puml

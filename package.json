@@ -1,5 +1,5 @@
 {
-  "name": "ppl-work-smart",
+  "name": "traceline",
   "version": "1.0.0",
   "description": "Analyse any service flow in Splunk logs: trace calls across layers, draw sequence diagrams, derive processing rules, and build and test the Splunk query",
   "private": true,

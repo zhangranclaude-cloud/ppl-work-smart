@@ -1,12 +1,17 @@
 (function (SS) {
   'use strict';
 
-  const KEYS = { cfg: 'ppl-work-smart.config', ui: 'ppl-work-smart.ui', paste: 'ppl-work-smart.pasted' };
-  // Read data saved under the project's previous name until it is saved under the new one.
-  const LEGACY = { [KEYS.cfg]: 'smart-splunk.config', [KEYS.ui]: 'smart-splunk.ui', [KEYS.paste]: 'smart-splunk.pasted' };
+  const KEYS = { cfg: 'traceline.config', ui: 'traceline.ui', paste: 'traceline.pasted' };
+  // Read data saved under the project's earlier names until it is saved under the current one.
+  const LEGACY_PREFIXES = ['ppl-work-smart', 'smart-splunk'];
   const store = {
     get(k) {
-      try { return localStorage.getItem(k) ?? (LEGACY[k] ? localStorage.getItem(LEGACY[k]) : null); } catch (e) { return null; }
+      try {
+        let v = localStorage.getItem(k);
+        const suffix = k.slice(k.indexOf('.'));
+        for (const p of LEGACY_PREFIXES) if (v === null) v = localStorage.getItem(p + suffix);
+        return v;
+      } catch (e) { return null; }
     },
     set(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* storage unavailable: keep working in memory */ } },
     json(k) { try { const v = this.get(k); return v ? JSON.parse(v) : null; } catch (e) { return null; } },
@@ -412,7 +417,7 @@
       h('h3', {}, 'Config'),
       h('p', { class: 'muted' }, 'Your config saves in this browser automatically. Export it to share it or keep a copy.'),
       h('div', { class: 'row' },
-        btn('Export config', () => download('ppl-work-smart-config.json', JSON.stringify(cfg, null, 2), 'application/json')),
+        btn('Export config', () => download('traceline-config.json', JSON.stringify(cfg, null, 2), 'application/json')),
         btn('Import config', () => $('#import').click()),
         btn('Reset to defaults', () => {
           if (!confirm('Replace the current config with the defaults?')) return;
@@ -531,7 +536,7 @@
         h('span', { class: 'chip' }, `${dropped} filtered out`),
         selfTestChip(),
         h('span', { class: 'spacer' }), sel, copyBtn,
-        btn('Download CSV', () => download('ppl-work-smart-flow.csv', csv(), 'text/csv'), 'small')),
+        btn('Download CSV', () => download('traceline-flow.csv', csv(), 'text/csv'), 'small')),
       rows.length
         ? h('div', { class: 'table-wrap' }, h('table', { class: 'grid' },
           h('thead', {}, h('tr', {}, header.map(t => h('th', {}, t)))),
@@ -584,7 +589,7 @@
     });
     caller.value = opts.caller;
     const copyBtn = btn('Copy PlantUML', () => copyText(puml, copyBtn), 'small primary');
-    const file = 'ppl-work-smart-sequence' + (ui.diagramSession ? '-' + ui.diagramSession.slice(0, 8) : '') + '.puml';
+    const file = 'traceline-sequence' + (ui.diagramSession ? '-' + ui.diagramSession.slice(0, 8) : '') + '.puml';
 
     return h('div', {},
       h('div', { class: 'toolbar' },
@@ -616,7 +621,7 @@
       h('div', { class: 'toolbar' },
         h('span', { class: 'muted' }, `Worked out from the Flow Result (${ui.source === 'pasted' ? 'pasted' : 'mock'} logs): what each API does downstream, which call patterns occur, and how long calls take.`),
         h('span', { class: 'spacer' }), copyBtn,
-        btn('Download .md', () => download('ppl-work-smart-processing-rules.md', md() + '\n', 'text/markdown'), 'small')),
+        btn('Download .md', () => download('traceline-processing-rules.md', md() + '\n', 'text/markdown'), 'small')),
       h('div', { class: 'stats' },
         stat(s.sessions, 'sessions analysed'),
         stat(s.entryApis, 'entry APIs'),
@@ -664,7 +669,7 @@
   function diagramPreview(puml, sid) {
     const layout = SS.layoutSequence(SS.parsePlantUml(puml), measure);
     const svgBtn = btn('Download .svg', () => download(
-      'ppl-work-smart-sequence' + (sid ? '-' + sid.slice(0, 8) : '') + '.svg',
+      'traceline-sequence' + (sid ? '-' + sid.slice(0, 8) : '') + '.svg',
       SS.sequenceSvgString(layout), 'image/svg+xml'), 'small');
     return h('div', {},
       h('div', { class: 'toolbar preview-head' },
@@ -746,7 +751,7 @@
     const copyBtn = btn('Copy', () => copyText(text, copyBtn), 'small');
     return h('div', {},
       h('div', { class: 'toolbar' }, sel, scenSel, h('span', { class: 'spacer' }), copyBtn,
-        btn('Download', () => download(ui.logFile || 'ppl-work-smart-mock.log', text + '\n'), 'small'),
+        btn('Download', () => download(ui.logFile || 'traceline-mock.log', text + '\n'), 'small'),
         btn('Download each file', () => files.forEach(f => download(f, state.mock.filter(e => e.file === f).map(e => e.raw).join('\n') + '\n')), 'small')),
       h('div', { class: 'legend' }, cfg.layers.map(l => badge(l.id)), h('span', { class: 'badge cn' }, 'noise')),
       h('pre', { class: 'logs' }, events.map(e => h('div', { class: 'ln ' + colorClass(e.layerIdx) }, e.raw))));
@@ -759,7 +764,7 @@
       h('div', { class: 'toolbar' },
         h('span', { class: 'muted' }, 'Built from Log Layers, Parameters and Settings. Run it on your real indexes.'),
         h('span', { class: 'spacer' }), copyBtn,
-        btn('Download .spl', () => download('ppl-work-smart-flow.spl', spl + '\n'), 'small')),
+        btn('Download .spl', () => download('traceline-flow.spl', spl + '\n'), 'small')),
       h('pre', { class: 'code' }, spl));
   }
 

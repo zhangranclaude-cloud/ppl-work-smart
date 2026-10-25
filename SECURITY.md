@@ -2,11 +2,11 @@
 
 ## Your data stays in your browser
 
-Ppl Work Smart is a static page. It has no backend and makes no network requests.
+Traceline is a static page. It has no backend and makes no network requests.
 
 - Logs you paste, and the config you build, are kept only in your browser's `localStorage`.
 - The page sets a Content-Security-Policy with `connect-src 'none'` and `default-src 'none'`. The browser blocks any attempt to send data out, even from code that was injected.
-- Only local scripts and styles are loaded. There are no CDNs, analytics, fonts or trackers.
+- Only local files are loaded: scripts, styles and the bundled fonts in `css/fonts/`. There are no CDNs, remote web fonts, analytics or trackers.
 - Untrusted text (pasted logs, config values) is only ever inserted as text, never as HTML.
 - Downloads (CSV, `.log`, `.spl`, config JSON) are made locally with `Blob` URLs.
 
