@@ -425,7 +425,7 @@
     const opt = (v, t) => h('label', { class: 'radio' },
       h('input', { type: 'radio', name: 'src', checked: ui.source === v, onchange: () => { ui.source = v; saveUi(); runAll(); } }), t);
     return h('div', {},
-      h('p', { class: 'muted' }, 'Choose which logs feed every output tab: Flow Result, Sequence Diagram, Processing Rule, and Extraction Debug and Splunk Test Harness under Extraction Log.'),
+      h('p', { class: 'muted' }, 'Choose which logs feed every output tab: Flow Result, Sequence Diagram, Processing Rule, and Extraction Debug and Splunk Test Harness under Query & Logs.'),
       h('div', { class: 'seg' }, opt('mock', 'Generated mock logs'), opt('pasted', 'Pasted logs')),
       h('div', { class: 'row' },
         btn('Copy mock logs into the box', () => {
@@ -465,7 +465,7 @@
       ['result', 'Flow Result', sim.rows.length],
       ['diagram', 'Sequence Diagram'],
       ['rules', 'Processing Rule'],
-      ['extraction', 'Extraction Log', problems || null],
+      ['extraction', 'Query & Logs', problems || null],
     ];
     const subTabs = [
       ['debug', 'Extraction Debug', problems || null],
@@ -478,14 +478,14 @@
     const view = inExtraction ? views[ui.extTab] : views[ui.outTab];
     withScroll(root, () => root.replaceChildren(
       tabBar(tabs, ui.outTab, openTab, '', 'out', 'Output'),
-      ...(inExtraction ? [tabBar(subTabs, ui.extTab, openTab, 'subtabs', 'sub', 'Extraction Log')] : []),
+      ...(inExtraction ? [tabBar(subTabs, ui.extTab, openTab, 'subtabs', 'sub', 'Query & Logs')] : []),
       ...(issues.length ? [h('div', { class: 'banner', role: 'status' }, h('strong', {}, 'Check your config'), h('ul', {}, issues.map(x => h('li', {}, x))))] : []),
       inExtraction ? tabPanel('sub', ui.extTab, (view || viewDebug)()) : tabPanel('out', ui.outTab, (view || viewResult)())));
   }
 
   const EXTRACTION_TABS = ['debug', 'logs', 'spl', 'harness'];
 
-  // Accepts a top-level tab or an Extraction Log sub-tab id.
+  // Accepts a top-level tab or a Query & Logs sub-tab id.
   function openTab(id) {
     if (EXTRACTION_TABS.includes(id)) { ui.outTab = 'extraction'; ui.extTab = id; }
     else ui.outTab = id;
@@ -557,7 +557,7 @@
       return 'No scenario is generating sessions. On the Scenario tab, tick at least one scenario that has calls and 1 or more sessions.';
     }
     if (ui.session) return 'Nothing for the selected session. Pick “All sessions” above.';
-    return 'Every input line was filtered out. Check Extraction Log → Extraction Debug to see which regex missed.';
+    return 'Every input line was filtered out. Check Query & Logs → Extraction Debug to see which regex missed.';
   }
 
   function viewDiagram() {

@@ -86,7 +86,7 @@ No backend and no network requests: a strict Content-Security-Policy blocks them
 | **Flow Result** | Every call in time order, indented by caller |
 | **Sequence Diagram** | PlantUML code with the diagram drawn below it |
 | **Processing Rule** | Rules worked out from the flow, plus a catalogue for each layer |
-| **Extraction Log** | Sub-tabs: **Extraction Debug** · **Mock Logs** · **Splunk Query** · **Splunk Test Harness** |
+| **Query & Logs** | Sub-tabs: **Extraction Debug** · **Mock Logs** · **Splunk Query** · **Splunk Test Harness** |
 
 The left panel holds the inputs: **Scenario**, **Parameters**, **Log Layers**, **Settings** and **Input Logs**.
 
@@ -138,14 +138,14 @@ npm test        # engine and security tests (Node's built-in runner)
 **To analyse real logs:**
 1. Search Splunk for the events you want, and copy the raw lines (one event per line).
 2. Paste them into **Input Logs** and choose *Pasted logs*.
-3. Open **Extraction Log → Extraction Debug**. If lines are missed or misread, adjust the regexes in **Log Layers** until every line is handled.
+3. Open **Query & Logs → Extraction Debug**. If lines are missed or misread, adjust the regexes in **Log Layers** until every line is handled.
 4. Read the result in **Flow Result**, **Sequence Diagram** and **Processing Rule**.
-5. Copy **Extraction Log → Splunk Query** to run the same analysis on your indexes.
+5. Copy **Query & Logs → Splunk Query** to run the same analysis on your indexes.
 
 **To build and test a query before you have logs:**
 1. **Scenario:** tick the scenarios to include, set sessions for each, and edit or add call flows.
 2. **Parameters:** add the values you want stamped on each line.
-3. Check **Flow Result**, then copy **Extraction Log → Splunk Test Harness** into Splunk Search to prove the query with real SPL.
+3. Check **Flow Result**, then copy **Query & Logs → Splunk Test Harness** into Splunk Search to prove the query with real SPL.
 
 Your config saves in the browser automatically. Use **Settings → Export / Import config** to share it.
 
