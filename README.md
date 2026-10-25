@@ -6,15 +6,24 @@
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?logo=css3&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-ES2020-F7DF1E?logo=javascript&logoColor=black)
 ![Splunk SPL](https://img.shields.io/badge/Splunk-SPL-000000?logo=splunk&logoColor=white)
+![PlantUML](https://img.shields.io/badge/diagrams-PlantUML-1E88E5)
 ![Node.js tests](https://img.shields.io/badge/tests-Node.js%20%E2%89%A520-339933?logo=nodedotjs&logoColor=white)
 ![GitHub Actions](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-2088FF?logo=githubactions&logoColor=white)
 ![CodeQL](https://img.shields.io/badge/scan-CodeQL%20%2B%20gitleaks-6E40C9?logo=github&logoColor=white)
 ![Dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)
 ![Privacy](https://img.shields.io/badge/data-stays%20in%20your%20browser-success)
 
-Generate mock transaction-flow logs, build the Splunk flow query, and test it before it touches Splunk.
+**Analyse any service flow in your Splunk logs.** Ppl Work Smart traces each request and response across your service layers, draws it as a sequence diagram, works out the processing rules the flows follow, and builds the Splunk query that does the same on your real indexes. It works on real log lines you paste in or on mock logs it generates, and it runs entirely in your browser.
 
-The flow it models: **eComm API → Enterprise API → WS (web service) / Host service**. A request is stamped `[?]`, a response `[!]`, and every line is ordered by timestamp, with any parameters you choose shown on the line.
+**▶ Live app: https://zhangranclaude-cloud.github.io/ppl-work-smart/**
+
+## What it does
+
+Paste lines from any Splunk log file, or generate mock ones, and the tool:
+
+1. **Reads each line:** works out which layer logged it, whether it's a request or a response, the session it belongs to, the API it calls, and any parameters you've chosen.
+2. **Rebuilds the flow:** orders every call by time, nests each call under the one that made it, and times each response against its request.
+3. **Shows it four ways:** as a flow table, a sequence diagram, a set of processing rules, and the Splunk query that produces the same table on your real indexes.
 
 ```
 Step  EventTime                Flow                                          Params                  ElapsedMs
@@ -27,37 +36,59 @@ Step  EventTime                Flow                                          Par
 7     2026-10-25 10:00:00.995  eComm: /api/v1/payment/transfer [!]           TxnRefNo=…; HTTP=200    597
 ```
 
-**▶ Live app: https://zhangranclaude-cloud.github.io/ppl-work-smart/**
+`[?]` marks a request and `[!]` a response. Indentation shows which call made which.
+
+The default setup models four layers, **eComm API → Enterprise API → WS (web service) / Host service**. Each layer's name, Splunk source, log pattern and regexes can be changed, so you can point them at your own services and log formats.
 
 ## Features
 
-- **Multiple scenarios:** each named scenario has its own call tree, an on/off switch and a session count, and the mock file mixes all enabled scenarios in time order (sessions overlap, as they do in production). Each eComm API calls zero or more Enterprise APIs; each Enterprise API calls zero or more WS calls and Host services, and a Host service is one main SvcCode with sub-codes. You can set latencies, noise lines and timeouts. Six scenarios are built in:
+### Analyse flows
+- **Flow Result:** every call in time order, indented by caller, with session, parameters and elapsed time. Filter by session, or export as CSV.
+- **Sequence Diagram:** PlantUML code for one session, with the **diagram drawn right below it**. WS calls can be drawn as internal processing of the Enterprise API (a self-call) or as their own participant. Params, elapsed time and timestamps can go on the arrows, and calls with no response are marked. It's drawn by a built-in renderer (`js/seqsvg.js`), so nothing is sent to a PlantUML server. You can download it as `.puml` or `.svg`.
+- **Processing Rule:** the rules the flows follow, worked out from what was logged.
+  - **For each entry API:** whether it's **processing rule only** (no downstream call) or which APIs it calls, drawn as a tree. Each distinct call pattern is listed with how often it occurs.
+  - **Stats:** elapsed time (avg, min, p95, max), the parameters seen, and missing responses.
+  - **For each layer:** a catalogue of who calls each API and what it calls.
+  - **Export:** copy or download as Markdown.
+
+### Work with real logs
+- **Bring your own logs:** paste lines from Splunk and every view above is built from them.
+- **Extraction Debug:** for every line, which layer, direction, session, API and parameters were extracted, or why the line was filtered out. This is the quickest way to tune the regexes to your format.
+- **Editable log layers:** the classify, session, direction and API regexes and the Splunk source and search terms for each layer.
+- **Dynamic parameters:** add or remove a field, and it's extracted with its own `rex` and shown in the `Params` column.
+
+### Build and prove the Splunk query
+- **Splunk Query:** the production SPL, generated from your layers and parameters.
+- **Splunk Test Harness:** the same query with your test lines built in through `makeresults`. It runs the real query in Splunk without indexing anything, and Splunk's output should match the Flow Result.
+
+### Generate test data
+- **Multiple scenarios:** each named scenario has its own call tree, an on/off switch and a session count. Sessions from all enabled scenarios are mixed in time order, as in production. You can set latencies, noise lines and timeouts. Six scenarios are built in:
+
   | Scenario | What it covers |
   |---|---|
   | Login, eligibility and fund transfer | Rules-only call, two Enterprise APIs, WS then Host |
   | Bill payment | WS lookup, then a Host service with three sub-codes |
   | Account summary (several Host services) | One Enterprise API calling a WS and two Host services |
-  | Rules only (no Enterprise call) | eComm APIs that never reach Enterprise |
+  | Rules only (no Enterprise call) | Entry APIs that never call downstream |
   | Profile update (Enterprise, no Host) | An Enterprise API with no WS or Host call |
   | Fund transfer with Host timeout | A Host request with no response logged |
-- **Dynamic parameters:** add or remove a parameter, and it is written into the mock logs, extracted with its own `rex`, and shown in the `Params` column. Its value can come from a pattern, a list, a number, a UUID or a sequence, and can be reused per line, per call, per call tree or per session.
-- **Editable log layers:** the classify, session, direction and API regexes and the log templates for each log type, so they can match your real format.
-- **Flow result and extraction debug:** an in-browser run of the generated query, with a self-test that checks every mock line was handled as intended.
-- **Sequence diagram:** turns the Flow Result into PlantUML code and **draws the diagram right below it**, one session at a time (App → eComm → Enterprise → WS / Host). By default a WS call is drawn as **internal processing of the Enterprise API** (a self-call on the Enterprise lifeline) rather than as its own participant; untick the option to give WS its own column. Params, elapsed time and timestamps can be shown on the arrows, and calls without a response are marked. The diagram is drawn in your browser by a small built-in renderer (`js/seqsvg.js`), so nothing is sent to a PlantUML server. You can copy the code, or download it as `.puml` or `.svg`.
-- **Processing rules:** analyses the Flow Result and works out the rules the flows follow. For each entry (eComm) API it shows whether it is **processing rule only** (no Enterprise call) or which Enterprise APIs it calls, and which WS and Host services those use, drawn as a tree. When the same API behaves differently it lists each pattern with how often it occurs. It also gives elapsed-time stats (avg, min, p95, max), the parameters seen and any missing responses, plus a catalogue for each layer showing who calls each API and what it calls. It works on pasted real logs too, and can be copied or downloaded as Markdown.
-- **SPL generator:** the production query, ready to paste into Splunk.
-- **Splunk test harness:** the same query with your test lines built in through `makeresults`, so the real query runs in Splunk without indexing anything.
-- **Bring your own logs:** paste real lines to check the regexes against them.
-- **Private by design:** no backend, no network requests (enforced by CSP), and nothing leaves your browser. See [SECURITY.md](SECURITY.md).
+
+- **Mock values:** each parameter's value can come from a pattern, a list, a number, a UUID or a sequence, and can stay the same per line, call, call tree or session.
+- **Self-test:** every generated line is checked against the layer it was written for, so a broken regex shows up straight away.
+
+### Private by design
+No backend and no network requests: a strict Content-Security-Policy blocks them, and fonts are bundled. Your logs stay in your browser. See [SECURITY.md](SECURITY.md).
 
 ## Tabs
 
 | Tab | Shows |
 |---|---|
-| **Flow Result** | The flow table the query produces |
+| **Flow Result** | Every call in time order, indented by caller |
 | **Sequence Diagram** | PlantUML code with the diagram drawn below it |
 | **Processing Rule** | Rules worked out from the flow, plus a catalogue for each layer |
 | **Extraction Log** | Sub-tabs: **Extraction Debug** · **Mock Logs** · **Splunk Query** · **Splunk Test Harness** |
+
+The left panel holds the inputs: **Scenario**, **Parameters**, **Log Layers**, **Settings** and **Input Logs**.
 
 ## Design
 
@@ -104,17 +135,23 @@ npm test        # engine and security tests (Node's built-in runner)
 
 ## How to use it
 
+**To analyse real logs:**
+1. Search Splunk for the events you want, and copy the raw lines (one event per line).
+2. Paste them into **Input Logs** and choose *Pasted logs*.
+3. Open **Extraction Log → Extraction Debug**. If lines are missed or misread, adjust the regexes in **Log Layers** until every line is handled.
+4. Read the result in **Flow Result**, **Sequence Diagram** and **Processing Rule**.
+5. Copy **Extraction Log → Splunk Query** to run the same analysis on your indexes.
+
+**To build and test a query before you have logs:**
 1. **Scenario:** tick the scenarios to include, set sessions for each, and edit or add call flows.
 2. **Parameters:** add the values you want stamped on each line.
-3. **Log Layers:** make the regexes and templates match your real logs. Pasting real lines into **Input Logs** and watching **Extraction Log → Extraction Debug** is the quickest way to do this.
-4. Check **Flow Result** (and the **Sequence Diagram** if you want a picture of it), then copy **Extraction Log → Splunk Query** to run on your indexes.
-5. To prove the query in real Splunk, copy **Extraction Log → Splunk Test Harness**, run it in Splunk Search, and compare the output with Flow Result.
+3. Check **Flow Result**, then copy **Extraction Log → Splunk Test Harness** into Splunk Search to prove the query with real SPL.
 
 Your config saves in the browser automatically. Use **Settings → Export / Import config** to share it.
 
-## How testing works
+## How the analysis works
 
-`js/simulator.js` runs the same steps as the generated SPL (`js/spl.js`): classify, `rex`, direction, sort, API inheritance, params, elapsed time and render. Regex mistakes therefore show up straight away. The Test Harness is the final check, because it runs the real SPL on Splunk against known input.
+`js/simulator.js` runs the same steps as the generated SPL (`js/spl.js`): classify, `rex`, direction, sort, API inheritance, params, elapsed time and render. What you see in the browser is therefore what the query will produce in Splunk. The Test Harness is the final check, because it runs the real SPL on Splunk against known input. The flow is then rebuilt into call trees (`js/rules.js`) for the processing rules and the diagram (`js/plantuml.js`).
 
 The simulator only mirrors the query this tool generates; it isn't a general SPL interpreter.
 
@@ -143,14 +180,15 @@ index.html              page shell and Content-Security-Policy
 css/style.css           design tokens and styles (dark, light, system)
 css/fonts/              bundled IBM Plex Sans + JetBrains Mono (OFL)
 js/util.js              seeded random, time formatting, regex helpers
-js/defaults.js          default layers, parameters, scenario; validation
+js/defaults.js          default layers, parameters, scenarios; validation
 js/generator.js         mock log generation, pasted-log parsing
 js/simulator.js         in-browser run of the query pipeline
 js/spl.js               SPL and test-harness builder
 js/plantuml.js          PlantUML sequence diagram from the flow
 js/seqsvg.js            local SVG renderer for that PlantUML
-js/rules.js             processing-rule analysis of the flow
+js/rules.js             call-tree rebuild and processing-rule analysis
 js/app.js               UI
 tests/                  engine and security tests (node:test)
+tools/serve.py          localhost dev server without caching
 .github/                CI/CD workflow and Dependabot
 ```

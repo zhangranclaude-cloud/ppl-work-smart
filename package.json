@@ -1,7 +1,7 @@
 {
   "name": "ppl-work-smart",
   "version": "1.0.0",
-  "description": "Mock transaction-flow logs, generate the Splunk flow query, and test it before it touches Splunk",
+  "description": "Analyse any service flow in Splunk logs: trace calls across layers, draw sequence diagrams, derive processing rules, and build and test the Splunk query",
   "private": true,
   "scripts": {
     "check": "node -e \"for (const f of require('fs').readdirSync('js')) require('child_process').execFileSync(process.execPath, ['--check', 'js/' + f], { stdio: 'inherit' })\"",
