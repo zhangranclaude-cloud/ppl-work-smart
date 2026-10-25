@@ -59,6 +59,14 @@ Step  EventTime                Flow                                          Par
 | **Processing Rule** | Rules worked out from the flow, plus a catalogue for each layer |
 | **Extraction Log** | Sub-tabs: **Extraction Debug** · **Mock Logs** · **Splunk Query** · **Splunk Test Harness** |
 
+## Design
+
+The UI follows a *Minimalism & Swiss* developer-tool style generated with the [ui-ux-pro-max](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) design skill: a slate "code dark" palette with a green accent, dense dashboard spacing, IBM Plex Sans for UI text and JetBrains Mono for code.
+
+- **Themes:** Dark (default), Light or System, chosen in the header. Text and badge colours meet WCAG 4.5:1 contrast, and input borders 3:1, in both themes.
+- **Accessibility:** a visible focus ring on every control, tabs that work with the arrow keys, Home and End, labelled SVG icon buttons (no emoji), 44px touch targets on touch screens, and reduced-motion support.
+- **Fonts are bundled** in `css/fonts/` (SIL Open Font License, licences included), so the app still makes no network requests.
+
 ## Install
 
 There's nothing to build and no dependencies.
@@ -132,7 +140,8 @@ The simulator only mirrors the query this tool generates; it isn't a general SPL
 
 ```
 index.html              page shell and Content-Security-Policy
-css/style.css           styles (light and dark)
+css/style.css           design tokens and styles (dark, light, system)
+css/fonts/              bundled IBM Plex Sans + JetBrains Mono (OFL)
 js/util.js              seeded random, time formatting, regex helpers
 js/defaults.js          default layers, parameters, scenario; validation
 js/generator.js         mock log generation, pasted-log parsing

@@ -61,3 +61,18 @@ test('no secrets or credentials in tracked source files', () => {
     for (const re of patterns) assert.ok(!re.test(src), `${f} matches ${re}`);
   }
 });
+
+test('fonts are bundled locally with their licences', () => {
+  const css = read('css/style.css');
+  const urls = [...css.matchAll(/url\(\s*["']?([^"')]+)["']?\s*\)/g)].map(m => m[1]);
+  assert.ok(urls.length >= 1);
+  for (const u of urls) {
+    assert.ok(!/^(?:[a-z]+:)?\/\//i.test(u), `remote url() in CSS: ${u}`);
+    assert.ok(fs.existsSync(path.join(ROOT, 'css', u)), `missing font file ${u}`);
+  }
+  assert.ok(!/@import/.test(css), 'no @import of remote stylesheets');
+  for (const f of ['OFL-IBM-Plex-Sans.txt', 'OFL-JetBrains-Mono.txt']) {
+    assert.match(fs.readFileSync(path.join(ROOT, 'css', 'fonts', f), 'utf8'), /SIL Open Font License/);
+  }
+  assert.match(html, /font-src 'self'/);
+});

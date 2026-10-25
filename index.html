@@ -1,20 +1,32 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <!-- Everything runs in the browser. connect-src 'none' stops the page from sending anything over the network. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'">
   <meta name="referrer" content="no-referrer">
   <title>Ppl Work Smart</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <header class="app-header">
-    <div>
-      <h1>Ppl Work Smart</h1>
-      <p>Mock transaction-flow logs, build the flow query, and test it before it touches Splunk.</p>
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="6" height="6" rx="1.5"/>
+          <rect x="15" y="9" width="6" height="6" rx="1.5"/>
+          <rect x="9" y="15" width="6" height="6" rx="1.5"/>
+          <path d="M9 6h3a3 3 0 0 1 3 3v0M18 15v0a3 3 0 0 1-3 3"/>
+        </svg>
+      </span>
+      <div>
+        <h1>Ppl Work Smart</h1>
+        <p>Mock transaction-flow logs, build the flow query, and test it before it touches Splunk.</p>
+      </div>
     </div>
+    <span class="spacer"></span>
+    <div id="theme" class="theme-switch" role="group" aria-label="Colour theme"></div>
   </header>
 
   <main class="layout">

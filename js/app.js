@@ -101,9 +101,36 @@
     return h('label', { class: 'fld' }, h('span', { class: 'lbl' }, label), sel);
   }
 
-  function iconBtn(text, title, disabled, fn) {
-    return h('button', { class: 'icon', title, 'aria-label': title, disabled: disabled || null, onclick: fn }, text);
+  // Outline icons (24px grid, 2px stroke), built as SVG DOM nodes rather than emoji or HTML strings.
+  const ICONS = {
+    up: [['path', { d: 'M12 19V5M5 12l7-7 7 7' }]],
+    down: [['path', { d: 'M12 5v14M19 12l-7 7-7-7' }]],
+    x: [['path', { d: 'M18 6 6 18M6 6l12 12' }]],
+    copy: [['rect', { x: 9, y: 9, width: 12, height: 12, rx: 2 }], ['path', { d: 'M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1' }]],
+    dice: [['rect', { x: 3, y: 3, width: 18, height: 18, rx: 3 }], ['circle', { cx: 8.5, cy: 8.5, r: 1.2, fill: 'currentColor' }],
+      ['circle', { cx: 12, cy: 12, r: 1.2, fill: 'currentColor' }], ['circle', { cx: 15.5, cy: 15.5, r: 1.2, fill: 'currentColor' }]],
+    sun: [['circle', { cx: 12, cy: 12, r: 4 }], ['path', { d: 'M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4' }]],
+    moon: [['path', { d: 'M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z' }]],
+    monitor: [['rect', { x: 2, y: 3, width: 20, height: 14, rx: 2 }], ['path', { d: 'M8 21h8M12 17v4' }]],
+  };
+
+  function icon(name) {
+    const NS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(NS, 'svg');
+    for (const [k, v] of Object.entries({ viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'aria-hidden': 'true', focusable: 'false' })) svg.setAttribute(k, v);
+    for (const [tag, attrs] of ICONS[name] || []) {
+      const el = document.createElementNS(NS, tag);
+      for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+      svg.append(el);
+    }
+    return svg;
   }
+
+  function iconBtn(name, title, disabled, fn) {
+    return h('button', { class: 'icon' + (name === 'x' ? ' danger' : ''), title, 'aria-label': title, disabled: disabled || null, onclick: fn }, icon(name));
+  }
+
+  const fmtNum = n => (typeof n === 'number' ? n.toLocaleString('en-US') : n);
 
   function btn(text, fn, cls = '') { return h('button', { class: 'btn ' + cls, onclick: fn }, text); }
 
@@ -114,10 +141,41 @@
     return h('span', { class: 'badge ' + colorClass(i) }, i >= 0 ? cfg.layers[i].label : id);
   }
 
-  function tabBar(tabs, active, pick, extraClass = '') {
-    return h('div', { class: 'tabs ' + extraClass, role: 'tablist' }, tabs.map(([id, t, count]) =>
-      h('button', { class: 'tab' + (id === active ? ' active' : ''), role: 'tab', 'aria-selected': id === active ? 'true' : 'false', onclick: () => pick(id) },
-        t, count != null ? h('span', { class: 'count' }, count) : null)));
+  // ARIA tabs: one tab stop per bar; arrow keys, Home and End move between tabs.
+  function tabBar(tabs, active, pick, extraClass, bar, label) {
+    const ids = tabs.map(t => t[0]);
+    const onkeydown = e => {
+      const i = ids.indexOf(active);
+      const next = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: ids.length - 1 }[e.key];
+      if (next === undefined) return;
+      e.preventDefault();
+      const id = ids[(next + ids.length) % ids.length];
+      pick(id);
+      const el = document.getElementById(`tab-${bar}-${id}`);
+      if (el) el.focus();
+    };
+    return h('div', { class: 'tabs ' + (extraClass || ''), role: 'tablist', 'aria-label': label, onkeydown },
+      tabs.map(([id, t, count]) => h('button', {
+        id: `tab-${bar}-${id}`, class: 'tab' + (id === active ? ' active' : ''), role: 'tab',
+        'aria-selected': id === active ? 'true' : 'false', 'aria-controls': `panel-${bar}`,
+        tabindex: id === active ? '0' : '-1', onclick: () => pick(id),
+      }, t, count != null ? h('span', { class: 'count' }, fmtNum(count)) : null)));
+  }
+
+  function tabPanel(bar, tabId, content) {
+    return h('div', { class: 'panel-body', id: `panel-${bar}`, role: 'tabpanel', 'aria-labelledby': `tab-${bar}-${tabId}` }, content);
+  }
+
+  // ---------- Theme ----------
+  const THEMES = [['dark', 'Dark', 'moon'], ['light', 'Light', 'sun'], ['system', 'System', 'monitor']];
+
+  function applyTheme() {
+    if (!THEMES.some(t => t[0] === ui.theme)) ui.theme = 'dark';
+    document.documentElement.dataset.theme = ui.theme;
+    $('#theme').replaceChildren(...THEMES.map(([id, label, ic]) => h('button', {
+      type: 'button', 'aria-pressed': ui.theme === id ? 'true' : 'false',
+      onclick: () => { ui.theme = id; saveUi(); applyTheme(); },
+    }, icon(ic), label)));
   }
 
   async function copyText(text, button) {
@@ -162,8 +220,8 @@
     const root = $('#cfg');
     const views = { scenario: renderScenario, params: renderParams, layers: renderLayers, settings: renderSettings, input: renderInput };
     withScroll(root, () => root.replaceChildren(
-      tabBar(CFG_TABS, ui.cfgTab, id => { ui.cfgTab = id; saveUi(); renderConfig(); }),
-      h('div', { class: 'panel-body' }, (views[ui.cfgTab] || renderScenario)())));
+      tabBar(CFG_TABS, ui.cfgTab, id => { ui.cfgTab = id; saveUi(); renderConfig(); }, '', 'cfg', 'Configuration'),
+      tabPanel('cfg', ui.cfgTab, (views[ui.cfgTab] || renderScenario)())));
   }
 
   function renderScenario() {
@@ -180,7 +238,7 @@
         fText('Noise lines', s, 'noiseLines', { type: 'number', min: 0, hint: 'Unrelated lines the query must ignore' }),
         h('div', { class: 'row end' },
           fText('Random seed', s, 'seed', { type: 'number' }),
-          iconBtn('🎲', 'New random seed', false, () => { s.seed = Math.floor(Math.random() * 1e9); rerenderConfig(); }))),
+          iconBtn('dice', 'New random seed', false, () => { s.seed = Math.floor(Math.random() * 1e9); rerenderConfig(); }))),
       h('h3', {}, 'Scenarios'),
       h('p', { class: 'muted' }, `Every ticked scenario adds its sessions to the mock logs, mixed together in time order: ${total} session${total === 1 ? '' : 's'} in total. Click a scenario to edit its call flow.`),
       h('div', { class: 'scen-list' }, list.map((sc, i) => scenarioRow(sc, i, list, select))),
@@ -217,14 +275,14 @@
       h('button', { class: 'scen-name', onclick: () => select(i), title: 'Edit call flow' },
         h('span', {}, sc.name || '(unnamed)'), h('span', { class: 'muted small' }, `${calls} call${calls === 1 ? '' : 's'}`)),
       sessions, h('span', { class: 'muted small' }, 'sessions'),
-      iconBtn('↑', 'Move up', i === 0, () => move(i - 1)),
-      iconBtn('↓', 'Move down', i === list.length - 1, () => move(i + 1)),
-      iconBtn('⧉', 'Duplicate', false, () => {
+      iconBtn('up', 'Move up', i === 0, () => move(i - 1)),
+      iconBtn('down', 'Move down', i === list.length - 1, () => move(i + 1)),
+      iconBtn('copy', 'Duplicate', false, () => {
         list.splice(i + 1, 0, { ...JSON.parse(JSON.stringify(sc)), name: sc.name + ' (copy)' });
         select(i + 1);
         changed();
       }),
-      iconBtn('✕', 'Remove', false, () => {
+      iconBtn('x', 'Remove', false, () => {
         if (calls && !confirm(`Remove the scenario "${sc.name}"?`)) return;
         list.splice(i, 1);
         if (ui.scenarioIdx >= list.length) ui.scenarioIdx = list.length - 1;
@@ -263,9 +321,9 @@
     const move = (j) => { [arr[i], arr[j]] = [arr[j], arr[i]]; rerenderConfig(); };
     return h('div', { class: 'node ' + colorClass(layerIdx(n.layer)) },
       h('div', { class: 'node-head' }, badge(n.layer), h('span', { class: 'spacer' }),
-        iconBtn('↑', 'Move up', i === 0, () => move(i - 1)),
-        iconBtn('↓', 'Move down', i === arr.length - 1, () => move(i + 1)),
-        iconBtn('✕', 'Remove', false, () => { arr.splice(i, 1); rerenderConfig(); })),
+        iconBtn('up', 'Move up', i === 0, () => move(i - 1)),
+        iconBtn('down', 'Move down', i === arr.length - 1, () => move(i + 1)),
+        iconBtn('x', 'Remove', false, () => { arr.splice(i, 1); rerenderConfig(); })),
       h('div', { class: 'grid2' }, fields,
         fText(kids.length ? 'Own processing time (ms, min-max)' : 'Latency (ms, min-max)', n, 'ms', { placeholder: '20-80' })),
       fCheck('No response logged (simulate a timeout)', n, 'noResponse'),
@@ -285,7 +343,7 @@
     const updName = () => { err.textContent = SS.paramNameError(p.name, cfg) || ''; title.textContent = p.name || '(unnamed)'; };
     return h('div', { class: 'card' },
       h('div', { class: 'node-head' }, title, h('span', { class: 'spacer' }),
-        iconBtn('✕', 'Remove parameter', false, () => { cfg.params.splice(i, 1); rerenderConfig(); })),
+        iconBtn('x', 'Remove parameter', false, () => { cfg.params.splice(i, 1); rerenderConfig(); })),
       h('div', { class: 'grid2' },
         fText('Splunk field name', p, 'name', { mono: true, after: updName, commit: renderConfig }),
         fText('Label in Params column', p, 'label'),
@@ -419,10 +477,10 @@
     const inExtraction = ui.outTab === 'extraction';
     const view = inExtraction ? views[ui.extTab] : views[ui.outTab];
     withScroll(root, () => root.replaceChildren(
-      tabBar(tabs, ui.outTab, openTab),
-      ...(inExtraction ? [tabBar(subTabs, ui.extTab, openTab, 'subtabs')] : []),
-      ...(issues.length ? [h('div', { class: 'banner' }, h('strong', {}, 'Check your config'), h('ul', {}, issues.map(x => h('li', {}, x))))] : []),
-      h('div', { class: 'panel-body' }, (view || viewResult)())));
+      tabBar(tabs, ui.outTab, openTab, '', 'out', 'Output'),
+      ...(inExtraction ? [tabBar(subTabs, ui.extTab, openTab, 'subtabs', 'sub', 'Extraction Log')] : []),
+      ...(issues.length ? [h('div', { class: 'banner', role: 'status' }, h('strong', {}, 'Check your config'), h('ul', {}, issues.map(x => h('li', {}, x))))] : []),
+      inExtraction ? tabPanel('sub', ui.extTab, (view || viewDebug)()) : tabPanel('out', ui.outTab, (view || viewResult)())));
   }
 
   const EXTRACTION_TABS = ['debug', 'logs', 'spl', 'harness'];
@@ -550,7 +608,7 @@
     if (!a.rules.length) return h('div', { class: 'empty' }, 'No flows to analyse. The Flow Result is empty; ' + (typeof emptyReason() === 'string' ? emptyReason() : 'see the Flow Result tab.'));
     const md = () => SS.rulesMarkdown(a);
     const copyBtn = btn('Copy as Markdown', () => copyText(md(), copyBtn), 'small primary');
-    const stat = (v, label, cls = '') => h('div', { class: 'stat ' + cls }, h('div', { class: 'stat-v' }, String(v)), h('div', { class: 'stat-l' }, label));
+    const stat = (v, label, cls = '') => h('div', { class: 'stat ' + cls }, h('div', { class: 'stat-v' }, fmtNum(v)), h('div', { class: 'stat-l' }, label));
     const typeChip = t => h('span', { class: 'chip ' + (t === 'Processing rule only' ? 'ok' : t === 'Calls downstream' ? 'info' : 'warn') }, t);
     const list = items => items.length ? items.map(x => h('div', {}, x.label, h('span', { class: 'muted' }, ` ×${x.count}`))) : h('span', { class: 'muted' }, '—');
 
@@ -729,6 +787,11 @@
     }
   });
 
+  applyTheme();
   renderConfig();
   runAll();
+  // Re-measure diagram text once the bundled fonts have loaded.
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(() => { measureCtx = null; if (ui.outTab === 'diagram') renderOutput(); });
+  }
 })(window.SS);

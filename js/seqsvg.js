@@ -7,7 +7,7 @@
 
   const LINE = 15;
   const MARGIN = 20;
-  SS.SEQ_FONT = '12px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+  SS.SEQ_FONT = '12px "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
 
   SS.parsePlantUml = function (src) {
     const d = { title: '', autonumber: false, responseBelow: false, participants: [], items: [] };
@@ -195,6 +195,9 @@
         bars.push({ t: 'rect', x: xs[idx[who]] - 5 + stack.length * 5, y: start, w: 10, h: Math.max(8, y - start), rx: 0, c: 'seq-act' });
       }
     }
+
+    // The title is 14px semibold; widen the canvas so it never overflows.
+    if (d.title) right = Math.max(right, MARGIN + tw(d.title) * 1.25);
 
     const bottom = y + 6;
     xs.forEach(cx => back.push({ t: 'line', x1: cx, y1: lifeTop, x2: cx, y2: bottom, c: 'seq-life' }));
