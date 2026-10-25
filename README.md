@@ -35,6 +35,7 @@ Step  EventTime                Flow                                          Par
 - **Dynamic parameters:** add or remove a parameter, and it is written into the mock logs, extracted with its own `rex`, and shown in the `Params` column. Its value can come from a pattern, a list, a number, a UUID or a sequence, and can be reused per line, per call, per call tree or per session.
 - **Editable log layers:** the classify, session, direction and API regexes and the log templates for each log type, so they can match your real format.
 - **Flow result and extraction debug:** an in-browser run of the generated query, with a self-test that checks every mock line was handled as intended.
+- **Sequence diagram:** turns the Flow Result into a PlantUML sequence diagram (App → eComm → Enterprise → WS / Host), one session at a time. You can show params, elapsed time and timestamps on the arrows, and calls without a response are marked. It's generated locally, and nothing is sent to a PlantUML server.
 - **SPL generator:** the production query, ready to paste into Splunk.
 - **Splunk test harness:** the same query with your test lines built in through `makeresults`, so the real query runs in Splunk without indexing anything.
 - **Bring your own logs:** paste real lines to check the regexes against them.
@@ -80,7 +81,7 @@ npm test        # engine and security tests (Node's built-in runner)
 1. **Scenario:** describe the call flow you want to test.
 2. **Parameters:** add the values you want stamped on each line.
 3. **Log Layers:** make the regexes and templates match your real logs. Pasting real lines into **Input Logs** and watching **Extraction Debug** is the quickest way to do this.
-4. Check **Flow Result**, then copy the **Splunk Query** to run on your indexes.
+4. Check **Flow Result** (and the **Sequence Diagram** if you want a picture of it), then copy the **Splunk Query** to run on your indexes.
 5. To prove the query in real Splunk, copy the **Splunk Test Harness**, run it in Splunk Search, and compare the output with Flow Result.
 
 Your config saves in the browser automatically. Use **Settings → Export / Import config** to share it.
@@ -119,6 +120,7 @@ js/defaults.js          default layers, parameters, scenario; validation
 js/generator.js         mock log generation, pasted-log parsing
 js/simulator.js         in-browser run of the query pipeline
 js/spl.js               SPL and test-harness builder
+js/plantuml.js          PlantUML sequence diagram from the flow
 js/app.js               UI
 tests/                  engine and security tests (node:test)
 .github/                CI/CD workflow and Dependabot

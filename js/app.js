@@ -338,12 +338,13 @@
     const problems = sim.debug.filter(d => d.mismatch).length;
     const tabs = [
       ['result', 'Flow Result', sim.rows.length],
+      ['diagram', 'Sequence Diagram'],
       ['debug', 'Extraction Debug', problems || null],
       ['logs', 'Mock Logs', state.mock.length],
       ['spl', 'Splunk Query'],
       ['harness', 'Splunk Test Harness'],
     ];
-    const views = { result: viewResult, debug: viewDebug, logs: viewLogs, spl: viewSpl, harness: viewHarness };
+    const views = { result: viewResult, diagram: viewDiagram, debug: viewDebug, logs: viewLogs, spl: viewSpl, harness: viewHarness };
     withScroll(root, () => root.replaceChildren(
       tabBar(tabs, ui.outTab, id => { ui.outTab = id; saveUi(); renderOutput(); }),
       ...(issues.length ? [h('div', { class: 'banner' }, h('strong', {}, 'Check your config'), h('ul', {}, issues.map(x => h('li', {}, x))))] : []),
@@ -390,6 +391,41 @@
             h('td', { class: 'mono small' }, r.params),
             h('td', { class: 'num' }, r.elapsed ?? ''))))))
         : h('div', { class: 'empty' }, 'No rows. Check Extraction Debug to see why lines were filtered out.'));
+  }
+
+  function viewDiagram() {
+    const rows = state.sim.rows;
+    const sessions = SS.diagramSessions(rows);
+    if (!sessions.includes(ui.diagramSession)) ui.diagramSession = sessions[0] || '';
+    ui.puml = Object.assign({ caller: 'App', params: true, time: false, elapsed: true, autonumber: true }, ui.puml || {});
+    const opts = ui.puml;
+    const puml = SS.buildPlantUml(cfg, rows, { ...opts, sessionId: ui.diagramSession });
+    const rerender = () => { saveUi(); renderOutput(); };
+
+    const sel = h('select', { class: 'inp compact', onchange: e => { ui.diagramSession = e.target.value; rerender(); } },
+      sessions.map(s => h('option', { value: s }, s)));
+    sel.value = ui.diagramSession;
+    const opt = (key, label) => h('label', { class: 'chk' },
+      h('input', { type: 'checkbox', checked: !!opts[key], onchange: e => { opts[key] = e.target.checked; rerender(); } }), h('span', {}, label));
+    const caller = h('input', {
+      class: 'inp compact', 'aria-label': 'Caller name', placeholder: 'App',
+      onchange: e => { opts.caller = e.target.value; rerender(); },
+    });
+    caller.value = opts.caller;
+    const copyBtn = btn('Copy PlantUML', () => copyText(puml, copyBtn), 'small primary');
+    const file = 'ppl-work-smart-sequence' + (ui.diagramSession ? '-' + ui.diagramSession.slice(0, 8) : '') + '.puml';
+
+    return h('div', {},
+      h('div', { class: 'toolbar' },
+        h('span', { class: 'lbl' }, 'Session'), sel,
+        h('span', { class: 'lbl' }, 'Caller'), caller,
+        h('span', { class: 'spacer' }), copyBtn,
+        btn('Download .puml', () => download(file, puml + '\n'), 'small')),
+      h('div', { class: 'toolbar' },
+        opt('params', 'Params on arrows'), opt('elapsed', 'Elapsed time on responses'),
+        opt('time', 'Timestamps'), opt('autonumber', 'Number the steps')),
+      h('p', { class: 'muted' }, 'Built from the Flow Result, one session per diagram. Render it with the PlantUML extension in VS Code or IntelliJ, or with plantuml.jar. Nothing is sent to a PlantUML server.'),
+      h('pre', { class: 'code' }, puml));
   }
 
   function viewDebug() {

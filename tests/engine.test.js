@@ -141,3 +141,57 @@ test('imported configs are normalized and keep user changes', () => {
   assert.equal(cfg.params[0].name, 'x');
   assert.equal(cfg.params[0].gen, 'pattern');
 });
+
+test('PlantUML sequence diagram follows the call stack', () => {
+  const cfg = SS.defaultConfig();
+  const sim = SS.simulate(cfg, SS.generate(cfg));
+  const puml = SS.buildPlantUml(cfg, sim.rows);
+  const lines = puml.split('\n');
+
+  assert.equal(lines[0], '@startuml');
+  assert.equal(lines[lines.length - 1], '@enduml');
+  assert.ok(puml.includes('actor "App" as Caller'));
+  assert.ok(puml.includes('Caller -> L_ecomm : /api/v1/auth/login [?]\\nTxnRefNo='));
+  assert.ok(puml.includes('L_ecomm -> L_enterprise : CustomerLogin [?]'));
+  assert.ok(puml.includes('L_enterprise -> L_host : CL01.A01 [?]'));
+  assert.match(puml, /L_host --> L_enterprise : CL01\.A01 \[!\] \(\d+ ms\)/);
+  assert.match(puml, /L_ws --> L_enterprise : https:\/\/enterprise-sit\.internal\/ws\/limitCheck \[!\]/);
+  assert.match(puml, /L_ecomm --> Caller : \/api\/v1\/payment\/transfer \[!\]/);
+
+  const count = re => lines.filter(l => re.test(l)).length;
+  assert.equal(count(/^activate /), count(/^deactivate /), 'activations balanced');
+  assert.equal(count(/ -> /), 10);
+  assert.equal(count(/ --> /), 10);
+});
+
+test('PlantUML marks calls that never got a response', () => {
+  const cfg = SS.defaultConfig();
+  cfg.scenario[2].children[1].children[1].noResponse = true; // FundTransfer -> Host FT01
+  const sim = SS.simulate(cfg, SS.generate(cfg));
+  const puml = SS.buildPlantUml(cfg, sim.rows);
+  assert.ok(puml.includes('note over L_host : no response logged for FT01.A01,A02'));
+  const lines = puml.split('\n');
+  assert.equal(lines.filter(l => l.startsWith('activate ')).length, lines.filter(l => l.startsWith('deactivate ')).length);
+});
+
+test('PlantUML draws one chosen session and honours the options', () => {
+  const cfg = SS.defaultConfig();
+  cfg.settings.sessions = 2;
+  cfg.settings.sessionGapMs = 100;
+  const sim = SS.simulate(cfg, SS.generate(cfg));
+  const sessions = SS.diagramSessions(sim.rows);
+  assert.equal(sessions.length, 2);
+
+  const puml = SS.buildPlantUml(cfg, sim.rows, { sessionId: sessions[1], params: false, elapsed: false, time: true, autonumber: false, caller: 'Mobile "App"' });
+  assert.ok(puml.includes('session ' + sessions[1]));
+  assert.ok(!puml.includes(sessions[0]));
+  assert.ok(!puml.includes('TxnRefNo') && !puml.includes(' ms)') && !puml.includes('autonumber'));
+  assert.match(puml, /Caller -> L_ecomm : \d{2}:\d{2}:\d{2}\.\d{3} {2}\/api\/v1\/auth\/login \[\?\]/);
+  assert.ok(puml.includes(`actor "Mobile 'App'" as Caller`));
+});
+
+test('PlantUML with no rows still produces a valid diagram', () => {
+  const puml = SS.buildPlantUml(SS.defaultConfig(), []);
+  assert.ok(puml.startsWith('@startuml') && puml.endsWith('@enduml'));
+  assert.ok(puml.includes('No flow rows to draw'));
+});

@@ -9,3 +9,4 @@ Thumbs.db
 # local exports that may contain real log data
 ppl-work-smart-*.json
 ppl-work-smart-*.csv
+ppl-work-smart-*.puml

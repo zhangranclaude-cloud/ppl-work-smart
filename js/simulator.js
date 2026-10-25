@@ -118,6 +118,12 @@
         elapsed,
         layerIdx: L.idx,
         depth: L.l.depth,
+        // Structured fields for consumers such as the sequence diagram.
+        layerId: L.l.id,
+        layerLabel: L.l.label,
+        api: o.api,
+        direction: d.direction,
+        pairKey: o.pairKey,
       };
     });
 
