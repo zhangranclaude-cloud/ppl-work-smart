@@ -24,7 +24,7 @@
       .map(x => x.l);
 
     const out = ['@startuml'];
-    out.push(`title Transaction flow${sid ? ' - session ' + sid : ''}`);
+    out.push(`title Transaction flow${o.label ? ' - ' + text(o.label) : ''}${sid ? ' - session ' + sid : ''}`);
     out.push('hide footbox');
     out.push('skinparam responseMessageBelowArrow true');
     if (o.autonumber) out.push('autonumber');

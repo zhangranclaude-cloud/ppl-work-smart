@@ -92,6 +92,23 @@
     return cur;
   }
 
+  const MAX_SESSIONS = 500;
+
+  // Which scenario each session runs, round-robin so the journeys interleave in the mock file.
+  SS.sessionPlan = function (cfg) {
+    const active = (cfg.scenarios || []).filter(sc => sc.enabled !== false && sc.calls && sc.calls.length);
+    const counts = active.map(sc => Math.min(200, Math.max(0, Math.floor(Number(sc.sessions) || 0))));
+    const plan = [];
+    for (let round = 0; plan.length < MAX_SESSIONS; round++) {
+      let added = false;
+      active.forEach((sc, i) => {
+        if (round < counts[i] && plan.length < MAX_SESSIONS) { plan.push(sc); added = true; }
+      });
+      if (!added) break;
+    }
+    return plan;
+  };
+
   SS.generate = function (cfg) {
     const s = cfg.settings;
     const R = SS.makeRandom(Number(s.seed) || 1);
@@ -100,21 +117,21 @@
     const params = SS.activeParams(cfg);
     const events = [];
     const seq = {};
-    const sessions = Math.min(200, Math.max(1, Math.floor(Number(s.sessions) || 1)));
     const gap = Math.max(0, Number(s.sessionGapMs) || 0);
     let start = SS.parseTs(s.startTime);
     if (isNaN(start)) start = SS.parseTs(SS.defaultConfig().settings.startTime);
 
     const sids = [];
-    for (let i = 0; i < sessions; i++) {
-      const ctx = { R, layers, params, events, seq, flow: {}, session: { sid: R.uuid(), store: {} } };
+    SS.sessionPlan(cfg).forEach((scenario, i) => {
+      const ctx = { R, layers, params, events: [], seq, flow: {}, session: { sid: R.uuid(), store: {} } };
       sids.push(ctx.session.sid);
       let t = start + i * gap + R.int(0, 40);
-      for (const root of cfg.scenario) {
+      for (const root of scenario.calls) {
         ctx.flow = {};
         t = emitNode(root, t, ctx) + R.int(30, 150);
       }
-    }
+      for (const e of ctx.events) events.push({ ...e, scenario: scenario.name });
+    });
 
     const noise = NOISE.filter(n => layers[n.layer]);
     const count = Math.min(500, Math.max(0, Math.floor(Number(s.noiseLines) || 0)));
@@ -131,6 +148,7 @@
           layerId: null,
           layerIdx: -1,
           sessionId: null,
+          scenario: null,
         });
       }
     }

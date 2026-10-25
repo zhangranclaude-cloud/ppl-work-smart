@@ -33,6 +33,71 @@
 
   const node = (layer, props, children = []) => ({ ...SS.newNode(layer), ...props, children });
 
+  SS.newScenario = (name, calls) => ({ name, enabled: true, sessions: 1, calls: calls || [SS.newNode('ecomm')] });
+
+  const WS = 'https://enterprise-sit.internal/ws/';
+  const login = () => node('ecomm', { api: '/api/v1/auth/login', ms: '15-40' }, [
+    node('enterprise', { api: 'CustomerLogin', ms: '10-30' }, [
+      node('host', { main: 'CL01', subs: 'A01', ms: '120-250' }),
+    ]),
+  ]);
+
+  // Built-in journeys, together covering every shape of flow the query has to handle.
+  SS.defaultScenarios = () => [
+    SS.newScenario('Login, eligibility and fund transfer', [
+      login(),
+      node('ecomm', { api: '/api/v1/rules/eligibility', ms: '5-15' }),
+      node('ecomm', { api: '/api/v1/payment/transfer', ms: '20-60' }, [
+        node('enterprise', { api: 'AccountInquiry', ms: '10-30' }, [
+          node('ws', { api: WS + 'accountInquiry', ms: '80-160' }),
+        ]),
+        node('enterprise', { api: 'FundTransfer', ms: '15-40' }, [
+          node('ws', { api: WS + 'limitCheck', ms: '60-120' }),
+          node('host', { main: 'FT01', subs: 'A01,A02', ms: '150-300' }),
+        ]),
+      ]),
+    ]),
+    SS.newScenario('Bill payment', [
+      login(),
+      node('ecomm', { api: '/api/v1/bills/pay', ms: '20-50' }, [
+        node('enterprise', { api: 'BillerInquiry', ms: '10-25' }, [
+          node('ws', { api: WS + 'billerLookup', ms: '70-140' }),
+        ]),
+        node('enterprise', { api: 'BillPayment', ms: '15-35' }, [
+          node('host', { main: 'BP01', subs: 'A01,A02,A03', ms: '180-320' }),
+        ]),
+      ]),
+    ]),
+    SS.newScenario('Account summary (several Host services)', [
+      login(),
+      node('ecomm', { api: '/api/v1/accounts/summary', ms: '15-40' }, [
+        node('enterprise', { api: 'AccountSummary', ms: '10-30' }, [
+          node('ws', { api: WS + 'customerProfile', ms: '50-110' }),
+          node('host', { main: 'AS01', subs: 'A01', ms: '100-200' }),
+          node('host', { main: 'AS02', subs: 'B01,B02', ms: '110-220' }),
+        ]),
+      ]),
+    ]),
+    SS.newScenario('Rules only (no Enterprise call)', [
+      node('ecomm', { api: '/api/v1/rules/eligibility', ms: '5-15' }),
+      node('ecomm', { api: '/api/v1/offers/personalised', ms: '8-25' }),
+    ]),
+    SS.newScenario('Profile update (Enterprise, no Host)', [
+      login(),
+      node('ecomm', { api: '/api/v1/profile/update', ms: '15-35' }, [
+        node('enterprise', { api: 'UpdateProfile', ms: '20-45' }),
+      ]),
+    ]),
+    SS.newScenario('Fund transfer with Host timeout', [
+      login(),
+      node('ecomm', { api: '/api/v1/payment/transfer', ms: '20-60' }, [
+        node('enterprise', { api: 'FundTransfer', ms: '15-40' }, [
+          node('host', { main: 'FT01', subs: 'A01,A02', ms: '150-300', noResponse: true }),
+        ]),
+      ]),
+    ]),
+  ];
+
   function today10am() {
     const d = new Date();
     return `${d.getFullYear()}-${SS.pad(d.getMonth() + 1)}-${SS.pad(d.getDate())}T10:00:00`;
@@ -41,8 +106,7 @@
   SS.defaultConfig = () => ({
     version: SS.CONFIG_VERSION,
     settings: {
-      sessions: 1,
-      sessionGapMs: 5000,
+      sessionGapMs: 400,
       startTime: today10am(),
       noiseLines: 4,
       seed: 20261025,
@@ -120,23 +184,7 @@
       { name: 'accountNo', label: 'AcctNo', logKey: 'AccountNo', layers: ['host'], on: 'request', gen: 'pattern', genArg: '##########', scope: 'session', regex: '' },
     ],
 
-    scenario: [
-      node('ecomm', { api: '/api/v1/auth/login', ms: '15-40' }, [
-        node('enterprise', { api: 'CustomerLogin', ms: '10-30' }, [
-          node('host', { main: 'CL01', subs: 'A01', ms: '120-250' }),
-        ]),
-      ]),
-      node('ecomm', { api: '/api/v1/rules/eligibility', ms: '5-15' }),
-      node('ecomm', { api: '/api/v1/payment/transfer', ms: '20-60' }, [
-        node('enterprise', { api: 'AccountInquiry', ms: '10-30' }, [
-          node('ws', { api: 'https://enterprise-sit.internal/ws/accountInquiry', ms: '80-160' }),
-        ]),
-        node('enterprise', { api: 'FundTransfer', ms: '15-40' }, [
-          node('ws', { api: 'https://enterprise-sit.internal/ws/limitCheck', ms: '60-120' }),
-          node('host', { main: 'FT01', subs: 'A01,A02', ms: '150-300' }),
-        ]),
-      ]),
-    ],
+    scenarios: SS.defaultScenarios(),
   });
 
   // Fill in anything missing from an imported / older saved config.
@@ -147,14 +195,33 @@
       ...SS.newNode(n.layer in SS.CHILDREN ? n.layer : 'ecomm'), ...n,
       children: Array.isArray(n.children) ? n.children.map(fixNode) : [],
     });
+    const fixScenario = (s, i) => ({
+      ...SS.newScenario(`Scenario ${i + 1}`, []), ...s,
+      calls: Array.isArray(s.calls) ? s.calls.map(fixNode) : [],
+    });
+
+    let scenarios;
+    if (Array.isArray(c.scenarios)) {
+      scenarios = c.scenarios.map(fixScenario);
+    } else if (Array.isArray(c.scenario)) {
+      // Older configs had one call tree plus settings.sessions: keep it first, then add the built-ins.
+      const mine = { ...SS.newScenario('My scenario', c.scenario.map(fixNode)), sessions: Number(c.settings && c.settings.sessions) || 1 };
+      const sameAsDefault = JSON.stringify(mine.calls) === JSON.stringify(d.scenarios[0].calls);
+      scenarios = sameAsDefault ? d.scenarios : [mine, ...d.scenarios];
+    } else {
+      scenarios = d.scenarios;
+    }
+
+    const settings = { ...d.settings, ...(c.settings || {}) };
+    delete settings.sessions;
     return {
       version: SS.CONFIG_VERSION,
-      settings: { ...d.settings, ...(c.settings || {}) },
+      settings,
       layers,
       params: Array.isArray(c.params)
         ? c.params.map(p => ({ ...SS.newParam(), ...p, layers: Array.isArray(p.layers) ? p.layers : [] }))
         : d.params,
-      scenario: Array.isArray(c.scenario) ? c.scenario.map(fixNode) : d.scenario,
+      scenarios,
     };
   };
 
@@ -184,6 +251,7 @@
       if (l.sessionRegex && !SS.hasValueGroup(l.sessionRegex)) out.push(`Layer ${n}: session regex needs a (?<value>…) group`);
       if (l.apiRegex && !SS.hasValueGroup(l.apiRegex)) out.push(`Layer ${n}: API regex needs a (?<value>…) group`);
     });
+    if (SS.sessionPlan && !SS.sessionPlan(cfg).length) out.push('Scenarios: nothing to generate. Enable a scenario that has calls and at least 1 session.');
     if (!SS.hasValueGroup(cfg.settings.genericSessionRegex)) out.push('Settings: generic session regex needs a (?<value>…) group');
     cfg.params.forEach(p => {
       const e = SS.paramNameError(p.name, cfg);

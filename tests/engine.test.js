@@ -5,9 +5,15 @@ const { loadSS } = require('./load');
 const SS = loadSS();
 // Objects from the sandbox have a different Array/Object prototype; compare plain copies.
 const plain = v => JSON.parse(JSON.stringify(v));
+// Default config with only the first built-in scenario, so counts below are exact.
+const base = () => {
+  const cfg = SS.defaultConfig();
+  cfg.scenarios.forEach((sc, i) => { sc.enabled = i === 0; });
+  return cfg;
+};
 
 test('default scenario produces the expected flow with no config issues', () => {
-  const cfg = SS.defaultConfig();
+  const cfg = base();
   const events = SS.generate(cfg);
   const sim = SS.simulate(cfg, events);
 
@@ -26,8 +32,8 @@ test('default scenario produces the expected flow with no config issues', () => 
 });
 
 test('responses carry elapsed time and steps count per session', () => {
-  const cfg = SS.defaultConfig();
-  cfg.settings.sessions = 3;
+  const cfg = base();
+  cfg.scenarios[0].sessions = 3;
   cfg.settings.sessionGapMs = 200;
   const sim = SS.simulate(cfg, SS.generate(cfg));
   for (const r of sim.rows) {
@@ -43,7 +49,7 @@ test('responses carry elapsed time and steps count per session', () => {
 });
 
 test('same seed gives identical logs; a new seed changes them', () => {
-  const cfg = SS.defaultConfig();
+  const cfg = base();
   const a = SS.generate(cfg).map(e => e.raw);
   const b = SS.generate(cfg).map(e => e.raw);
   assert.deepEqual(a, b);
@@ -52,7 +58,7 @@ test('same seed gives identical logs; a new seed changes them', () => {
 });
 
 test('a broken regex is reported by the self-test', () => {
-  const cfg = SS.defaultConfig();
+  const cfg = base();
   cfg.layers.find(l => l.id === 'ws').requestRegex = 'NO-SUCH-TEXT';
   const sim = SS.simulate(cfg, SS.generate(cfg));
   const bad = sim.debug.filter(d => d.mismatch);
@@ -61,14 +67,14 @@ test('a broken regex is reported by the self-test', () => {
 });
 
 test('an invalid regex is surfaced as an error instead of throwing', () => {
-  const cfg = SS.defaultConfig();
+  const cfg = base();
   cfg.layers[0].apiRegex = '(?<value>[unclosed';
   const sim = SS.simulate(cfg, SS.generate(cfg));
   assert.equal(sim.errors.length, 1);
 });
 
 test('added parameters flow through mock logs, SPL and the Params column', () => {
-  const cfg = SS.defaultConfig();
+  const cfg = base();
   cfg.params.push({ ...SS.newParam(cfg), name: 'amount', label: 'Amt', layers: ['ecomm'], on: 'request', gen: 'number', genArg: '10-500:2' });
   const events = SS.generate(cfg);
   assert.ok(events.some(e => /amount="\d+\.\d{2}"/.test(e.raw)));
@@ -82,14 +88,14 @@ test('added parameters flow through mock logs, SPL and the Params column', () =>
 });
 
 test('removed parameters disappear everywhere', () => {
-  const cfg = SS.defaultConfig();
+  const cfg = base();
   cfg.params = cfg.params.filter(p => p.name !== 'transactionRef');
   assert.ok(!SS.generate(cfg).some(e => e.raw.includes('transactionRef')));
   assert.ok(!SS.buildSpl(cfg).includes('transactionRef'));
 });
 
 test('reserved and duplicate parameter names are rejected', () => {
-  const cfg = SS.defaultConfig();
+  const cfg = base();
   cfg.params.push({ ...SS.newParam(cfg), name: 'API' });
   cfg.params.push({ ...SS.newParam(cfg), name: 'httpStatus' });
   const issues = SS.configIssues(cfg).join('\n');
@@ -99,7 +105,7 @@ test('reserved and duplicate parameter names are rejected', () => {
 });
 
 test('pasted logs: timestamps with comma or dot milliseconds', () => {
-  const cfg = SS.defaultConfig();
+  const cfg = base();
   const sid = '25afb1c5-ac47-4646-b96c-36f77f8d7cb1';
   const text = [
     `2026-10-25 09:00:00,5 x [ECOMM-Message] sessionId ${sid} Request endpoint="/a"`,
@@ -112,7 +118,7 @@ test('pasted logs: timestamps with comma or dot milliseconds', () => {
 });
 
 test('SPL and test harness have the expected shape', () => {
-  const cfg = SS.defaultConfig();
+  const cfg = base();
   const spl = SS.buildSpl(cfg);
   assert.ok(spl.startsWith('(source='));
   assert.ok(spl.includes('`SEARCH_SESSION_ID`'));
@@ -129,21 +135,22 @@ test('SPL and test harness have the expected shape', () => {
 });
 
 test('quotes and backslashes in log lines are escaped in the harness', () => {
-  const cfg = SS.defaultConfig();
+  const cfg = base();
   const harness = SS.buildSpl(cfg, { events: [{ time: 0, raw: 'a "quoted" C:\\path' }] });
   assert.ok(harness.includes('"0.000~|~a \\"quoted\\" C:\\\\path"'));
 });
 
 test('imported configs are normalized and keep user changes', () => {
-  const cfg = SS.normalizeConfig({ settings: { sessions: 7 }, params: [{ name: 'x', layers: ['ecomm'] }] });
-  assert.equal(cfg.settings.sessions, 7);
+  const cfg = SS.normalizeConfig({ settings: { noiseLines: 7 }, params: [{ name: 'x', layers: ['ecomm'] }] });
+  assert.equal(cfg.settings.noiseLines, 7);
+  assert.equal(cfg.scenarios.length, SS.defaultScenarios().length);
   assert.equal(cfg.layers.length, 4);
   assert.equal(cfg.params[0].name, 'x');
   assert.equal(cfg.params[0].gen, 'pattern');
 });
 
 test('PlantUML sequence diagram follows the call stack', () => {
-  const cfg = SS.defaultConfig();
+  const cfg = base();
   const sim = SS.simulate(cfg, SS.generate(cfg));
   const puml = SS.buildPlantUml(cfg, sim.rows);
   const lines = puml.split('\n');
@@ -165,8 +172,8 @@ test('PlantUML sequence diagram follows the call stack', () => {
 });
 
 test('PlantUML marks calls that never got a response', () => {
-  const cfg = SS.defaultConfig();
-  cfg.scenario[2].children[1].children[1].noResponse = true; // FundTransfer -> Host FT01
+  const cfg = base();
+  cfg.scenarios[0].calls[2].children[1].children[1].noResponse = true; // FundTransfer -> Host FT01
   const sim = SS.simulate(cfg, SS.generate(cfg));
   const puml = SS.buildPlantUml(cfg, sim.rows);
   assert.ok(puml.includes('note over L_host : no response logged for FT01.A01,A02'));
@@ -175,8 +182,8 @@ test('PlantUML marks calls that never got a response', () => {
 });
 
 test('PlantUML draws one chosen session and honours the options', () => {
-  const cfg = SS.defaultConfig();
-  cfg.settings.sessions = 2;
+  const cfg = base();
+  cfg.scenarios[0].sessions = 2;
   cfg.settings.sessionGapMs = 100;
   const sim = SS.simulate(cfg, SS.generate(cfg));
   const sessions = SS.diagramSessions(sim.rows);
@@ -194,4 +201,73 @@ test('PlantUML with no rows still produces a valid diagram', () => {
   const puml = SS.buildPlantUml(SS.defaultConfig(), []);
   assert.ok(puml.startsWith('@startuml') && puml.endsWith('@enduml'));
   assert.ok(puml.includes('No flow rows to draw'));
+});
+
+test('every built-in scenario runs clean and lands in one mixed mock file', () => {
+  const cfg = SS.defaultConfig();
+  const events = SS.generate(cfg);
+  const sim = SS.simulate(cfg, events);
+  assert.deepEqual(plain(SS.configIssues(cfg)), []);
+  assert.equal(sim.debug.filter(d => d.mismatch).length, 0);
+
+  const names = SS.defaultScenarios().map(s => s.name);
+  const seen = new Set(events.map(e => e.scenario).filter(Boolean));
+  assert.deepEqual([...seen].sort(), [...names].sort(), 'every scenario present');
+  assert.equal(new Set(sim.rows.map(r => r.sessionId)).size, names.length, 'one session each');
+  assert.equal(events.length - sim.rows.length, cfg.settings.noiseLines, 'only noise filtered');
+
+  // Sessions overlap in time, so the file genuinely mixes scenarios rather than concatenating them.
+  const order = events.filter(e => e.scenario).map(e => e.scenario);
+  const switches = order.filter((s, i) => i > 0 && s !== order[i - 1]).length;
+  assert.ok(switches >= names.length - 1);
+});
+
+test('scenario shapes: rules only, Enterprise without Host, several Host services, timeout', () => {
+  const cfg = SS.defaultConfig();
+  const sim = SS.simulate(cfg, SS.generate(cfg));
+  const flows = sim.rows.map(r => r.flow);
+  assert.ok(flows.includes('eComm: /api/v1/offers/personalised [!]'));
+  assert.ok(flows.includes('--> Enterprise: UpdateProfile [!]'));
+  assert.ok(flows.includes('-----> Host: AS01.A01 [?]') && flows.includes('-----> Host: AS02.B01,B02 [?]'));
+  assert.ok(flows.includes('-----> Host: BP01.A01,A02,A03 [!]'));
+
+  const events = SS.generate(cfg);
+  const timeout = events.filter(e => e.scenario === 'Fund transfer with Host timeout' && e.raw.includes('<SvcCode>FT01'));
+  assert.equal(timeout.length, 1, 'request logged, response missing');
+  assert.match(timeout[0].raw, /Request Message/);
+});
+
+test('sessions per scenario, disabling and round-robin order', () => {
+  const cfg = SS.defaultConfig();
+  cfg.scenarios.forEach((sc, i) => { sc.enabled = i < 2; });
+  cfg.scenarios[0].sessions = 3;
+  cfg.scenarios[1].sessions = 1;
+  assert.deepEqual(plain(SS.sessionPlan(cfg).map(s => s.name)),
+    [cfg.scenarios[0].name, cfg.scenarios[1].name, cfg.scenarios[0].name, cfg.scenarios[0].name]);
+
+  const sim = SS.simulate(cfg, SS.generate(cfg));
+  assert.equal(new Set(sim.rows.map(r => r.sessionId)).size, 4);
+
+  cfg.scenarios.forEach(sc => { sc.enabled = false; });
+  assert.equal(SS.generate(cfg).length, 0);
+  assert.match(SS.configIssues(cfg).join('\n'), /nothing to generate/);
+});
+
+test('older single-scenario configs migrate into the scenario list', () => {
+  const old = { settings: { sessions: 4 }, scenario: [{ layer: 'ecomm', api: '/legacy', children: [] }] };
+  const cfg = SS.normalizeConfig(old);
+  assert.equal(cfg.scenarios[0].name, 'My scenario');
+  assert.equal(cfg.scenarios[0].sessions, 4);
+  assert.equal(cfg.scenarios[0].calls[0].api, '/legacy');
+  assert.equal(cfg.scenarios.length, 1 + SS.defaultScenarios().length);
+  assert.equal(cfg.settings.sessions, undefined);
+
+  const untouched = SS.normalizeConfig({ scenario: JSON.parse(JSON.stringify(SS.defaultScenarios()[0].calls)) });
+  assert.equal(untouched.scenarios.length, SS.defaultScenarios().length, 'unchanged old default is not duplicated');
+});
+
+test('PlantUML title carries the scenario name', () => {
+  const cfg = base();
+  const sim = SS.simulate(cfg, SS.generate(cfg));
+  assert.match(SS.buildPlantUml(cfg, sim.rows, { label: 'Bill payment' }), /^title Transaction flow - Bill payment - session /m);
 });

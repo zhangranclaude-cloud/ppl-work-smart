@@ -31,7 +31,15 @@ Step  EventTime                Flow                                          Par
 
 ## Features
 
-- **Scenario builder:** build the call tree. Each eComm API calls zero or more Enterprise APIs. Each Enterprise API calls zero or more WS calls and Host services, and a Host service is one main SvcCode with sub-codes. You can set latencies, number of sessions, interleaving, noise lines and timeouts.
+- **Multiple scenarios:** each named scenario has its own call tree, an on/off switch and a session count, and the mock file mixes all enabled scenarios in time order (sessions overlap, as they do in production). Each eComm API calls zero or more Enterprise APIs; each Enterprise API calls zero or more WS calls and Host services, and a Host service is one main SvcCode with sub-codes. You can set latencies, noise lines and timeouts. Six scenarios are built in:
+  | Scenario | What it covers |
+  |---|---|
+  | Login, eligibility and fund transfer | Rules-only call, two Enterprise APIs, WS then Host |
+  | Bill payment | WS lookup, then a Host service with three sub-codes |
+  | Account summary (several Host services) | One Enterprise API calling a WS and two Host services |
+  | Rules only (no Enterprise call) | eComm APIs that never reach Enterprise |
+  | Profile update (Enterprise, no Host) | An Enterprise API with no WS or Host call |
+  | Fund transfer with Host timeout | A Host request with no response logged |
 - **Dynamic parameters:** add or remove a parameter, and it is written into the mock logs, extracted with its own `rex`, and shown in the `Params` column. Its value can come from a pattern, a list, a number, a UUID or a sequence, and can be reused per line, per call, per call tree or per session.
 - **Editable log layers:** the classify, session, direction and API regexes and the log templates for each log type, so they can match your real format.
 - **Flow result and extraction debug:** an in-browser run of the generated query, with a self-test that checks every mock line was handled as intended.
@@ -78,7 +86,7 @@ npm test        # engine and security tests (Node's built-in runner)
 
 ## How to use it
 
-1. **Scenario:** describe the call flow you want to test.
+1. **Scenario:** tick the scenarios to include, set sessions for each, and edit or add call flows.
 2. **Parameters:** add the values you want stamped on each line.
 3. **Log Layers:** make the regexes and templates match your real logs. Pasting real lines into **Input Logs** and watching **Extraction Debug** is the quickest way to do this.
 4. Check **Flow Result** (and the **Sequence Diagram** if you want a picture of it), then copy the **Splunk Query** to run on your indexes.

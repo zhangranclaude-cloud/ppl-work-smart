@@ -168,18 +168,84 @@
 
   function renderScenario() {
     const s = cfg.settings;
+    const list = cfg.scenarios;
+    if (!(ui.scenarioIdx >= 0 && ui.scenarioIdx < list.length)) ui.scenarioIdx = 0;
+    const cur = list[ui.scenarioIdx];
+    const total = SS.sessionPlan(cfg).length;
+    const select = i => { ui.scenarioIdx = i; saveUi(); renderConfig(); };
     return h('div', {},
       h('div', { class: 'grid2' },
-        fText('Sessions', s, 'sessions', { type: 'number', min: 1 }),
-        fText('Gap between sessions (ms)', s, 'sessionGapMs', { type: 'number', min: 0, hint: 'Smaller than a session’s duration → sessions interleave' }),
+        fText('Gap between sessions (ms)', s, 'sessionGapMs', { type: 'number', min: 0, hint: 'Smaller than a session’s duration → sessions overlap' }),
         fText('Start time', s, 'startTime', { type: 'datetime-local', step: 1 }),
-        fText('Noise lines', s, 'noiseLines', { type: 'number', min: 0, hint: 'Unrelated lines the query must ignore' })),
-      h('div', { class: 'row end' },
-        fText('Random seed', s, 'seed', { type: 'number' }),
-        btn('New random seed', () => { s.seed = Math.floor(Math.random() * 1e9); rerenderConfig(); })),
-      h('h3', {}, 'Call flow'),
-      h('p', { class: 'muted' }, 'Calls run top to bottom. Each call logs a request, runs its children in order, then logs its response.'),
-      nodeList(cfg.scenario, ['ecomm']));
+        fText('Noise lines', s, 'noiseLines', { type: 'number', min: 0, hint: 'Unrelated lines the query must ignore' }),
+        h('div', { class: 'row end' },
+          fText('Random seed', s, 'seed', { type: 'number' }),
+          iconBtn('🎲', 'New random seed', false, () => { s.seed = Math.floor(Math.random() * 1e9); rerenderConfig(); }))),
+      h('h3', {}, 'Scenarios'),
+      h('p', { class: 'muted' }, `Every ticked scenario adds its sessions to the mock logs, mixed together in time order: ${total} session${total === 1 ? '' : 's'} in total. Click a scenario to edit its call flow.`),
+      h('div', { class: 'scen-list' }, list.map((sc, i) => scenarioRow(sc, i, list, select))),
+      h('div', { class: 'addrow' },
+        btn('+ New scenario', () => { list.push(SS.newScenario(`Scenario ${list.length + 1}`)); select(list.length - 1); changed(); }, 'small'),
+        btn('Restore built-in scenarios', () => {
+          const have = new Set(list.map(x => x.name));
+          const missing = SS.defaultScenarios().filter(x => !have.has(x.name));
+          if (!missing.length) { alert('All built-in scenarios are already in the list.'); return; }
+          list.push(...missing);
+          rerenderConfig();
+        }, 'small')),
+      cur ? h('div', { class: 'scen-editor' },
+        h('h3', {}, 'Call flow'),
+        fText('Scenario name', cur, 'name', { commit: renderConfig }),
+        h('p', { class: 'muted' }, 'Calls run top to bottom. Each call logs a request, runs its children in order, then logs its response.'),
+        nodeList(cur.calls, ['ecomm']))
+        : h('div', { class: 'empty' }, 'No scenarios yet. Add one to generate mock logs.'));
+  }
+
+  function scenarioRow(sc, i, list, select) {
+    const move = j => { [list[i], list[j]] = [list[j], list[i]]; ui.scenarioIdx = j; saveUi(); rerenderConfig(); };
+    const calls = countCalls(sc.calls);
+    const sessions = h('input', {
+      class: 'inp sessions', type: 'number', min: 0, max: 200, title: 'Sessions', 'aria-label': `Sessions for ${sc.name}`,
+      oninput: e => { sc.sessions = e.target.value === '' ? 0 : Number(e.target.value); changed(); },
+    });
+    sessions.value = sc.sessions;
+    return h('div', { class: 'scen' + (i === ui.scenarioIdx ? ' selected' : '') },
+      h('input', {
+        type: 'checkbox', title: 'Include in mock logs', 'aria-label': `Include ${sc.name}`, checked: sc.enabled !== false,
+        onchange: e => { sc.enabled = e.target.checked; changed(); },
+      }),
+      h('button', { class: 'scen-name', onclick: () => select(i), title: 'Edit call flow' },
+        h('span', {}, sc.name || '(unnamed)'), h('span', { class: 'muted small' }, `${calls} call${calls === 1 ? '' : 's'}`)),
+      sessions, h('span', { class: 'muted small' }, 'sessions'),
+      iconBtn('↑', 'Move up', i === 0, () => move(i - 1)),
+      iconBtn('↓', 'Move down', i === list.length - 1, () => move(i + 1)),
+      iconBtn('⧉', 'Duplicate', false, () => {
+        list.splice(i + 1, 0, { ...JSON.parse(JSON.stringify(sc)), name: sc.name + ' (copy)' });
+        select(i + 1);
+        changed();
+      }),
+      iconBtn('✕', 'Remove', false, () => {
+        if (calls && !confirm(`Remove the scenario "${sc.name}"?`)) return;
+        list.splice(i, 1);
+        if (ui.scenarioIdx >= list.length) ui.scenarioIdx = list.length - 1;
+        saveUi();
+        rerenderConfig();
+      }));
+  }
+
+  function countCalls(nodes) {
+    return (nodes || []).reduce((n, x) => n + 1 + countCalls(x.children), 0);
+  }
+
+  // Session id -> scenario name, known only for generated logs.
+  function scenarioNames() {
+    const m = {};
+    if (ui.source !== 'pasted') for (const e of state.mock) if (e.sessionId && e.scenario) m[e.sessionId] = e.scenario;
+    return m;
+  }
+
+  function sessionOption(sid, names) {
+    return h('option', { value: sid }, names[sid] ? `${names[sid]} · ${sid.slice(0, 8)}` : sid);
   }
 
   function nodeList(arr, childLayers) {
@@ -365,12 +431,15 @@
     if (ui.session && !sessions.includes(ui.session)) ui.session = '';
     const rows = ui.session ? sim.rows.filter(r => r.sessionId === ui.session) : sim.rows;
     const dropped = sim.debug.filter(d => d.status !== 'kept').length;
+    const names = scenarioNames();
+    const hasNames = Object.keys(names).length > 0;
     const sel = h('select', { class: 'inp compact', onchange: e => { ui.session = e.target.value; saveUi(); renderOutput(); } },
       h('option', { value: '' }, `All sessions (${sessions.length})`),
-      sessions.map(s => h('option', { value: s }, s)));
+      sessions.map(s => sessionOption(s, names)));
     sel.value = ui.session;
-    const csv = () => [['Step', 'EventTime', 'sessionId', 'Flow', 'Params', 'ElapsedMs'],
-      ...rows.map(r => [r.step, r.eventTime, r.sessionId, r.flow, r.params, r.elapsed])]
+    const header = ['Step', 'EventTime', ...(hasNames ? ['Scenario'] : []), 'sessionId', 'Flow', 'Params', 'ElapsedMs'];
+    const csv = () => [header,
+      ...rows.map(r => [r.step, r.eventTime, ...(hasNames ? [names[r.sessionId] || ''] : []), r.sessionId, r.flow, r.params, r.elapsed])]
       .map(r => r.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
     const copyBtn = btn('Copy CSV', () => copyText(csv(), copyBtn), 'small');
     return h('div', {},
@@ -382,10 +451,11 @@
         btn('Download CSV', () => download('ppl-work-smart-flow.csv', csv(), 'text/csv'), 'small')),
       rows.length
         ? h('div', { class: 'table-wrap' }, h('table', { class: 'grid' },
-          h('thead', {}, h('tr', {}, ['Step', 'EventTime', 'sessionId', 'Flow', 'Params', 'ElapsedMs'].map(t => h('th', {}, t)))),
+          h('thead', {}, h('tr', {}, header.map(t => h('th', {}, t)))),
           h('tbody', {}, rows.map(r => h('tr', { class: colorClass(r.layerIdx) },
             h('td', { class: 'num' }, r.step ?? ''),
             h('td', { class: 'mono nowrap' }, r.eventTime),
+            hasNames ? h('td', { class: 'small nowrap' }, names[r.sessionId] || '') : null,
             h('td', { class: 'mono small', title: r.sessionId || '' }, r.sessionId ? r.sessionId.slice(0, 8) + '…' : ''),
             h('td', { class: 'mono flow nowrap' }, r.flow),
             h('td', { class: 'mono small' }, r.params),
@@ -399,11 +469,12 @@
     if (!sessions.includes(ui.diagramSession)) ui.diagramSession = sessions[0] || '';
     ui.puml = Object.assign({ caller: 'App', params: true, time: false, elapsed: true, autonumber: true }, ui.puml || {});
     const opts = ui.puml;
-    const puml = SS.buildPlantUml(cfg, rows, { ...opts, sessionId: ui.diagramSession });
+    const names = scenarioNames();
+    const puml = SS.buildPlantUml(cfg, rows, { ...opts, sessionId: ui.diagramSession, label: names[ui.diagramSession] });
     const rerender = () => { saveUi(); renderOutput(); };
 
     const sel = h('select', { class: 'inp compact', onchange: e => { ui.diagramSession = e.target.value; rerender(); } },
-      sessions.map(s => h('option', { value: s }, s)));
+      sessions.map(s => sessionOption(s, names)));
     sel.value = ui.diagramSession;
     const opt = (key, label) => h('label', { class: 'chk' },
       h('input', { type: 'checkbox', checked: !!opts[key], onchange: e => { opts[key] = e.target.checked; rerender(); } }), h('span', {}, label));
@@ -461,15 +532,20 @@
 
   function viewLogs() {
     const files = [...new Set(state.mock.map(e => e.file))];
+    const scenarios = [...new Set(state.mock.map(e => e.scenario).filter(Boolean))];
     if (ui.logFile && !files.includes(ui.logFile)) ui.logFile = '';
-    const events = ui.logFile ? state.mock.filter(e => e.file === ui.logFile) : state.mock;
+    if (ui.logScenario && !scenarios.includes(ui.logScenario)) ui.logScenario = '';
+    const events = state.mock.filter(e => (!ui.logFile || e.file === ui.logFile) && (!ui.logScenario || e.scenario === ui.logScenario));
     const text = events.map(e => e.raw).join('\n');
-    const sel = h('select', { class: 'inp compact', onchange: e => { ui.logFile = e.target.value; saveUi(); renderOutput(); } },
+    const sel = h('select', { class: 'inp compact', 'aria-label': 'Log file', onchange: e => { ui.logFile = e.target.value; saveUi(); renderOutput(); } },
       h('option', { value: '' }, 'All files, merged by time'), files.map(f => h('option', { value: f }, f)));
     sel.value = ui.logFile;
+    const scenSel = h('select', { class: 'inp compact', 'aria-label': 'Scenario', onchange: e => { ui.logScenario = e.target.value; saveUi(); renderOutput(); } },
+      h('option', { value: '' }, `All scenarios (${scenarios.length}) + noise`), scenarios.map(s => h('option', { value: s }, s)));
+    scenSel.value = ui.logScenario || '';
     const copyBtn = btn('Copy', () => copyText(text, copyBtn), 'small');
     return h('div', {},
-      h('div', { class: 'toolbar' }, sel, h('span', { class: 'spacer' }), copyBtn,
+      h('div', { class: 'toolbar' }, sel, scenSel, h('span', { class: 'spacer' }), copyBtn,
         btn('Download', () => download(ui.logFile || 'ppl-work-smart-mock.log', text + '\n'), 'small'),
         btn('Download each file', () => files.forEach(f => download(f, state.mock.filter(e => e.file === f).map(e => e.raw).join('\n') + '\n')), 'small')),
       h('div', { class: 'legend' }, cfg.layers.map(l => badge(l.id)), h('span', { class: 'badge cn' }, 'noise')),
