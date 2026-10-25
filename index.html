@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ppl Work Smart</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <h1>Ppl Work Smart</h1>
+      <p>Mock transaction-flow logs, build the flow query, and test it before it touches Splunk.</p>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section id="cfg" class="panel" aria-label="Configuration"></section>
+    <section id="out" class="panel" aria-label="Output"></section>
+  </main>
+
+  <input id="import" type="file" accept="application/json,.json" hidden>
+
+  <script src="js/util.js"></script>
+  <script src="js/defaults.js"></script>
+  <script src="js/generator.js"></script>
+  <script src="js/simulator.js"></script>
+  <script src="js/spl.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
