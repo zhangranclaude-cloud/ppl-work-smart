@@ -80,7 +80,7 @@ npm test        # engine and security tests (Node's built-in runner)
 1. **Scenario:** describe the call flow you want to test.
 2. **Parameters:** add the values you want stamped on each line.
 3. **Log Layers:** make the regexes and templates match your real logs. Pasting real lines into **Input Logs** and watching **Extraction Debug** is the quickest way to do this.
-4. Check **Flow Result**, then copy the **SPL Query** to run on your indexes.
+4. Check **Flow Result**, then copy the **Splunk Query** to run on your indexes.
 5. To prove the query in real Splunk, copy the **Splunk Test Harness**, run it in Splunk Search, and compare the output with Flow Result.
 
 Your config saves in the browser automatically. Use **Settings → Export / Import config** to share it.

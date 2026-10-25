@@ -340,7 +340,7 @@
       ['result', 'Flow Result', sim.rows.length],
       ['debug', 'Extraction Debug', problems || null],
       ['logs', 'Mock Logs', state.mock.length],
-      ['spl', 'SPL Query'],
+      ['spl', 'Splunk Query'],
       ['harness', 'Splunk Test Harness'],
     ];
     const views = { result: viewResult, debug: viewDebug, logs: viewLogs, spl: viewSpl, harness: viewHarness };
