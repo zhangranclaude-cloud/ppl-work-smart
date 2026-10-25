@@ -1,0 +1,11 @@
+node_modules/
+_site/
+*.log
+!tests/**/*.log
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+# local exports that may contain real log data
+ppl-work-smart-*.json
+ppl-work-smart-*.csv

@@ -124,7 +124,9 @@
     try {
       await navigator.clipboard.writeText(text);
     } catch (e) {
-      const ta = h('textarea', { style: 'position:fixed;opacity:0' });
+      const ta = h('textarea', {});
+      ta.style.position = 'fixed'; // set via CSSOM: the CSP blocks inline style attributes
+      ta.style.opacity = '0';
       ta.value = text;
       document.body.append(ta);
       ta.select();

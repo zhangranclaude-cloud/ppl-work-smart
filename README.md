@@ -1,55 +1,125 @@
 # Ppl Work Smart
 
-A browser tool for building and testing the transaction-flow Splunk query
-(eComm → Enterprise → WS / Host) before running it on real indexes.
+[![CI/CD](https://github.com/zhangranclaude-cloud/ppl-work-smart/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/zhangranclaude-cloud/ppl-work-smart/actions/workflows/ci-cd.yml)
+[![GitHub Pages](https://img.shields.io/badge/demo-GitHub%20Pages-222222?logo=githubpages&logoColor=white)](https://zhangranclaude-cloud.github.io/ppl-work-smart/)
+![HTML5](https://img.shields.io/badge/HTML5-E34F26?logo=html5&logoColor=white)
+![CSS3](https://img.shields.io/badge/CSS3-1572B6?logo=css3&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-ES2020-F7DF1E?logo=javascript&logoColor=black)
+![Splunk SPL](https://img.shields.io/badge/Splunk-SPL-000000?logo=splunk&logoColor=white)
+![Node.js tests](https://img.shields.io/badge/tests-Node.js%20%E2%89%A520-339933?logo=nodedotjs&logoColor=white)
+![GitHub Actions](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-2088FF?logo=githubactions&logoColor=white)
+![CodeQL](https://img.shields.io/badge/scan-CodeQL%20%2B%20gitleaks-6E40C9?logo=github&logoColor=white)
+![Dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)
+![Privacy](https://img.shields.io/badge/data-stays%20in%20your%20browser-success)
 
-## Run it
+Generate mock transaction-flow logs, build the Splunk flow query, and test it before it touches Splunk.
 
-Open `index.html` in a browser (double-click it). There's no build step, no server and nothing to install.
-Your config saves in the browser automatically. Use **Settings → Export config** to share it or keep a copy.
-
-## What it does
-
-| Left panel | |
-|---|---|
-| **Scenario** | Build the call tree. Each eComm API can call any number of Enterprise APIs (or none, if it only runs rules). Each Enterprise API can call any number of WS calls and Host services (or none). A Host service is one main SvcCode plus one or more sub-codes. Set latencies, the number of sessions, interleaving and noise lines, or mark a call as "no response" to simulate a timeout. |
-| **Parameters** | Add or remove parameters. Each one is written into the mock logs, extracted by its own `rex` in the SPL, and stamped into the `Params` column. You choose which layers it applies to, whether it's written on the request, the response or both, how its value is generated, and how the value is reused (per line, per call, per call tree, per session). |
-| **Log Layers** | One card per log type: the base-search source and terms, the classify / session / direction / API regexes, and the mock log templates. Change these to match your real log format. |
-| **Settings** | Session filter macro, the `?` / `!` symbols, fallback regexes, SPL comments on or off, and config import / export / reset. |
-| **Input Logs** | Switch from mock logs to **your own pasted log lines**, so you can check the regexes against real data. |
-
-| Right panel | |
-|---|---|
-| **Flow Result** | The table the query would produce: Step, EventTime, sessionId, the indented Flow, Params and ElapsedMs. A self-test chip shows whether every mock line was handled the way it was written. |
-| **Extraction Debug** | For each input line: the layer it was written as, the layer it was classified as, and the direction, session, API and params extracted, plus why a line was filtered out. |
-| **Mock Logs** | The generated logs, color-coded by layer. Copy them, or download one `.log` per source file. |
-| **SPL Query** | The production query, generated from the config. Copy it and run it on real indexes. |
-| **Splunk Test Harness** | The same query with the test lines built in through `makeresults`. Paste it into Splunk Search to run the **real** query on the mock or pasted lines without indexing anything. The output should match the Flow Result tab. |
-
-## How "testing the query" works
-
-- **In the browser:** `js/simulator.js` runs the same steps as the generated SPL (`js/spl.js`): classify, rex, direction, sort, API inheritance, params, elapsed time, render. Regex mistakes show up straight away in Flow Result and Extraction Debug.
-- **In Splunk:** the Test Harness is the final check, because it runs the real SPL on the real Splunk engine against known input.
-
-The simulator only mirrors the query this tool generates. It isn't a general SPL interpreter, so hand edits to the SPL aren't simulated.
-
-## Notes
-
-- Regexes are written the way Splunk (PCRE) uses them. Capture the value with a group named `(?<value>…)`; the tool renames it to the right Splunk field. A leading `(?i)` is supported in both the browser and Splunk.
-- Layers are checked top to bottom, and an event goes to the first layer whose classify regex matches. That's why Host comes before WS: both come from the microservice logs.
-- Pasted logs need one event per line. Join multi-line XML onto a single line first.
-- `streamstats` pairing (elapsed time, WS URL inheritance) assumes calls to the same API don't overlap within one session.
-- The ```` ``` ```` step comments need Splunk 8.0+. Turn them off in Settings for older versions.
-
-## Files
+The flow it models: **eComm API → Enterprise API → WS (web service) / Host service**. A request is stamped `[?]`, a response `[!]`, and every line is ordered by timestamp, with any parameters you choose shown on the line.
 
 ```
-index.html          page shell
-css/style.css       styles (light and dark)
-js/util.js          seeded random, time formatting, regex helpers
-js/defaults.js      default layers, parameters, scenario; validation
-js/generator.js     mock log generation, pasted-log parsing
-js/simulator.js     in-browser run of the query pipeline
-js/spl.js           SPL + test-harness builder
-js/app.js           UI
+Step  EventTime                Flow                                          Params                  ElapsedMs
+1     2026-10-25 10:00:00.398  eComm: /api/v1/payment/transfer [?]           TxnRefNo=TX1917377922
+2     2026-10-25 10:00:00.401  --> Enterprise: AccountInquiry [?]            TxnRefNo=TX1917377922
+3     2026-10-25 10:00:00.407  -----> WS: https://…/ws/accountInquiry [?]
+4     2026-10-25 10:00:00.546  -----> WS: https://…/ws/accountInquiry [!]                            139
+5     2026-10-25 10:00:00.704  -----> Host: FT01.A01,A02 [?]                 AcctNo=1722464163
+6     2026-10-25 10:00:00.938  -----> Host: FT01.A01,A02 [!]                                         234
+7     2026-10-25 10:00:00.995  eComm: /api/v1/payment/transfer [!]           TxnRefNo=…; HTTP=200    597
+```
+
+**▶ Live app: https://zhangranclaude-cloud.github.io/ppl-work-smart/**
+
+## Features
+
+- **Scenario builder:** build the call tree. Each eComm API calls zero or more Enterprise APIs. Each Enterprise API calls zero or more WS calls and Host services, and a Host service is one main SvcCode with sub-codes. You can set latencies, number of sessions, interleaving, noise lines and timeouts.
+- **Dynamic parameters:** add or remove a parameter, and it is written into the mock logs, extracted with its own `rex`, and shown in the `Params` column. Its value can come from a pattern, a list, a number, a UUID or a sequence, and can be reused per line, per call, per call tree or per session.
+- **Editable log layers:** the classify, session, direction and API regexes and the log templates for each log type, so they can match your real format.
+- **Flow result and extraction debug:** an in-browser run of the generated query, with a self-test that checks every mock line was handled as intended.
+- **SPL generator:** the production query, ready to paste into Splunk.
+- **Splunk test harness:** the same query with your test lines built in through `makeresults`, so the real query runs in Splunk without indexing anything.
+- **Bring your own logs:** paste real lines to check the regexes against them.
+- **Private by design:** no backend, no network requests (enforced by CSP), and nothing leaves your browser. See [SECURITY.md](SECURITY.md).
+
+## Install
+
+There's nothing to build and no dependencies.
+
+```bash
+git clone https://github.com/zhangranclaude-cloud/ppl-work-smart.git
+cd ppl-work-smart
+```
+
+You need a modern browser (Edge, Chrome, Firefox, Safari). [Node.js](https://nodejs.org/) 20+ is only needed to run the tests, and `npm install` isn't required.
+
+## Run
+
+**Online:** open the [live app](https://zhangranclaude-cloud.github.io/ppl-work-smart/).
+
+**Locally:** pick one.
+
+```bash
+# 1. Open the file directly
+start index.html          # Windows
+open index.html           # macOS
+xdg-open index.html       # Linux
+
+# 2. Or serve it on localhost
+python -m http.server 8080 --bind 127.0.0.1    # or: npm start
+# then browse to http://127.0.0.1:8080
+```
+
+**Tests:**
+
+```bash
+npm run check   # syntax check
+npm test        # engine and security tests (Node's built-in runner)
+```
+
+## How to use it
+
+1. **Scenario:** describe the call flow you want to test.
+2. **Parameters:** add the values you want stamped on each line.
+3. **Log Layers:** make the regexes and templates match your real logs. Pasting real lines into **Input Logs** and watching **Extraction Debug** is the quickest way to do this.
+4. Check **Flow Result**, then copy the **SPL Query** to run on your indexes.
+5. To prove the query in real Splunk, copy the **Splunk Test Harness**, run it in Splunk Search, and compare the output with Flow Result.
+
+Your config saves in the browser automatically. Use **Settings → Export / Import config** to share it.
+
+## How testing works
+
+`js/simulator.js` runs the same steps as the generated SPL (`js/spl.js`): classify, `rex`, direction, sort, API inheritance, params, elapsed time and render. Regex mistakes therefore show up straight away. The Test Harness is the final check, because it runs the real SPL on Splunk against known input.
+
+The simulator only mirrors the query this tool generates; it isn't a general SPL interpreter.
+
+**Things to know:**
+- Regexes are PCRE-style, as in Splunk. Capture with `(?<value>…)`, and the tool renames the group to the right field.
+- Layers are checked top to bottom, and an event belongs to the first layer whose classify regex matches.
+- Pasted logs need one event per line.
+- Elapsed-time pairing assumes calls to the same API don't overlap within one session.
+- The ```` ``` ```` step comments need Splunk 8.0+. Turn them off in Settings for older versions.
+
+## CI/CD
+
+[`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml) runs on every push and pull request, and weekly:
+
+| Job | |
+|---|---|
+| Test | Syntax check plus `npm test` |
+| Secret scan | gitleaks over the full git history |
+| CodeQL | `security-extended` analysis of the JavaScript and the workflows |
+| Deploy | On `main` only, after all checks pass, publishes `index.html`, `css/` and `js/` to GitHub Pages |
+
+## Project structure
+
+```
+index.html              page shell and Content-Security-Policy
+css/style.css           styles (light and dark)
+js/util.js              seeded random, time formatting, regex helpers
+js/defaults.js          default layers, parameters, scenario; validation
+js/generator.js         mock log generation, pasted-log parsing
+js/simulator.js         in-browser run of the query pipeline
+js/spl.js               SPL and test-harness builder
+js/app.js               UI
+tests/                  engine and security tests (node:test)
+.github/                CI/CD workflow and Dependabot
 ```
