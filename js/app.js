@@ -510,7 +510,57 @@
         opt('params', 'Params on arrows'), opt('elapsed', 'Elapsed time on responses'),
         opt('time', 'Timestamps'), opt('autonumber', 'Number the steps')),
       h('p', { class: 'muted' }, 'Built from the Flow Result, one session per diagram. Render it with the PlantUML extension in VS Code or IntelliJ, or with plantuml.jar. Nothing is sent to a PlantUML server.'),
-      h('pre', { class: 'code' }, puml));
+      h('h4', {}, 'PlantUML code'),
+      h('pre', { class: 'code puml' }, puml),
+      diagramPreview(puml, ui.diagramSession));
+  }
+
+  // Canvas text measurement so the SVG layout fits labels exactly.
+  let measureCtx = null;
+  function measure(s) {
+    if (!measureCtx) {
+      measureCtx = document.createElement('canvas').getContext('2d');
+      if (measureCtx) measureCtx.font = SS.SEQ_FONT;
+    }
+    return measureCtx ? measureCtx.measureText(String(s)).width : String(s).length * 6.8;
+  }
+
+  function diagramPreview(puml, sid) {
+    const layout = SS.layoutSequence(SS.parsePlantUml(puml), measure);
+    const svgBtn = btn('Download .svg', () => download(
+      'ppl-work-smart-sequence' + (sid ? '-' + sid.slice(0, 8) : '') + '.svg',
+      SS.sequenceSvgString(layout), 'image/svg+xml'), 'small');
+    return h('div', {},
+      h('div', { class: 'toolbar preview-head' },
+        h('h4', {}, 'Diagram'),
+        h('span', { class: 'muted small' }, 'Drawn in your browser from the code above. Rendering can differ slightly from PlantUML’s own output.'),
+        h('span', { class: 'spacer' }), svgBtn),
+      h('div', { class: 'seq-wrap' }, svgElement(layout)));
+  }
+
+  function svgElement(layout) {
+    const NS = 'http://www.w3.org/2000/svg';
+    const el = (tag, attrs) => {
+      const e = document.createElementNS(NS, tag);
+      for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+      return e;
+    };
+    const svg = el('svg', {
+      class: 'seq-svg', width: layout.width, height: layout.height,
+      viewBox: `0 0 ${layout.width} ${layout.height}`, role: 'img', 'aria-label': 'Sequence diagram',
+    });
+    for (const s of layout.shapes) {
+      if (s.t === 'line') svg.append(el('line', { class: s.c, x1: s.x1, y1: s.y1, x2: s.x2, y2: s.y2 }));
+      else if (s.t === 'rect') svg.append(el('rect', { class: s.c, x: s.x, y: s.y, width: s.w, height: s.h, rx: s.rx || 0 }));
+      else if (s.t === 'circle') svg.append(el('circle', { class: s.c, cx: s.cx, cy: s.cy, r: s.r }));
+      else if (s.t === 'poly') svg.append(el('polygon', { class: s.c, points: s.pts.map(p => p.join(',')).join(' ') }));
+      else if (s.t === 'text') {
+        const t = el('text', { class: s.c, x: s.x, y: s.y, 'text-anchor': s.a });
+        t.textContent = s.s;
+        svg.append(t);
+      }
+    }
+    return svg;
   }
 
   function viewDebug() {

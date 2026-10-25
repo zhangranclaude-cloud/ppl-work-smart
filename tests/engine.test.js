@@ -271,3 +271,51 @@ test('PlantUML title carries the scenario name', () => {
   const sim = SS.simulate(cfg, SS.generate(cfg));
   assert.match(SS.buildPlantUml(cfg, sim.rows, { label: 'Bill payment' }), /^title Transaction flow - Bill payment - session /m);
 });
+
+test('local renderer parses the generated PlantUML', () => {
+  const cfg = base();
+  const puml = SS.buildPlantUml(cfg, SS.simulate(cfg, SS.generate(cfg)).rows);
+  const d = SS.parsePlantUml(puml);
+  assert.match(d.title, /^Transaction flow - session /);
+  assert.ok(d.autonumber && d.responseBelow);
+  assert.deepEqual(plain(d.participants.map(p => [p.alias, p.label, p.kind])), [
+    ['Caller', 'App', 'actor'], ['L_ecomm', 'eComm', 'participant'], ['L_enterprise', 'Enterprise', 'participant'],
+    ['L_host', 'Host', 'participant'], ['L_ws', 'WS', 'participant'],
+  ]);
+  const msgs = d.items.filter(i => i.type === 'msg');
+  assert.equal(msgs.length, 20);
+  assert.deepEqual(plain(msgs[0]), { type: 'msg', from: 'Caller', to: 'L_ecomm', dashed: false, text: ['/api/v1/auth/login [?]', msgs[0].text[1]] });
+  assert.match(msgs[0].text[1], /^TxnRefNo=TX\d{10}$/);
+  assert.equal(d.items.filter(i => i.type === 'activate').length, d.items.filter(i => i.type === 'deactivate').length);
+});
+
+test('local renderer lays out every message top to bottom without overlaps', () => {
+  const cfg = SS.defaultConfig();
+  const sim = SS.simulate(cfg, SS.generate(cfg));
+  for (const sid of SS.diagramSessions(sim.rows)) {
+    const d = SS.parsePlantUml(SS.buildPlantUml(cfg, sim.rows, { sessionId: sid }));
+    const L = SS.layoutSequence(d);
+    const arrows = L.shapes.filter(s => s.t === 'line' && /seq-msg/.test(s.c));
+    assert.equal(arrows.length, d.items.filter(i => i.type === 'msg').length);
+    for (let i = 1; i < arrows.length; i++) assert.ok(arrows[i].y1 > arrows[i - 1].y1, 'arrows move down');
+    for (const s of L.shapes) {
+      const xs = s.t === 'poly' ? s.pts.map(p => p[0]) : [s.x ?? s.x1 ?? s.cx, s.x2 ?? s.x ?? s.cx];
+      for (const x of xs) assert.ok(x >= 0 && x <= L.width, 'inside the canvas');
+    }
+    assert.equal(L.shapes.filter(s => s.c === 'seq-act').length, d.items.filter(i => i.type === 'activate').length);
+  }
+});
+
+test('timeout notes render and the SVG export is well-formed and escaped', () => {
+  const cfg = base();
+  cfg.scenarios[0].calls[2].children[1].children[1].noResponse = true;
+  cfg.scenarios[0].calls[0].api = '/api/<login>&"x"';
+  const puml = SS.buildPlantUml(cfg, SS.simulate(cfg, SS.generate(cfg)).rows);
+  const L = SS.layoutSequence(SS.parsePlantUml(puml));
+  assert.ok(L.shapes.some(s => s.c === 'seq-note'));
+  const svg = SS.sequenceSvgString(L);
+  assert.ok(svg.startsWith('<svg xmlns="http://www.w3.org/2000/svg"') && svg.endsWith('</svg>'));
+  assert.ok(svg.includes('no response logged for FT01.A01,A02'));
+  assert.ok(svg.includes('/api/&lt;login&gt;&amp;'));
+  assert.ok(!/<script|on\w+=/i.test(svg));
+});

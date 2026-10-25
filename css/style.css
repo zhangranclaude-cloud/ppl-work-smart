@@ -314,6 +314,30 @@ pre.code, pre.logs {
   white-space: pre;
 }
 pre.logs .ln { border-left: 3px solid var(--lc); padding-left: 8px; }
+pre.code.puml { max-height: 300px; }
+.preview-head { margin: 18px 0 8px; }
+.preview-head h4 { margin: 0; }
+.seq-wrap {
+  overflow: auto;
+  max-height: 75vh;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+}
+.seq-svg { display: block; }
+.seq-svg text { font: 12px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; fill: var(--text); }
+.seq-svg .seq-title { font-weight: 600; font-size: 14px; }
+.seq-svg .seq-num { font-weight: 700; }
+.seq-svg .seq-box, .seq-svg .seq-actor { fill: var(--accent-weak); stroke: var(--c0); stroke-width: 1.2; }
+.seq-svg .seq-figure { stroke: var(--c0); stroke-width: 1.5; }
+.seq-svg .seq-life { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 5 4; }
+.seq-svg .seq-act { fill: var(--panel); stroke: var(--c0); stroke-width: 1; }
+.seq-svg .seq-msg { stroke: var(--text); stroke-width: 1.2; }
+.seq-svg .seq-dashed { stroke-dasharray: 5 3; }
+.seq-svg .seq-head { fill: var(--text); }
+.seq-svg .seq-note { fill: var(--warn-bg); stroke: var(--warn); stroke-width: 1; }
+
 .legend { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
 .empty { padding: 40px 10px; text-align: center; color: var(--muted); }
 

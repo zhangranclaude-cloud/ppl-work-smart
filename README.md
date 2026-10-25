@@ -43,7 +43,7 @@ Step  EventTime                Flow                                          Par
 - **Dynamic parameters:** add or remove a parameter, and it is written into the mock logs, extracted with its own `rex`, and shown in the `Params` column. Its value can come from a pattern, a list, a number, a UUID or a sequence, and can be reused per line, per call, per call tree or per session.
 - **Editable log layers:** the classify, session, direction and API regexes and the log templates for each log type, so they can match your real format.
 - **Flow result and extraction debug:** an in-browser run of the generated query, with a self-test that checks every mock line was handled as intended.
-- **Sequence diagram:** turns the Flow Result into a PlantUML sequence diagram (App → eComm → Enterprise → WS / Host), one session at a time. You can show params, elapsed time and timestamps on the arrows, and calls without a response are marked. It's generated locally, and nothing is sent to a PlantUML server.
+- **Sequence diagram:** turns the Flow Result into PlantUML code and **draws the diagram right below it**, one session at a time (App → eComm → Enterprise → WS / Host). Params, elapsed time and timestamps can be shown on the arrows, and calls without a response are marked. The diagram is drawn in your browser by a small built-in renderer (`js/seqsvg.js`), so nothing is sent to a PlantUML server. You can copy the code, or download it as `.puml` or `.svg`.
 - **SPL generator:** the production query, ready to paste into Splunk.
 - **Splunk test harness:** the same query with your test lines built in through `makeresults`, so the real query runs in Splunk without indexing anything.
 - **Bring your own logs:** paste real lines to check the regexes against them.
@@ -129,6 +129,7 @@ js/generator.js         mock log generation, pasted-log parsing
 js/simulator.js         in-browser run of the query pipeline
 js/spl.js               SPL and test-harness builder
 js/plantuml.js          PlantUML sequence diagram from the flow
+js/seqsvg.js            local SVG renderer for that PlantUML
 js/app.js               UI
 tests/                  engine and security tests (node:test)
 .github/                CI/CD workflow and Dependabot
