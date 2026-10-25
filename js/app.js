@@ -460,7 +460,21 @@
             h('td', { class: 'mono flow nowrap' }, r.flow),
             h('td', { class: 'mono small' }, r.params),
             h('td', { class: 'num' }, r.elapsed ?? ''))))))
-        : h('div', { class: 'empty' }, 'No rows. Check Extraction Debug to see why lines were filtered out.'));
+        : h('div', { class: 'empty' }, emptyReason()));
+  }
+
+  // Say why the Flow Result is empty, most likely cause first.
+  function emptyReason() {
+    if (state.genError) return `${state.genError}. Reload the page with Ctrl+F5; if it persists, use Settings → Reset to defaults.`;
+    if (ui.source === 'pasted' && !state.input.length) {
+      return h('span', {}, 'Input Logs is set to “Pasted logs” but the box is empty. ',
+        btn('Use generated mock logs', () => { ui.source = 'mock'; saveUi(); renderConfig(); runAll(); }, 'small'));
+    }
+    if (ui.source !== 'pasted' && !SS.sessionPlan(cfg).length) {
+      return 'No scenario is generating sessions. On the Scenario tab, tick at least one scenario that has calls and 1 or more sessions.';
+    }
+    if (ui.session) return 'Nothing for the selected session. Pick “All sessions” above.';
+    return 'Every input line was filtered out. Check Extraction Debug to see which regex missed.';
   }
 
   function viewDiagram() {

@@ -6,7 +6,7 @@
   "scripts": {
     "check": "node -e \"for (const f of require('fs').readdirSync('js')) require('child_process').execFileSync(process.execPath, ['--check', 'js/' + f], { stdio: 'inherit' })\"",
     "test": "node --test tests/engine.test.js tests/security.test.js",
-    "start": "python -m http.server 8080 --bind 127.0.0.1"
+    "start": "python tools/serve.py 8080"
   },
   "engines": {
     "node": ">=20"

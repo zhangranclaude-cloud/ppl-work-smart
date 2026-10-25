@@ -73,7 +73,7 @@ open index.html           # macOS
 xdg-open index.html       # Linux
 
 # 2. Or serve it on localhost
-python -m http.server 8080 --bind 127.0.0.1    # or: npm start
+python tools/serve.py 8080    # or: npm start  (localhost only, no browser caching)
 # then browse to http://127.0.0.1:8080
 ```
 

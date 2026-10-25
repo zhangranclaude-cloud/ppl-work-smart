@@ -1,5 +1,19 @@
 window.SS = window.SS || {};
 
+// Make script failures visible instead of leaving silently empty panels.
+if (typeof window.addEventListener === 'function' && typeof document !== 'undefined') {
+  window.addEventListener('error', e => {
+    let bar = document.getElementById('fatal');
+    if (!bar) {
+      bar = document.createElement('div');
+      bar.id = 'fatal';
+      bar.className = 'fatal';
+      document.body.prepend(bar);
+    }
+    bar.textContent = `Something went wrong: ${e.message}. Reload with Ctrl+F5; if it persists, Settings → Reset to defaults.`;
+  });
+}
+
 (function (SS) {
   'use strict';
 

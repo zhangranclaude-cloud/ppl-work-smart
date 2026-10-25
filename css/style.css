@@ -243,6 +243,13 @@ details.card > summary { cursor: pointer; padding: 2px 0 8px; list-style-positio
 .err { color: #d92d20; font-size: 12px; margin: -4px 0 6px; }
 .err:empty { display: none; }
 
+.fatal {
+  padding: 10px 20px;
+  background: #d92d20;
+  color: #fff;
+  font-weight: 500;
+}
+
 .banner {
   margin: 10px 14px 0;
   padding: 8px 12px;
