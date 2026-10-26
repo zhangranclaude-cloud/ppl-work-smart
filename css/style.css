@@ -528,3 +528,10 @@ pre.tree { margin: 0; font: 12px/1.55 var(--mono); white-space: pre; }
   font-variant-ligatures: none;
   font-feature-settings: "liga" 0, "calt" 0;
 }
+
+/* Processing Rule: step / item / rule table */
+table.steps td.item { white-space: nowrap; }
+table.steps .tree-prefix { color: var(--muted); white-space: pre; }
+table.steps .rule-list { margin: 0; padding-left: 16px; }
+table.steps .rule-list li + li { margin-top: 2px; }
+table.steps td:nth-child(3) { min-width: 340px; }

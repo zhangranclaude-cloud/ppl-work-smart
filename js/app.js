@@ -608,52 +608,43 @@
   }
 
   function viewRules() {
-    const a = SS.analyzeRules(cfg, state.sim.rows);
-    const s = a.summary;
-    if (!a.rules.length) return h('div', { class: 'empty' }, 'No flows to analyse. The Flow Result is empty; ' + (typeof emptyReason() === 'string' ? emptyReason() : 'see the Flow Result tab.'));
-    const md = () => SS.rulesMarkdown(a);
+    const rows = state.sim.rows;
+    const sessions = SS.diagramSessions(rows);
+    if (!sessions.length) return h('div', { class: 'empty' }, 'No flows to analyse. The Flow Result is empty; ' + (typeof emptyReason() === 'string' ? emptyReason() : 'see the Flow Result tab.'));
+    if (!sessions.includes(ui.diagramSession)) ui.diagramSession = sessions[0];
+    ui.puml = Object.assign({ caller: 'App', params: true, time: false, elapsed: true, autonumber: true, wsInternal: true }, ui.puml || {});
+    const names = scenarioNames();
+    const res = SS.processingSteps(cfg, rows, { sessionId: ui.diagramSession, caller: ui.puml.caller || 'App', wsInternal: ui.puml.wsInternal });
+    const title = 'Processing rules' + (names[res.sessionId] ? ' - ' + names[res.sessionId] : '');
+    const md = () => SS.processingStepsMarkdown(res, title);
     const copyBtn = btn('Copy as Markdown', () => copyText(md(), copyBtn), 'small primary');
-    const stat = (v, label, cls = '') => h('div', { class: 'stat ' + cls }, h('div', { class: 'stat-v' }, fmtNum(v)), h('div', { class: 'stat-l' }, label));
-    const typeChip = t => h('span', { class: 'chip ' + (t === 'Processing rule only' ? 'ok' : t === 'Calls downstream' ? 'info' : 'warn') }, t);
-    const list = items => items.length ? items.map(x => h('div', {}, x.label, h('span', { class: 'muted' }, ` ×${x.count}`))) : h('span', { class: 'muted' }, '—');
+    const file = 'traceline-processing-rules-' + String(res.sessionId).slice(0, 8) + '.md';
+
+    const sel = h('select', { class: 'inp compact', 'aria-label': 'Session', onchange: e => { ui.diagramSession = e.target.value; saveUi(); renderOutput(); } },
+      sessions.map(s => sessionOption(s, names)));
+    sel.value = ui.diagramSession;
+    const layerName = id => (cfg.layers.find(l => l.id === id) || { label: id }).label;
 
     return h('div', {},
       h('div', { class: 'toolbar' },
-        h('span', { class: 'muted' }, `Worked out from the Flow Result (${ui.source === 'pasted' ? 'pasted' : 'mock'} logs): what each API does downstream, which call patterns occur, and how long calls take.`),
+        h('span', { class: 'lbl' }, 'Session'), sel,
+        h('label', { class: 'chk' },
+          h('input', { type: 'checkbox', checked: !!ui.puml.wsInternal, onchange: e => { ui.puml.wsInternal = e.target.checked; saveUi(); renderOutput(); } }),
+          h('span', {}, `${layerName('ws')} as internal process of ${layerName('enterprise')}`)),
         h('span', { class: 'spacer' }), copyBtn,
-        btn('Download .md', () => download('traceline-processing-rules.md', md() + '\n', 'text/markdown'), 'small')),
-      h('div', { class: 'stats' },
-        stat(s.sessions, 'sessions analysed'),
-        stat(s.entryApis, 'entry APIs'),
-        stat(s.processingOnly, 'processing rule only'),
-        stat(s.calls, 'calls in total'),
-        stat(s.timeouts, 'missing responses', s.timeouts ? 'warn' : ''),
-        s.orphans ? stat(s.orphans, 'responses without request', 'warn') : null),
-
-      h('h3', {}, `${a.rules[0].layerLabel} API rules`),
-      h('div', { class: 'table-wrap' }, h('table', { class: 'grid rules' },
-        h('thead', {}, h('tr', {}, ['API', 'Rule', 'Downstream calls', 'Calls', 'Elapsed', 'Params'].map(t => h('th', {}, t)))),
-        h('tbody', {}, a.rules.map(r => h('tr', { class: colorClass(layerIdx(r.layerId)) },
-          h('td', { class: 'mono' }, r.api),
-          h('td', {}, typeChip(r.type), r.timeouts ? h('div', { class: 'bad-text small' }, `${r.timeouts} missing response(s)`) : null),
-          h('td', {}, r.variants.map((v, i) => h('div', { class: 'variant' },
-            r.variants.length > 1 ? h('div', { class: 'muted small' }, `Pattern ${i + 1}: ${v.count}× (${v.share}%)`) : null,
-            v.tree.length ? h('pre', { class: 'tree' }, v.tree.join('\n')) : h('span', { class: 'muted' }, 'No downstream call')))),
-          h('td', { class: 'num' }, r.count),
-          h('td', { class: 'small nowrap' }, r.stats ? [h('div', {}, `avg ${r.stats.avg} ms`), h('div', { class: 'muted' }, `${r.stats.min}–${r.stats.max} ms`)] : h('span', { class: 'muted' }, '—')),
-          h('td', { class: 'mono small' }, r.params.join(', ') || h('span', { class: 'muted' }, '—'))))))),
-
-      a.catalogs.filter(c => c.layerId !== a.rules[0].layerId).map(c => [
-        h('h3', {}, `${c.layerLabel} catalogue`),
-        h('div', { class: 'table-wrap' }, h('table', { class: 'grid rules' },
-          h('thead', {}, h('tr', {}, ['API', 'Called by', 'Calls downstream', 'Calls', 'Elapsed', 'Missing'].map(t => h('th', {}, t)))),
-          h('tbody', {}, c.entries.map(e => h('tr', { class: colorClass(layerIdx(c.layerId)) },
-            h('td', { class: 'mono' }, e.api),
-            h('td', { class: 'small' }, list(e.calledBy)),
-            h('td', { class: 'small' }, list(e.calls)),
-            h('td', { class: 'num' }, e.count),
-            h('td', { class: 'small nowrap' }, e.stats ? [h('div', {}, `avg ${e.stats.avg} ms`), h('div', { class: 'muted' }, `${e.stats.min}–${e.stats.max} ms`)] : h('span', { class: 'muted' }, '—')),
-            h('td', { class: 'num' }, e.timeouts ? h('span', { class: 'bad-text' }, e.timeouts) : h('span', { class: 'muted' }, '—')))))))]));
+        btn('Download .md', () => download(file, md() + '\n', 'text/markdown'), 'small')),
+      h('p', { class: 'muted' }, 'Read off the sequence diagram for this session: one row per API or URL, with its step numbers from the diagram (request → response). Calls to service codes are described in the rule of the API that made them. The session and the WS option are shared with the Sequence Diagram tab.'),
+      h('div', { class: 'table-wrap' }, h('table', { class: 'grid rules steps' },
+        h('thead', {}, h('tr', {}, h('th', {}, 'Step'), h('th', {}, 'Item'), h('th', {}, 'Processing rule'))),
+        h('tbody', {}, res.items.map(it => h('tr', { class: colorClass(layerIdx(it.layerId)) },
+          h('td', { class: 'num nowrap' }, it.steps),
+          h('td', { class: 'item' },
+            h('span', { class: 'tree-prefix mono', 'aria-hidden': 'true' }, it.prefix),
+            badge(it.layerId), ' ', h('span', { class: 'mono' }, it.api)),
+          h('td', {}, h('ul', { class: 'rule-list' }, it.rules.map(r =>
+            h('li', { class: /^(No response|.*no response logged)/.test(r) ? 'bad-text' : '' }, r))))))))),
+      res.orphans.length ? h('p', { class: 'bad-text small' },
+        'Responses without a logged request: ' + res.orphans.map(o => `step ${o.step} ${o.layerLabel} ${o.api}`).join('; ') + '.') : null);
   }
 
   // Canvas text measurement so the SVG layout fits labels exactly.

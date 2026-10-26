@@ -354,54 +354,71 @@ test('renderer draws self-calls as loops inside the canvas', () => {
   }
 });
 
-test('processing rules: entry APIs, patterns and processing-rule-only calls', () => {
+test('processing rules: one row per API/URL with diagram step numbers', () => {
+  const cfg = base();
+  const rows = SS.simulate(cfg, SS.generate(cfg)).rows;
+  const res = SS.processingSteps(cfg, rows);
+  assert.equal(res.sessionId, SS.diagramSessions(rows)[0]);
+
+  assert.deepEqual(plain(res.items.map(i => [i.steps, i.prefix + i.layerLabel + ' ' + i.api])), [
+    ['1 → 6', 'eComm /api/v1/auth/login'],
+    ['2 → 5', '└─ Enterprise CustomerLogin'],
+    ['7 → 8', 'eComm /api/v1/rules/eligibility'],
+    ['9 → 20', 'eComm /api/v1/payment/transfer'],
+    ['10 → 13', '├─ Enterprise AccountInquiry'],
+    ['11 → 12', '│  └─ WS https://enterprise-sit.internal/ws/accountInquiry'],
+    ['14 → 19', '└─ Enterprise FundTransfer'],
+    ['15 → 16', '   └─ WS https://enterprise-sit.internal/ws/limitCheck'],
+  ]);
+  assert.ok(!res.items.some(i => i.layerId === 'host'), 'Host calls are not rows of their own');
+
+  const rule = api => res.items.find(i => i.api === api).rules;
+  assert.ok(rule('/api/v1/rules/eligibility').includes('Processing rule only: no downstream call.'));
+  assert.ok(rule('/api/v1/auth/login').includes('Entry API, called by App.'));
+  assert.ok(rule('/api/v1/payment/transfer').includes(
+    'Calls, in order: Enterprise AccountInquiry (step 10) → Enterprise FundTransfer (step 14).'));
+
+  const ft = rule('FundTransfer');
+  assert.ok(ft.includes('Called by eComm /api/v1/payment/transfer.'));
+  assert.ok(ft.includes('Calls, in order: WS https://enterprise-sit.internal/ws/limitCheck (internal, step 15) → Host FT01 (step 17).'));
+  assert.ok(ft.some(l => /^Host call: service code FT01 with sub-codes A01, A02; steps 17 → 18, \d+ ms; request AcctNo=\d{10}\.$/.test(l)));
+  assert.ok(ft.some(l => /^Responded at step 19 after \d+ ms\.$/.test(l)));
+  assert.ok(rule('https://enterprise-sit.internal/ws/limitCheck')[0].startsWith('Internal processing step of Enterprise FundTransfer'));
+});
+
+test('processing rule steps match the sequence diagram numbering', () => {
   const cfg = SS.defaultConfig();
-  const a = SS.analyzeRules(cfg, SS.simulate(cfg, SS.generate(cfg)).rows);
-  const rule = api => a.rules.find(r => r.api === api);
-
-  assert.equal(a.summary.sessions, 6);
-  assert.equal(a.summary.timeouts, 1, 'the Host timeout scenario');
-  assert.equal(a.summary.orphans, 0);
-
-  const login = rule('/api/v1/auth/login');
-  assert.equal(login.count, 5);
-  assert.equal(login.type, 'Calls downstream');
-  assert.equal(login.variants.length, 1);
-  assert.deepEqual(plain(login.variants[0].tree), ['└─ Enterprise CustomerLogin', '   └─ Host CL01.A01']);
-  assert.ok(login.params.includes('TxnRefNo') && login.params.includes('HTTP'));
-  assert.ok(login.stats.min > 0 && login.stats.min <= login.stats.avg && login.stats.avg <= login.stats.max);
-
-  for (const api of ['/api/v1/rules/eligibility', '/api/v1/offers/personalised']) {
-    assert.equal(rule(api).type, 'Processing rule only', api);
-    assert.deepEqual(plain(rule(api).variants[0].tree), []);
+  const rows = SS.simulate(cfg, SS.generate(cfg)).rows;
+  for (const sid of SS.diagramSessions(rows)) {
+    const res = SS.processingSteps(cfg, rows, { sessionId: sid });
+    const msgs = SS.parsePlantUml(SS.buildPlantUml(cfg, rows, { sessionId: sid })).items.filter(i => i.type === 'msg');
+    const sessionRows = rows.filter(r => r.sessionId === sid);
+    assert.equal(msgs.length, sessionRows.length, 'one diagram arrow per flow row');
+    for (const it of res.items) {
+      const req = sessionRows[it.reqStep - 1];
+      assert.equal(req.direction, 'Request');
+      assert.equal(req.api, it.api, `step ${it.reqStep} is the request of ${it.api}`);
+      if (it.respStep) assert.equal(sessionRows[it.respStep - 1].direction, 'Response');
+    }
   }
-  assert.equal(a.summary.processingOnly, 2);
-
-  const transfer = rule('/api/v1/payment/transfer');
-  assert.equal(transfer.count, 2);
-  assert.equal(transfer.variants.length, 2, 'normal flow and Host-timeout flow');
-  assert.equal(transfer.timeouts, 1);
-  assert.ok(transfer.variants.some(v => v.tree.includes('   └─ Host FT01.A01,A02  (no response)')));
 });
 
-test('processing rules: per-layer catalogues know callers and callees', () => {
+test('processing rules flag missing responses and the WS option', () => {
   const cfg = SS.defaultConfig();
-  const a = SS.analyzeRules(cfg, SS.simulate(cfg, SS.generate(cfg)).rows);
-  assert.deepEqual(plain(a.catalogs.map(c => c.layerLabel)), ['eComm', 'Enterprise', 'Host', 'WS']);
+  const events = SS.generate(cfg);
+  const rows = SS.simulate(cfg, events).rows;
+  const sid = events.find(e => e.scenario === 'Fund transfer with Host timeout').sessionId;
+  const res = SS.processingSteps(cfg, rows, { sessionId: sid });
+  const ft = res.items.find(i => i.api === 'FundTransfer').rules;
+  assert.ok(ft.some(l => /^Host call: service code FT01 with sub-codes A01, A02; step \d+, no response logged \(possible timeout\)/.test(l)));
 
-  const ent = a.catalogs.find(c => c.layerId === 'enterprise').entries;
-  const summary = ent.find(e => e.api === 'AccountSummary');
-  assert.deepEqual(plain(summary.calledBy), [{ label: 'eComm /api/v1/accounts/summary', count: 1 }]);
-  assert.deepEqual(plain(summary.calls.map(c => c.label)), ['WS https://enterprise-sit.internal/ws/customerProfile', 'Host AS01.A01', 'Host AS02.B01,B02']);
-  assert.equal(ent.find(e => e.api === 'UpdateProfile').calls.length, 0, 'Enterprise API without Host');
-
-  const ft = a.catalogs.find(c => c.layerId === 'host').entries.find(e => e.api === 'FT01.A01,A02');
-  assert.equal(ft.count, 2);
-  assert.equal(ft.timeouts, 1);
-  assert.equal(ft.stats.n, 1, 'only the answered call has a timing');
+  const base1 = SS.diagramSessions(rows)[0];
+  const ext = SS.processingSteps(cfg, rows, { sessionId: base1, wsInternal: false, caller: 'Mobile' });
+  assert.ok(ext.items.find(i => i.api.endsWith('/limitCheck')).rules[0] === 'Called by Enterprise FundTransfer.');
+  assert.ok(ext.items[0].rules[0] === 'Entry API, called by Mobile.');
 });
 
-test('processing rules work on pasted logs and export as Markdown', () => {
+test('processing rules work on pasted logs and export as a 3-column Markdown table', () => {
   const cfg = SS.defaultConfig();
   const sid = '25afb1c5-ac47-4646-b96c-36f77f8d7cb1';
   const text = [
@@ -409,19 +426,18 @@ test('processing rules work on pasted logs and export as Markdown', () => {
     `2026-10-25 09:00:00.010 x [Enterprise-HostMessage] sessionIdentity ${sid} Request endpoint="E1"`,
     `2026-10-25 09:00:00.050 x [Enterprise-HostMessage] sessionIdentity ${sid} Response endpoint="E1"`,
     `2026-10-25 09:00:00.060 x [ECOMM-Message] sessionId ${sid} Response endpoint="/a"`,
-    `2026-10-25 09:00:01.000 x [ECOMM-Message] sessionId ${sid} Request endpoint="/b"`,
-    `2026-10-25 09:00:01.005 x [ECOMM-Message] sessionId ${sid} Response endpoint="/b"`,
+    `2026-10-25 09:00:01.000 x [ECOMM-Message] sessionId ${sid} Request endpoint="/b|x"`,
+    `2026-10-25 09:00:01.005 x [ECOMM-Message] sessionId ${sid} Response endpoint="/b|x"`,
     `2026-10-25 09:00:02.000 x [Enterprise-HostMessage] sessionIdentity ${sid} Response endpoint="E9"`,
   ].join('\n');
-  const a = SS.analyzeRules(cfg, SS.simulate(cfg, SS.parsePasted(text, cfg)).rows);
-  assert.equal(a.rules.find(r => r.api === '/a').type, 'Calls downstream');
-  assert.equal(a.rules.find(r => r.api === '/b').type, 'Processing rule only');
-  assert.equal(a.rules.find(r => r.api === '/a').stats.avg, 60);
-  assert.equal(a.summary.orphans, 1, 'response with no request');
+  const res = SS.processingSteps(cfg, SS.simulate(cfg, SS.parsePasted(text, cfg)).rows);
+  assert.deepEqual(plain(res.items.map(i => i.steps)), ['1 → 4', '2 → 3', '5 → 6']);
+  assert.ok(res.items[0].rules.includes('Responded at step 4 after 60 ms.'));
+  assert.deepEqual(plain(res.orphans), [{ step: 7, layerLabel: 'Enterprise', api: 'E9' }]);
 
-  const md = SS.rulesMarkdown(a);
-  assert.match(md, /^# Processing rules/);
-  assert.ok(md.includes('### eComm /b') && md.includes('- Rule: **Processing rule only**'));
-  assert.ok(md.includes('└─ Enterprise E1'));
-  assert.ok(md.includes('| E1 | 1 | eComm /a (1) |'));
+  const md = SS.processingStepsMarkdown(res);
+  assert.ok(md.includes('| Step | Item | Processing rule |'));
+  assert.ok(md.includes('| 1 → 4 | eComm `/a` | Entry API, called by App.<br>Calls, in order: Enterprise E1 (step 2).<br>'));
+  assert.ok(md.includes('`/b\\|x`'), 'pipes escaped');
+  assert.match(md, /Responses without a logged request: step 7 Enterprise E9\./);
 });

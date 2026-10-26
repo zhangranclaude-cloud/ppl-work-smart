@@ -45,11 +45,11 @@ The default setup models four layers, **eComm API → Enterprise API → WS (web
 ### Analyse flows
 - **Flow Result:** every call in time order, indented by caller, with session, parameters and elapsed time. Filter by session, or export as CSV.
 - **Sequence Diagram:** PlantUML code for one session, with the **diagram drawn right below it**. WS calls can be drawn as internal processing of the Enterprise API (a self-call) or as their own participant. Params, elapsed time and timestamps can go on the arrows, and calls with no response are marked. It's drawn by a built-in renderer (`js/seqsvg.js`), so nothing is sent to a PlantUML server. You can download it as `.puml` or `.svg`.
-- **Processing Rule:** the rules the flows follow, worked out from what was logged.
-  - **For each entry API:** whether it's **processing rule only** (no downstream call) or which APIs it calls, drawn as a tree. Each distinct call pattern is listed with how often it occurs.
-  - **Stats:** elapsed time (avg, min, p95, max), the parameters seen, and missing responses.
-  - **For each layer:** a catalogue of who calls each API and what it calls.
-  - **Export:** copy or download as Markdown.
+- **Processing Rule:** reads the sequence diagram of the selected session as a three-column table:
+  - **Step:** the diagram's step numbers for each call, request → response.
+  - **Item:** one row per API or URL (entry APIs, the APIs they call, and WS URLs), indented under its caller.
+  - **Processing rule:** who calls it; whether it is **processing rule only** or what it calls, in order; each Host call it makes (service code, sub-codes, steps, elapsed time, params, or a missing response); when it responded; and its request and response parameters.
+  - It shares the session and the *WS as internal process* option with the Sequence Diagram tab. You can copy it or download it as a Markdown table.
 
 ### Work with real logs
 - **Bring your own logs:** paste lines from Splunk and every view above is built from them.
@@ -85,7 +85,7 @@ No backend and no network requests: a strict Content-Security-Policy blocks them
 |---|---|
 | **Flow Result** | Every call in time order, indented by caller |
 | **Sequence Diagram** | PlantUML code with the diagram drawn below it |
-| **Processing Rule** | Rules worked out from the flow, plus a catalogue for each layer |
+| **Processing Rule** | Step / Item / Processing rule for each API and URL in the diagram |
 | **Query & Logs** | Sub-tabs: **Extraction Debug** · **Mock Logs** · **Splunk Query** · **Splunk Test Harness** |
 
 The left panel holds the inputs: **Scenario**, **Parameters**, **Log Layers**, **Settings** and **Input Logs**.
@@ -151,7 +151,7 @@ Your config saves in the browser automatically. Use **Settings → Export / Impo
 
 ## How the analysis works
 
-`js/simulator.js` runs the same steps as the generated SPL (`js/spl.js`): classify, `rex`, direction, sort, API inheritance, params, elapsed time and render. What you see in the browser is therefore what the query will produce in Splunk. The Test Harness is the final check, because it runs the real SPL on Splunk against known input. The flow is then rebuilt into call trees (`js/rules.js`) for the processing rules and the diagram (`js/plantuml.js`).
+`js/simulator.js` runs the same steps as the generated SPL (`js/spl.js`): classify, `rex`, direction, sort, API inheritance, params, elapsed time and render. What you see in the browser is therefore what the query will produce in Splunk. The Test Harness is the final check, because it runs the real SPL on Splunk against known input. The flow is then rebuilt into call trees for the diagram (`js/plantuml.js`) and the processing rules (`js/rules.js`), which use the same step numbers.
 
 The simulator only mirrors the query this tool generates; it isn't a general SPL interpreter.
 
@@ -186,7 +186,7 @@ js/simulator.js         in-browser run of the query pipeline
 js/spl.js               SPL and test-harness builder
 js/plantuml.js          PlantUML sequence diagram from the flow
 js/seqsvg.js            local SVG renderer for that PlantUML
-js/rules.js             call-tree rebuild and processing-rule analysis
+js/rules.js             call-tree rebuild and step-by-step processing rules
 js/app.js               UI
 tests/                  engine and security tests (node:test)
 tools/serve.py          localhost dev server without caching

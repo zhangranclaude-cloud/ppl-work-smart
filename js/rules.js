@@ -1,9 +1,8 @@
-// Analyses Flow Result rows into processing rules: what each API does downstream,
-// which call patterns occur, how long calls take, and where responses are missing.
+// Processing rules for one session, read off the same flow the sequence diagram draws.
+// Step numbers equal the diagram's autonumber: one arrow per Flow Result row, in order.
+// Each API/URL is one item; service-code (Host) calls are described in their caller's rule.
 (function (SS) {
   'use strict';
-
-  const paramKeys = p => String(p || '').split(';').map(s => s.split('=')[0].trim()).filter(Boolean);
 
   // Rebuild each session's call tree from the flat, time-ordered rows.
   SS.buildCallTrees = function (rows) {
@@ -14,9 +13,9 @@
       const s = sessions.get(r.sessionId);
       if (r.direction === 'Request') {
         const node = {
-          layerId: r.layerId, layerLabel: r.layerLabel, api: r.api, pairKey: r.pairKey, depth: r.depth,
-          sessionId: r.sessionId, start: r.eventTime, params: new Set(paramKeys(r.params)),
-          children: [], elapsed: null, responded: false, parent: s.stack[s.stack.length - 1] || null,
+          layerId: r.layerId, layerLabel: r.layerLabel, api: r.api, pairKey: r.pairKey,
+          reqStep: r.step, respStep: null, reqParams: r.params || '', respParams: '',
+          elapsed: null, responded: false, children: [], parent: s.stack[s.stack.length - 1] || null,
         };
         (node.parent ? node.parent.children : s.roots).push(node);
         s.stack.push(node);
@@ -28,150 +27,102 @@
       }
       if (idx === -1) { s.orphans.push(r); continue; }
       const node = s.stack[idx];
-      node.responded = true;
-      node.elapsed = r.elapsed;
-      paramKeys(r.params).forEach(k => node.params.add(k));
+      Object.assign(node, { responded: true, respStep: r.step, respParams: r.params || '', elapsed: r.elapsed });
       s.stack.length = idx;
     }
     return [...sessions.values()].map(({ stack, ...rest }) => rest);
   };
 
-  const nodeLabel = n => `${n.layerLabel} ${n.api}`;
-  const signature = n => `${n.layerId}:${n.api}` + (n.children.length ? '(' + n.children.map(signature).join(',') + ')' : '');
+  const steps = n => (n.responded ? `${n.reqStep} → ${n.respStep}` : `${n.reqStep} → (no response)`);
+  const ms = n => (n.elapsed != null ? `${n.elapsed} ms` : '');
 
-  SS.elapsedStats = function (values) {
-    const v = values.filter(x => typeof x === 'number').sort((a, b) => a - b);
-    if (!v.length) return null;
-    const pick = q => v[Math.min(v.length - 1, Math.ceil(q * v.length) - 1)];
-    return { n: v.length, min: v[0], max: v[v.length - 1], avg: Math.round(v.reduce((a, b) => a + b, 0) / v.length), p95: pick(0.95) };
-  };
-
-  // Indented tree text for a list of call nodes.
-  SS.treeLines = function (nodes, prefix = '') {
-    const out = [];
-    nodes.forEach((n, i) => {
-      const last = i === nodes.length - 1;
-      out.push(prefix + (last ? '└─ ' : '├─ ') + nodeLabel(n) + (n.responded ? '' : '  (no response)'));
-      out.push(...SS.treeLines(n.children, prefix + (last ? '   ' : '│  ')));
-    });
-    return out;
-  };
-
-  SS.analyzeRules = function (cfg, rows) {
+  // opts: { sessionId, caller, wsInternal }
+  SS.processingSteps = function (cfg, rows, opts = {}) {
+    const o = { caller: 'App', wsInternal: true, ...opts };
+    const svcLayers = new Set(cfg.layers.filter(l => l.apiMode === 'svccode').map(l => l.id));
     const trees = SS.buildCallTrees(rows);
-    const order = Object.fromEntries(cfg.layers.map((l, i) => [l.id, l.depth * 100 + i]));
-    const rootRules = new Map();
-    const catalogs = new Map();
-    let calls = 0, timeouts = 0, orphans = 0;
+    const tree = trees.find(t => t.sessionId === o.sessionId) || trees[0];
+    if (!tree) return { sessionId: null, items: [], orphans: [] };
 
-    const visit = node => {
-      calls++;
-      if (!node.responded) timeouts++;
-      if (!catalogs.has(node.layerId)) catalogs.set(node.layerId, { layerId: node.layerId, layerLabel: node.layerLabel, apis: new Map() });
-      const cat = catalogs.get(node.layerId).apis;
-      if (!cat.has(node.api)) cat.set(node.api, { api: node.api, count: 0, elapsed: [], timeouts: 0, calledBy: new Map(), calls: new Map(), params: new Set() });
-      const e = cat.get(node.api);
-      e.count++;
-      e.elapsed.push(node.elapsed);
-      if (!node.responded) e.timeouts++;
-      node.params.forEach(k => e.params.add(k));
-      const by = node.parent ? nodeLabel(node.parent) : '(entry point)';
-      e.calledBy.set(by, (e.calledBy.get(by) || 0) + 1);
-      for (const c of node.children) e.calls.set(nodeLabel(c), (e.calls.get(nodeLabel(c)) || 0) + 1);
-      node.children.forEach(visit);
-    };
+    const isService = n => svcLayers.has(n.layerId);
+    const isInternal = n => o.wsInternal && n.layerId === 'ws' && n.parent;
+    const name = n => `${n.layerLabel} ${n.api}`;
+    const items = [];
 
-    for (const s of trees) {
-      orphans += s.orphans.length;
-      for (const root of s.roots) {
-        visit(root);
-        const key = `${root.layerId}|${root.api}`;
-        if (!rootRules.has(key)) {
-          rootRules.set(key, {
-            layerId: root.layerId, layerLabel: root.layerLabel, api: root.api,
-            count: 0, sessions: new Set(), elapsed: [], timeouts: 0, params: new Set(), variants: new Map(),
-          });
-        }
-        const rule = rootRules.get(key);
-        rule.count++;
-        rule.sessions.add(s.sessionId);
-        rule.elapsed.push(root.elapsed);
-        if (!root.responded) rule.timeouts++;
-        root.params.forEach(k => rule.params.add(k));
-        let downstreamTimeouts = 0;
-        const countTimeouts = n => { if (!n.responded) downstreamTimeouts++; n.children.forEach(countTimeouts); };
-        root.children.forEach(countTimeouts);
-        rule.timeouts += downstreamTimeouts;
-        const sig = signature({ ...root, layerId: '', api: '' });
-        if (!rule.variants.has(sig)) rule.variants.set(sig, { count: 0, children: root.children });
-        rule.variants.get(sig).count++;
+    const describe = n => {
+      const rules = [];
+      // Who calls it.
+      if (!n.parent) rules.push(`Entry API, called by ${o.caller}.`);
+      else if (isInternal(n)) rules.push(`Internal processing step of ${name(n.parent)}: calls this web service.`);
+      else rules.push(`Called by ${name(n.parent)}.`);
+
+      // What it calls, in order.
+      const kids = n.children;
+      if (!kids.length) {
+        rules.push(!n.parent ? 'Processing rule only: no downstream call.' : 'Handled here: no downstream call.');
+      } else {
+        rules.push('Calls, in order: ' + kids.map(c =>
+          (isService(c) ? `${c.layerLabel} ${c.pairKey || c.api}` : name(c)) +
+          (isInternal(c) ? ` (internal, step ${c.reqStep})` : ` (step ${c.reqStep})`)).join(' → ') + '.');
       }
-    }
 
-    const rules = [...rootRules.values()].map(r => {
-      const variants = [...r.variants.values()].sort((a, b) => b.count - a.count)
-        .map(v => ({ count: v.count, share: Math.round((v.count / r.count) * 100), children: v.children, tree: SS.treeLines(v.children) }));
-      const leafOnly = variants.filter(v => !v.children.length).length;
-      const type = leafOnly === variants.length ? 'Processing rule only'
-        : leafOnly ? 'Sometimes processing rule only' : 'Calls downstream';
-      return { ...r, sessions: r.sessions.size, stats: SS.elapsedStats(r.elapsed), params: [...r.params], variants, type };
-    });
+      // Service-code calls are described here rather than as their own rows.
+      for (const c of kids.filter(isService)) {
+        const main = c.pairKey || String(c.api).split('.')[0];
+        const subs = String(c.api).startsWith(main + '.') ? String(c.api).slice(main.length + 1) : '';
+        let line = `${c.layerLabel} call: service code ${main}` + (subs ? ` with sub-codes ${subs.split(',').join(', ')}` : '');
+        line += c.responded
+          ? `; steps ${c.reqStep} → ${c.respStep}` + (c.elapsed != null ? `, ${ms(c)}` : '')
+          : `; step ${c.reqStep}, no response logged (possible timeout)`;
+        if (c.reqParams) line += `; request ${c.reqParams}`;
+        if (c.respParams) line += `; response ${c.respParams}`;
+        rules.push(line + '.');
+      }
 
-    const layerCatalogs = [...catalogs.values()]
-      .sort((a, b) => (order[a.layerId] ?? 999) - (order[b.layerId] ?? 999))
-      .map(c => ({
-        layerId: c.layerId, layerLabel: c.layerLabel,
-        entries: [...c.apis.values()].map(e => ({
-          api: e.api, count: e.count, timeouts: e.timeouts, stats: SS.elapsedStats(e.elapsed), params: [...e.params],
-          calledBy: [...e.calledBy.entries()].map(([k, n]) => ({ label: k, count: n })),
-          calls: [...e.calls.entries()].map(([k, n]) => ({ label: k, count: n })),
-        })),
-      }));
-
-    return {
-      summary: {
-        sessions: trees.length,
-        entryCalls: trees.reduce((n, s) => n + s.roots.length, 0),
-        entryApis: rules.length,
-        processingOnly: rules.filter(r => r.type === 'Processing rule only').length,
-        calls, timeouts, orphans,
-      },
-      rules,
-      catalogs: layerCatalogs,
+      // Its own outcome and parameters.
+      if (n.responded) rules.push(`Responded at step ${n.respStep}` + (n.elapsed != null ? ` after ${ms(n)}` : '') + '.');
+      else rules.push('No response logged (possible timeout).');
+      if (n.reqParams) rules.push(`Request params: ${n.reqParams}.`);
+      if (n.respParams) rules.push(`Response params: ${n.respParams}.`);
+      return rules;
     };
+
+    // Pre-order walk over the items (service-code calls excluded), with tree prefixes for the item column.
+    const walk = (nodes, prefix, depth) => {
+      const list = nodes.filter(n => !isService(n));
+      list.forEach((n, i) => {
+        const last = i === list.length - 1;
+        items.push({
+          steps: steps(n), reqStep: n.reqStep, respStep: n.respStep,
+          layerId: n.layerId, layerLabel: n.layerLabel, api: n.api, depth,
+          prefix: depth === 0 ? '' : prefix + (last ? '└─ ' : '├─ '),
+          rules: describe(n),
+        });
+        walk(n.children, depth === 0 ? '' : prefix + (last ? '   ' : '│  '), depth + 1);
+      });
+    };
+    walk(tree.roots, '', 0);
+
+    // A service-code call made straight from the entry point (no API above it) still gets a row.
+    for (const n of tree.roots.filter(isService)) {
+      items.push({ steps: steps(n), reqStep: n.reqStep, respStep: n.respStep, layerId: n.layerId, layerLabel: n.layerLabel, api: n.api, depth: 0, prefix: '', rules: describe(n) });
+    }
+    items.sort((a, b) => a.reqStep - b.reqStep);
+
+    return { sessionId: tree.sessionId, items, orphans: tree.orphans.map(r => ({ step: r.step, layerLabel: r.layerLabel, api: r.api })) };
   };
 
-  const fmtStats = s => (s ? `avg ${s.avg} ms (min ${s.min}, p95 ${s.p95}, max ${s.max})` : 'no response timings');
-  SS.formatStats = fmtStats;
-  const mdCell = s => String(s ?? '').replace(/\|/g, '\\|');
+  const cell = s => String(s ?? '').replace(/\|/g, '\\|');
 
-  SS.rulesMarkdown = function (a, title = 'Processing rules') {
-    const s = a.summary;
-    const out = [`# ${title}`, '',
-      `Analysed ${s.sessions} session(s): ${s.entryCalls} entry call(s) across ${s.entryApis} API(s), ${s.calls} call(s) in total.`,
-      `${s.processingOnly} API(s) are processing rule only. ${s.timeouts} call(s) had no response logged.` +
-      (s.orphans ? ` ${s.orphans} response(s) had no matching request.` : ''), ''];
-    out.push('## Entry API rules', '');
-    for (const r of a.rules) {
-      out.push(`### ${r.layerLabel} ${r.api}`, '');
-      out.push(`- Rule: **${r.type}**`);
-      out.push(`- Calls: ${r.count} in ${r.sessions} session(s)`);
-      out.push(`- Elapsed: ${fmtStats(r.stats)}`);
-      if (r.params.length) out.push(`- Params: ${r.params.join(', ')}`);
-      if (r.timeouts) out.push(`- Missing responses: ${r.timeouts}`);
-      r.variants.forEach((v, i) => {
-        out.push('', r.variants.length > 1 ? `Pattern ${i + 1} (${v.count}×, ${v.share}%):` : 'Downstream:', '');
-        out.push('```text', ...(v.tree.length ? v.tree : ['(no downstream calls: processing rule only)']), '```');
-      });
-      out.push('');
+  SS.processingStepsMarkdown = function (res, title = 'Processing rules') {
+    const out = [`# ${title}`, ''];
+    if (res.sessionId) out.push(`Session \`${res.sessionId}\`. Step numbers match the sequence diagram.`, '');
+    out.push('| Step | Item | Processing rule |', '|---|---|---|');
+    for (const it of res.items) {
+      out.push(`| ${cell(it.steps)} | ${cell((it.depth ? '&nbsp;'.repeat(it.depth * 3) + '└ ' : '') + `${it.layerLabel} \`${it.api}\``)} | ${cell(it.rules.join('<br>'))} |`);
     }
-    for (const c of a.catalogs) {
-      out.push(`## ${c.layerLabel} catalogue`, '', '| API | Calls | Called by | Calls downstream | Elapsed | Missing responses |', '|---|---|---|---|---|---|');
-      for (const e of c.entries) {
-        out.push(`| ${mdCell(e.api)} | ${e.count} | ${mdCell(e.calledBy.map(x => `${x.label} (${x.count})`).join(', '))} | ` +
-          `${mdCell(e.calls.map(x => `${x.label} (${x.count})`).join(', ') || '—')} | ${fmtStats(e.stats)} | ${e.timeouts || '—'} |`);
-      }
-      out.push('');
+    if (res.orphans.length) {
+      out.push('', 'Responses without a logged request: ' + res.orphans.map(o => `step ${o.step} ${o.layerLabel} ${o.api}`).join('; ') + '.');
     }
     return out.join('\n');
   };
