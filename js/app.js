@@ -393,7 +393,7 @@
           fText('Response when _raw matches', l, 'responseRegex', { mono: true })),
         fText('API / endpoint', l, 'apiRegex', { mono: true }),
         h('div', { class: 'grid2' },
-          fSelect('API mode', l, 'apiMode', [['single', 'Single value'], ['svccode', 'All matches: main.sub1,sub2']], renderConfig),
+          fSelect('API mode', l, 'apiMode', [['single', 'Single value'], ['svccode', 'Service codes: pairs “main ~ sub”']], renderConfig),
           fSelect('Params format in mock log', l, 'paramStyle', [['kv', 'key="value"'], ['xml', '<Key>value</Key>']])),
         fCheck('A response without an API reuses the last request’s API in the session', l, 'inheritApi'),
         fCheck('Drop events where the API isn’t found (otherwise shows N/A)', l, 'requireApi'),
@@ -525,9 +525,9 @@
       h('option', { value: '' }, `All sessions (${sessions.length})`),
       sessions.map(s => sessionOption(s, names)));
     sel.value = ui.session;
-    const header = ['Step', 'EventTime', ...(hasNames ? ['Scenario'] : []), 'sessionId', 'Flow', 'Params', 'ElapsedMs'];
+    const header = ['Step', 'EventTime', ...(hasNames ? ['Scenario'] : []), 'sessionId', 'Flow', 'HostServices', 'Params', 'ElapsedMs'];
     const csv = () => [header,
-      ...rows.map(r => [r.step, r.eventTime, ...(hasNames ? [names[r.sessionId] || ''] : []), r.sessionId, r.flow, r.params, r.elapsed])]
+      ...rows.map(r => [r.step, r.eventTime, ...(hasNames ? [names[r.sessionId] || ''] : []), r.sessionId, r.flow, r.hostServices, r.params, r.elapsed])]
       .map(r => r.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
     const copyBtn = btn('Copy CSV', () => copyText(csv(), copyBtn), 'small');
     return h('div', {},
@@ -546,6 +546,7 @@
             hasNames ? h('td', { class: 'small nowrap' }, names[r.sessionId] || '') : null,
             h('td', { class: 'mono small', title: r.sessionId || '' }, r.sessionId ? r.sessionId.slice(0, 8) + '…' : ''),
             h('td', { class: 'mono flow nowrap' }, r.flow),
+            h('td', { class: 'mono small nowrap' }, r.hostServices || ''),
             h('td', { class: 'mono small' }, r.params),
             h('td', { class: 'num' }, r.elapsed ?? ''))))))
         : h('div', { class: 'empty' }, emptyReason()));

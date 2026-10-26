@@ -107,5 +107,12 @@ if (typeof window.addEventListener === 'function' && typeof document !== 'undefi
 
   SS.hasValueGroup = re => String(re ?? '').includes('(?<value>');
 
-  SS.indent = depth => (depth <= 1 ? '' : '-'.repeat(2 + 3 * (depth - 2)) + '> ');
+  SS.indent = depth => (depth <= 1 ? '' : '-'.repeat(2 + 4 * (depth - 2)) + '› ');
+
+  // SvcCodes come in (service, sub-service) pairs: [a, b, c, d] -> "a ~ b | c ~ d"; an odd last code pairs with itself.
+  SS.hostPairs = codes => {
+    const out = [];
+    for (let i = 0; i < codes.length; i += 2) out.push(`${codes[i]} ~ ${codes[i + 1] ?? codes[i]}`);
+    return out.join(' | ');
+  };
 })(window.SS);

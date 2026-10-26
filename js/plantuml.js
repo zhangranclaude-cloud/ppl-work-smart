@@ -36,7 +36,8 @@
       const prefix = internal.has(r.layerId) ? text(r.layerLabel) + ': ' : '';
       let m = `${o.time ? r.eventTime.slice(11) + '  ' : ''}${prefix}${text(r.api)} [${text(sym)}]`;
       if (o.elapsed && r.direction === 'Response' && r.elapsed != null) m += ` (${r.elapsed} ms)`;
-      if (o.params && r.params) m += '\\n' + text(r.params); // PlantUML line break
+      if (r.hostServices) m += '\\n' + text(r.hostServices); // PlantUML line break
+      if (o.params && r.params) m += '\\n' + text(r.params);
       return m;
     };
 

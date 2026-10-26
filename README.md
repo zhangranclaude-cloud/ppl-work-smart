@@ -26,24 +26,24 @@ Paste lines from any Splunk log file, or generate mock ones, and the tool:
 3. **Shows it four ways:** as a flow table, a sequence diagram, a set of processing rules, and the Splunk query that produces the same table on your real indexes.
 
 ```
-Step  EventTime                Flow                                          Params                  ElapsedMs
-1     2026-10-25 10:00:00.398  eComm: /api/v1/payment/transfer [?]           TxnRefNo=TX1917377922
-2     2026-10-25 10:00:00.401  --> Enterprise: AccountInquiry [?]            TxnRefNo=TX1917377922
-3     2026-10-25 10:00:00.407  -----> WS: https://…/ws/accountInquiry [?]
-4     2026-10-25 10:00:00.546  -----> WS: https://…/ws/accountInquiry [!]                            139
-5     2026-10-25 10:00:00.704  -----> Host: FT01.A01,A02 [?]                 AcctNo=1722464163
-6     2026-10-25 10:00:00.938  -----> Host: FT01.A01,A02 [!]                                         234
-7     2026-10-25 10:00:00.995  eComm: /api/v1/payment/transfer [!]           TxnRefNo=…; HTTP=200    597
+Step  EventTime                Flow                                         HostServices             Params                    ElapsedMs
+9     2026-10-25 10:00:00.398  eComm: /api/v1/payment/transfer [?]                                   TxnRefNo: TX1917377922
+14    2026-10-25 10:00:00.575  --› Enterprise: FundTransfer [?]                                    TxnRefNo: TX1917377922
+15    2026-10-25 10:00:00.581  ------› WS: https://…/ws/limitCheck [?]
+16    2026-10-25 10:00:00.701  ------› WS: https://…/ws/limitCheck [!]                                                           120
+17    2026-10-25 10:00:00.704  ------› Host: FT01 [?]                        FT01 ~ A01 | FT01 ~ A02  AcctNo: 1722464163
+18    2026-10-25 10:00:00.938  ------› Host: FT01 [!]                        FT01 ~ A01 | FT01 ~ A02                            234
+20    2026-10-25 10:00:00.995  eComm: /api/v1/payment/transfer [!]                                   TxnRefNo: …; HTTP: 200     597
 ```
 
-`[?]` marks a request and `[!]` a response. Indentation shows which call made which.
+`[?]` marks a request and `[!]` a response. Indentation shows which call made which. **HostServices** lists a Host message's `<SvcCode>` values as *service ~ sub-service* pairs, joined with ` | `.
 
 The default setup models four layers, **eComm API → Enterprise API → WS (web service) / Host service**. Each layer's name, Splunk source, log pattern and regexes can be changed, so you can point them at your own services and log formats.
 
 ## Features
 
 ### Analyse flows
-- **Flow Result:** every call in time order, indented by caller, with session, parameters and elapsed time. Filter by session, or export as CSV.
+- **Flow Result:** every call in time order, indented by caller, with session, Host service pairs, parameters and elapsed time. The columns match the Splunk query: `Step EventTime sessionId Flow HostServices Params ElapsedMs`. Filter by session, or export as CSV.
 - **Sequence Diagram:** PlantUML code for one session, with the **diagram drawn right below it**. WS calls can be drawn as internal processing of the Enterprise API (a self-call) or as their own participant. Params, elapsed time and timestamps can go on the arrows, and calls with no response are marked. It's drawn by a built-in renderer (`js/seqsvg.js`), so nothing is sent to a PlantUML server. You can download it as `.puml` or `.svg`.
 - **Processing Rule:** reads the sequence diagram of the selected session as a three-column table:
   - **Step:** the diagram's step numbers for each call, request → response.

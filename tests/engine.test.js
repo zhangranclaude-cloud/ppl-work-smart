@@ -25,10 +25,11 @@ test('default scenario produces the expected flow with no config issues', () => 
 
   const flows = sim.rows.map(r => r.flow);
   assert.equal(flows[0], 'eComm: /api/v1/auth/login [?]');
-  assert.equal(flows[1], '--> Enterprise: CustomerLogin [?]');
-  assert.equal(flows[2], '-----> Host: CL01.A01 [?]');
-  assert.ok(flows.includes('-----> Host: FT01.A01,A02 [!]'), 'main.sub1,sub2 service codes');
-  assert.ok(flows.includes('-----> WS: https://enterprise-sit.internal/ws/accountInquiry [!]'), 'WS response inherits URL');
+  assert.equal(flows[1], '--› Enterprise: CustomerLogin [?]');
+  assert.equal(flows[2], '------› Host: CL01 [?]');
+  assert.ok(flows.includes('------› Host: FT01 [!]'), 'Host API is the service code');
+  assert.ok(sim.rows.some(r => r.hostServices === 'FT01 ~ A01 | FT01 ~ A02'), 'SvcCodes paired as main ~ sub');
+  assert.ok(flows.includes('------› WS: https://enterprise-sit.internal/ws/accountInquiry [!]'), 'WS response inherits URL');
 });
 
 test('responses carry elapsed time and steps count per session', () => {
@@ -81,10 +82,10 @@ test('added parameters flow through mock logs, SPL and the Params column', () =>
 
   const spl = SS.buildSpl(cfg);
   assert.ok(spl.includes('(?<amount>'));
-  assert.ok(spl.includes('"Amt=".amount'));
+  assert.ok(spl.includes('"Amt: ".amount'));
 
   const sim = SS.simulate(cfg, events);
-  assert.ok(sim.rows.some(r => /Amt=\d+\.\d{2}/.test(r.params)));
+  assert.ok(sim.rows.some(r => /Amt: \d+\.\d{2}/.test(r.params)));
 });
 
 test('removed parameters disappear everywhere', () => {
@@ -122,7 +123,7 @@ test('SPL and test harness have the expected shape', () => {
   const spl = SS.buildSpl(cfg);
   assert.ok(spl.startsWith('(source='));
   assert.ok(spl.includes('`SEARCH_SESSION_ID`'));
-  assert.ok(spl.trim().endsWith('| table Step EventTime sessionId Flow Params ElapsedMs'));
+  assert.ok(spl.trim().endsWith('| table Step EventTime sessionId Flow HostServices Params ElapsedMs'));
 
   const events = SS.generate(cfg);
   const harness = SS.buildSpl(cfg, { events });
@@ -158,10 +159,10 @@ test('PlantUML sequence diagram follows the call stack', () => {
   assert.equal(lines[0], '@startuml');
   assert.equal(lines[lines.length - 1], '@enduml');
   assert.ok(puml.includes('actor "App" as Caller'));
-  assert.ok(puml.includes('Caller -> L_ecomm : /api/v1/auth/login [?]\\nTxnRefNo='));
+  assert.ok(puml.includes('Caller -> L_ecomm : /api/v1/auth/login [?]\\nTxnRefNo: '));
   assert.ok(puml.includes('L_ecomm -> L_enterprise : CustomerLogin [?]'));
-  assert.ok(puml.includes('L_enterprise -> L_host : CL01.A01 [?]'));
-  assert.match(puml, /L_host --> L_enterprise : CL01\.A01 \[!\] \(\d+ ms\)/);
+  assert.ok(puml.includes('L_enterprise -> L_host : CL01 [?]\\nCL01 ~ A01\\nAcctNo: '));
+  assert.match(puml, /L_host --> L_enterprise : CL01 \[!\] \(\d+ ms\)\\nCL01 ~ A01/);
   assert.match(puml, /L_ws --> L_enterprise : https:\/\/enterprise-sit\.internal\/ws\/limitCheck \[!\]/);
   assert.match(puml, /L_ecomm --> Caller : \/api\/v1\/payment\/transfer \[!\]/);
 
@@ -176,7 +177,7 @@ test('PlantUML marks calls that never got a response', () => {
   cfg.scenarios[0].calls[2].children[1].children[1].noResponse = true; // FundTransfer -> Host FT01
   const sim = SS.simulate(cfg, SS.generate(cfg));
   const puml = SS.buildPlantUml(cfg, sim.rows);
-  assert.ok(puml.includes('note over L_host : no response logged for FT01.A01,A02'));
+  assert.ok(puml.includes('note over L_host : no response logged for FT01'));
   const lines = puml.split('\n');
   assert.equal(lines.filter(l => l.startsWith('activate ')).length, lines.filter(l => l.startsWith('deactivate ')).length);
 });
@@ -227,9 +228,11 @@ test('scenario shapes: rules only, Enterprise without Host, several Host service
   const sim = SS.simulate(cfg, SS.generate(cfg));
   const flows = sim.rows.map(r => r.flow);
   assert.ok(flows.includes('eComm: /api/v1/offers/personalised [!]'));
-  assert.ok(flows.includes('--> Enterprise: UpdateProfile [!]'));
-  assert.ok(flows.includes('-----> Host: AS01.A01 [?]') && flows.includes('-----> Host: AS02.B01,B02 [?]'));
-  assert.ok(flows.includes('-----> Host: BP01.A01,A02,A03 [!]'));
+  assert.ok(flows.includes('--› Enterprise: UpdateProfile [!]'));
+  assert.ok(flows.includes('------› Host: AS01 [?]') && flows.includes('------› Host: AS02 [?]'));
+  assert.ok(flows.includes('------› Host: BP01 [!]'));
+  assert.ok(sim.rows.some(r => r.hostServices === 'BP01 ~ A01 | BP01 ~ A02 | BP01 ~ A03'));
+  assert.ok(sim.rows.some(r => r.hostServices === 'AS02 ~ B01 | AS02 ~ B02'));
 
   const events = SS.generate(cfg);
   const timeout = events.filter(e => e.scenario === 'Fund transfer with Host timeout' && e.raw.includes('<SvcCode>FT01'));
@@ -285,7 +288,7 @@ test('local renderer parses the generated PlantUML', () => {
   const msgs = d.items.filter(i => i.type === 'msg');
   assert.equal(msgs.length, 20);
   assert.deepEqual(plain(msgs[0]), { type: 'msg', from: 'Caller', to: 'L_ecomm', dashed: false, text: ['/api/v1/auth/login [?]', msgs[0].text[1]] });
-  assert.match(msgs[0].text[1], /^TxnRefNo=TX\d{10}$/);
+  assert.match(msgs[0].text[1], /^TxnRefNo: TX\d{10}$/);
   assert.equal(d.items.filter(i => i.type === 'activate').length, d.items.filter(i => i.type === 'deactivate').length);
 });
 
@@ -315,7 +318,7 @@ test('timeout notes render and the SVG export is well-formed and escaped', () =>
   assert.ok(L.shapes.some(s => s.c === 'seq-note'));
   const svg = SS.sequenceSvgString(L);
   assert.ok(svg.startsWith('<svg xmlns="http://www.w3.org/2000/svg"') && svg.endsWith('</svg>'));
-  assert.ok(svg.includes('no response logged for FT01.A01,A02'));
+  assert.ok(svg.includes('no response logged for FT01'));
   assert.ok(svg.includes('/api/&lt;login&gt;&amp;'));
   assert.ok(!/<script|on\w+=/i.test(svg));
 });
@@ -330,7 +333,7 @@ test('WS can be drawn as internal processing of the Enterprise API', () => {
   assert.ok(!/\bL_ws\b/.test(puml), 'nothing drawn on a WS lifeline');
   assert.ok(lines.includes('L_enterprise -> L_enterprise : WS: https://enterprise-sit.internal/ws/accountInquiry [?]'));
   assert.ok(lines.some(l => /^L_enterprise --> L_enterprise : WS: https:\/\/enterprise-sit\.internal\/ws\/limitCheck \[!\] \(\d+ ms\)$/.test(l)));
-  assert.ok(lines.some(l => /^L_enterprise -> L_host : FT01\.A01,A02 \[\?\]/.test(l)),
+  assert.ok(lines.some(l => /^L_enterprise -> L_host : FT01 \[\?\]/.test(l)),
     'Host is still called from Enterprise after the internal WS step');
   assert.equal(lines.filter(l => l.startsWith('activate ')).length, lines.filter(l => l.startsWith('deactivate ')).length);
 
@@ -381,7 +384,7 @@ test('processing rules: one row per API/URL with diagram step numbers', () => {
   const ft = rule('FundTransfer');
   assert.ok(ft.includes('Called by eComm /api/v1/payment/transfer.'));
   assert.ok(ft.includes('Calls, in order: WS https://enterprise-sit.internal/ws/limitCheck (internal, step 15) → Host FT01 (step 17).'));
-  assert.ok(ft.some(l => /^Host call: service code FT01 with sub-codes A01, A02; steps 17 → 18, \d+ ms; request AcctNo=\d{10}\.$/.test(l)));
+  assert.ok(ft.some(l => /^Host call: service code FT01, services FT01 ~ A01 \| FT01 ~ A02; steps 17 → 18, \d+ ms; request AcctNo: \d{10}\.$/.test(l)));
   assert.ok(ft.some(l => /^Responded at step 19 after \d+ ms\.$/.test(l)));
   assert.ok(rule('https://enterprise-sit.internal/ws/limitCheck')[0].startsWith('Internal processing step of Enterprise FundTransfer'));
 });
@@ -410,7 +413,7 @@ test('processing rules flag missing responses and the WS option', () => {
   const sid = events.find(e => e.scenario === 'Fund transfer with Host timeout').sessionId;
   const res = SS.processingSteps(cfg, rows, { sessionId: sid });
   const ft = res.items.find(i => i.api === 'FundTransfer').rules;
-  assert.ok(ft.some(l => /^Host call: service code FT01 with sub-codes A01, A02; step \d+, no response logged \(possible timeout\)/.test(l)));
+  assert.ok(ft.some(l => /^Host call: service code FT01, services FT01 ~ A01 \| FT01 ~ A02; step \d+, no response logged \(possible timeout\)/.test(l)));
 
   const base1 = SS.diagramSessions(rows)[0];
   const ext = SS.processingSteps(cfg, rows, { sessionId: base1, wsInternal: false, caller: 'Mobile' });

@@ -10,7 +10,7 @@
 
   SS.RESERVED = [
     'LayerName', 'Layer', 'Direction', 'sessionId', 'API', 'PairKey', 'Params', 'SortKey', 'reqTime',
-    'lastReqTime', 'ElapsedMs', 'DirectionSymbol', 'Indent', 'Flow', 'Step', 'EventTime', 'sidAny', 'row',
+    'lastReqTime', 'ElapsedMs', 'HostServices', 'DirectionSymbol', 'Indent', 'Flow', 'Step', 'EventTime', 'sidAny', 'row',
     'source', 'sourcetype', 'host', 'index', 'linecount', 'punct', 'splunk_server',
   ];
 
@@ -232,7 +232,7 @@
 
   SS.paramNameError = function (name, cfg) {
     if (!/^[A-Za-z][A-Za-z0-9_]*$/.test(name || '')) return 'Field name must start with a letter and use only letters, digits and _';
-    if (SS.RESERVED.includes(name) || /^(sid|api|inh|last)_/.test(name)) return `"${name}" is reserved by the query`;
+    if (SS.RESERVED.includes(name) || /^(sid|api|inh|last|pi|hp)_/.test(name)) return `"${name}" is reserved by the query`;
     if (cfg.params.filter(p => p.name === name).length > 1) return `Duplicate field name "${name}"`;
     return null;
   };

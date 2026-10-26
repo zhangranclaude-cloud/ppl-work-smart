@@ -80,7 +80,7 @@
         if (il.id === l.id) inherited = lastInh[k] ?? null;
       }
       let api;
-      if (l.apiMode === 'svccode') api = vals.length ? vals[0] + (vals.length > 1 ? '.' + vals.slice(1).join(',') : '') : null;
+      if (l.apiMode === 'svccode') api = vals.length ? vals[0] : null;
       else api = vals[0] ?? (l.inheritApi ? inherited : null);
       if (api === null && !l.requireApi) api = 'N/A';
       if (api === null) { d.status = 'dropped'; d.reason = 'API not found and the layer requires it'; continue; }
@@ -92,9 +92,10 @@
       for (const P of C.params) {
         if (!P.p.layers.includes(l.id)) continue;
         const v = d.params[P.p.name];
-        if (v != null && v.trim().length > 0) plist.push(`${P.p.label || P.p.name}=${v}`);
+        if (v != null && v.trim().length > 0) plist.push(`${P.p.label || P.p.name}: ${v}`);
       }
-      rows.push({ r, api, pairKey, params: plist.join('; ') });
+      const hostServices = l.apiMode === 'svccode' && vals.length ? SS.hostPairs(vals) : null;
+      rows.push({ r, api, pairKey, hostServices, params: plist.join('; ') });
     }
 
     // 6-7. Elapsed per call, step numbers, flow text.
@@ -114,6 +115,7 @@
         eventTime: SS.formatTs(o.r.time),
         sessionId: sid,
         flow: `${SS.indent(L.l.depth)}${L.l.label}: ${o.api} [${sym}]`,
+        hostServices: o.hostServices,
         params: o.params,
         elapsed,
         layerIdx: L.idx,

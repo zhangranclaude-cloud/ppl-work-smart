@@ -77,13 +77,22 @@
     o.push(svc.length
       ? '| eval PairKey=case(' + svc.map(l => `LayerName=${name(l)}, mvindex(api_${l.id}, 0)`).join(', ') + ', true(), API)'
       : '| eval PairKey=API');
+    // SvcCodes pair up as (service, sub-service): "a ~ b | c ~ d"; an odd last code pairs with itself.
+    for (const l of svc) {
+      const f = 'api_' + l.id;
+      o.push(`| eval pi_${l.id}=if(LayerName=${name(l)}, mvrange(0, ceil(mvcount(${f})/2)), null())`);
+      o.push(`| eval hp_${l.id}=mvmap(pi_${l.id}, mvindex(${f}, tonumber(pi_${l.id})*2)." ~ ".coalesce(mvindex(${f}, tonumber(pi_${l.id})*2+1), mvindex(${f}, tonumber(pi_${l.id})*2)))`);
+    }
+    o.push(svc.length
+      ? '| eval HostServices=case(' + svc.map(l => `LayerName=${name(l)}, mvjoin(hp_${l.id}, " | ")`).join(', ') + ', true(), null())'
+      : '| eval HostServices=null()');
 
     note('5. Parameters stamped on the line');
     o.push('| eval Params=null()');
     for (const p of P) {
       const layerNames = L.filter(l => p.layers.includes(l.id)).map(name);
       if (!layerNames.length) continue;
-      o.push(`| eval Params=mvappend(Params, if(in(LayerName, ${layerNames.join(', ')}) AND isnotnull(${p.name}) AND len(trim(${p.name}))>0, ${lit((p.label || p.name) + '=')}.${p.name}, null()))`);
+      o.push(`| eval Params=mvappend(Params, if(in(LayerName, ${layerNames.join(', ')}) AND isnotnull(${p.name}) AND len(trim(${p.name}))>0, ${lit((p.label || p.name) + ': ')}.${p.name}, null()))`);
     }
     o.push('| eval Params=mvjoin(Params, "; ")');
 
@@ -99,7 +108,7 @@
     o.push('| eval Flow=Indent.LayerName.": ".API." [".DirectionSymbol."]"');
     o.push('| streamstats count as Step by sessionId');
     o.push('| eval EventTime=strftime(_time, "%Y-%m-%d %H:%M:%S.%3N")');
-    o.push('| table Step EventTime sessionId Flow Params ElapsedMs');
+    o.push('| table Step EventTime sessionId Flow HostServices Params ElapsedMs');
 
     return o.join('\n');
   };
@@ -108,7 +117,7 @@
     const f = 'api_' + l.id;
     if (!l.apiRegex) return l.requireApi ? 'null()' : '"N/A"';
     if (l.apiMode === 'svccode') {
-      const e = `if(mvcount(${f})>0, mvindex(${f}, 0).if(mvcount(${f})>1, ".".mvjoin(mvindex(${f}, 1, -1), ","), ""), null())`;
+      const e = `mvindex(${f}, 0)`; // the service identifier; the pairs go to HostServices
       return l.requireApi ? e : `coalesce(${e}, "N/A")`;
     }
     const parts = [f];

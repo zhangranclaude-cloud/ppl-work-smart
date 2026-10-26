@@ -63,7 +63,8 @@
       sessionId: ctx.session.sid,
       api: layer.apiMode === 'svccode' ? (codes[0] || '') : (node.api || ''),
       direction: dir,
-      svcCodes: codes.map(c => `<SvcCode>${c}</SvcCode>`).join(''),
+      svcCodes: (codes.length > 1 ? codes.slice(1).flatMap(s => [codes[0], s]) : codes)
+        .map(c => `<SvcCode>${c}</SvcCode>`).join(''),
       main: node.main || '',
       subs: node.subs || '',
       params: parts.join(layer.paramStyle === 'xml' ? '' : ' '),

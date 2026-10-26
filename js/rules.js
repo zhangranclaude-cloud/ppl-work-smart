@@ -14,7 +14,7 @@
       if (r.direction === 'Request') {
         const node = {
           layerId: r.layerId, layerLabel: r.layerLabel, api: r.api, pairKey: r.pairKey,
-          reqStep: r.step, respStep: null, reqParams: r.params || '', respParams: '',
+          reqStep: r.step, respStep: null, reqParams: r.params || '', respParams: '', hostServices: r.hostServices || '',
           elapsed: null, responded: false, children: [], parent: s.stack[s.stack.length - 1] || null,
         };
         (node.parent ? node.parent.children : s.roots).push(node);
@@ -68,9 +68,7 @@
 
       // Service-code calls are described here rather than as their own rows.
       for (const c of kids.filter(isService)) {
-        const main = c.pairKey || String(c.api).split('.')[0];
-        const subs = String(c.api).startsWith(main + '.') ? String(c.api).slice(main.length + 1) : '';
-        let line = `${c.layerLabel} call: service code ${main}` + (subs ? ` with sub-codes ${subs.split(',').join(', ')}` : '');
+        let line = `${c.layerLabel} call: service code ${c.pairKey || c.api}` + (c.hostServices ? `, services ${c.hostServices}` : '');
         line += c.responded
           ? `; steps ${c.reqStep} → ${c.respStep}` + (c.elapsed != null ? `, ${ms(c)}` : '')
           : `; step ${c.reqStep}, no response logged (possible timeout)`;
