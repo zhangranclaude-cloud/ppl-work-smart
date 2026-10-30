@@ -9,3 +9,7 @@ Thumbs.db
 # Environment
 .env
 *.log
+
+# Fake, generated mock logs are part of the project
+!mock/**/*.log
+!feedback/demo/**/*.log

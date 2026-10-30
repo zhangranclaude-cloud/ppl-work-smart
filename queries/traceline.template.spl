@@ -1,0 +1,144 @@
+``` Traceline parameterized template. <PLACEHOLDERS> are filled in by the generator page. ```
+``` Lines marked [JSON-A] or [JSON-B] are alternatives: the page emits one set, depending on the JSON extraction mode. ```
+``` A placeholder that renders empty removes its whole line. ```
+
+``` ---------- 0. Base search ---------- ```
+index IN (<INDEX>) earliest=<TIME_EARLIEST> latest=<TIME_LATEST>
+(
+       (<LAYER_1_SOURCE> <LAYER_1_MATCH>)
+    OR (<LAYER_2_SOURCE> <LAYER_2_MATCH>)
+    OR (<LAYER_3_SOURCE> <LAYER_3_MATCH>)
+    OR (<LAYER_4_SOURCE> <LAYER_4_MATCH>)
+)
+
+``` ---------- 1. Layer: deepest layer is checked first, as in the original (Host before WS) ---------- ```
+| eval LayerName=case(
+    match(_raw, "<LAYER_4_MATCH_REGEX>"), "<LAYER_4_NAME>",
+    match(_raw, "<LAYER_3_MATCH_REGEX>"), "<LAYER_3_NAME>",
+    match(_raw, "<LAYER_2_MATCH_REGEX>"), "<LAYER_2_NAME>",
+    match(_raw, "<LAYER_1_MATCH_REGEX>"), "<LAYER_1_NAME>")
+| where isnotnull(LayerName)
+| eval Layer=case(LayerName="<LAYER_1_NAME>",1, LayerName="<LAYER_2_NAME>",2, LayerName="<LAYER_3_NAME>",3, LayerName="<LAYER_4_NAME>",4)
+
+``` ---------- 2. JSON fields (eComm and Enterprise only) ---------- ```
+``` [JSON-B] rex + json_extract: when the sourcetype has no JSON extraction, or the JSON follows a text prefix ```
+| rex field=_raw "<JSON_BLOB_REGEX>"
+| eval JsonBlob=if(in(Layer, <JSON_LAYER_LIST>), JsonBlob, null())
+| eval JsonOK=if(isnotnull(JsonBlob), if(json_valid(JsonBlob), 1, 0), null())
+| eval sidJson=json_extract(JsonBlob, "<JSON_SESSION_PATH>"),
+       TxnJson=json_extract(JsonBlob, "<JSON_TXNREF_PATH>"),
+       EndpointJson=json_extract(JsonBlob, "<JSON_ENDPOINT_PATH>"),
+       DirJson=json_extract(JsonBlob, "<JSON_DIRECTION_PATH>"),
+       HttpStatus=json_extract(JsonBlob, "<JSON_HTTPSTATUS_PATH>"),
+       RespCode=json_extract(JsonBlob, "<JSON_RESPCODE_PATH>"),
+       ErrCode=json_extract(JsonBlob, "<JSON_ERRCODE_PATH>"),
+       ErrDesc=json_extract(JsonBlob, "<JSON_ERRDESC_PATH>")
+``` [JSON-A] direct field access: when INDEXED_EXTRACTIONS=json or KV_MODE=json already extracts the fields ```
+``` | eval JsonOK=if(in(Layer, <JSON_LAYER_LIST>), 1, null()) ```
+``` | eval sidJson=mvindex('<JSON_SESSION_PATH>', 0), TxnJson=mvindex('<JSON_TXNREF_PATH>', 0), ... same for every path ```
+
+``` ---------- 3. Direction ---------- ```
+| eval Direction=case(
+    <LAYER_1_DIRECTION_RULE>,
+    <LAYER_2_DIRECTION_RULE>,
+    <LAYER_3_DIRECTION_RULE>,
+    <LAYER_4_DIRECTION_RULE>)
+| where isnotnull(Direction)
+
+``` ---------- 4. Session and link keys ---------- ```
+<LAYER_1_SID_RULE>
+<LAYER_2_SID_RULE>
+<LAYER_3_SID_RULE>
+<LAYER_4_SID_RULE>
+| eval sessionId=coalesce(<SID_FIELDS>)
+| rex field=_raw "(?:transactionReferenceNumber|transactionRef)\s*:\s*(?<transactionRef>[^\"]+)"
+| eval transactionRef=coalesce(TxnJson, transactionRef)
+| rex field=_raw "<HOST_LINK_REGEX>"
+| eval LinkKey=coalesce(transactionRef, hostRef)
+| rex field=_raw "(?<sidAny>[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})"
+| eventstats first(sessionId) as sidViaLink by LinkKey
+| eval LinkedBy=case(isnotnull(sessionId),"sessionId", isnotnull(sidViaLink),"LinkKey", isnotnull(sidAny),"any-UUID", true(),"none")
+| eval sessionId=coalesce(sessionId, sidViaLink, sidAny, "unlinked")
+| search sessionId IN (<SESSION_ID>)
+
+``` ---------- 5. Endpoint, URL, service codes ---------- ```
+<LAYER_1_ENDPOINT_RULE>
+<LAYER_2_ENDPOINT_RULE>
+<LAYER_3_ENDPOINT_RULE>
+<LAYER_4_ENDPOINT_RULE>
+| where LayerName!="<LAYER_4_NAME>" OR mvcount(SvcCode)>=1
+
+``` ---------- 6. HopStatus (per response event) ---------- ```
+<WS_STATUS_RULE>
+<HOST_STATUS_RULE>
+| eval HostBad=mvmap(HostStatus, if(in(HostStatus, <HOST_SUCCESS_VALUES>), null(), HostStatus))
+| eval HopStatus=case(
+    Direction="Request", "N/A",
+    JsonOK=0, "UNKNOWN",
+    isnotnull(HttpStatus) AND NOT in(tostring(HttpStatus), <HTTP_SUCCESS_LIST>), "FAILED",
+    len(trim(ErrCode))>0 AND NOT in(ErrCode, <SUCCESS_CODE_LIST>), "FAILED",
+    len(trim(ErrDesc))>0, "FAILED",
+    match(_raw, "<FAIL_PATTERN>"), "FAILED",
+    isnotnull(HostBad), "FAILED",
+    isnotnull(RespCode), if(in(RespCode, <SUCCESS_CODE_LIST>), "SUCCESS", "FAILED"),
+    isnotnull(HostStatus), "SUCCESS",
+    isnotnull(WsStatus), if(in(WsStatus, <HTTP_SUCCESS_LIST>, <SUCCESS_CODE_LIST>), "SUCCESS", "FAILED"),
+    isnotnull(HttpStatus), "SUCCESS",
+    true(), "UNKNOWN")
+| eval RespCode=coalesce(RespCode, WsStatus, mvjoin(HostStatus, ","))
+
+``` ---------- 7. Order, pairing, elapsed time, missing responses ---------- ```
+| eval SortKey=if(Direction="Request", Layer, -Layer)
+| sort 0 sessionId _time SortKey
+| streamstats count as Step by sessionId
+| eval WsURL=if(LayerName="<LAYER_3_NAME>", URL, null())
+| streamstats last(WsURL) as LastWsURL by sessionId
+| eval pairIndex=mvrange(0, ceil(mvcount(SvcCode)/2))
+| eval HostPairs=mvmap(pairIndex,
+    mvindex(SvcCode, pairIndex*2) . " ~ " .
+    coalesce(mvindex(SvcCode, (pairIndex*2)+1), mvindex(SvcCode, pairIndex*2)))
+| eval HostServices=if(LayerName="<LAYER_4_NAME>", mvjoin(HostPairs, " | "), null())
+| eval API=case(
+    LayerName="<LAYER_1_NAME>", Endpoint,
+    LayerName="<LAYER_2_NAME>", Endpoint,
+    LayerName="<LAYER_3_NAME>", coalesce(URL, LastWsURL, EnterpriseEndpoint, "N/A"),
+    LayerName="<LAYER_4_NAME>", EnterpriseEndpoint)
+| eval PairKey=case(
+    LayerName="<LAYER_4_NAME>", coalesce(mvindex(SvcCode, 0), EnterpriseEndpoint, ""),
+    true(), replace(API, "(?i)(Request|Response)$", ""))
+| eval ReqTime=if(Direction="Request", _time, null())
+| streamstats last(ReqTime) as LastReqTime by sessionId Layer PairKey
+| eval ElapsedMs=if(Direction="Response" AND isnotnull(LastReqTime),
+    round((_time-LastReqTime)*1000, 0), null())
+| eventstats count(eval(Direction="Request")) as nReq count(eval(Direction="Response")) as nResp by sessionId Layer PairKey
+| eval RespMissing=if(Direction="Request" AND nResp<nReq, 1, 0)
+
+``` ---------- 8. SessionStatus and FirstFailedHop (per sessionId) ---------- ```
+| eventstats min(Layer) as EntryLayer by sessionId
+| eval EntryResult=if(Layer=EntryLayer AND Direction="Response", HopStatus, null()),
+       FailTime=if(HopStatus="FAILED", _time, null())
+| eventstats count(eval(HopStatus="FAILED")) as FailedHops
+             count(eval(HopStatus="UNKNOWN")) as UnknownHops
+             sum(RespMissing) as MissingResponses
+             values(EntryResult) as EntryResults
+             min(FailTime) as FirstFailTime
+             by sessionId
+| eval SessionStatus=case(
+    isnotnull(mvfind(EntryResults, "^FAILED$")), "FAILED",
+    FailedHops>0 AND isnotnull(mvfind(EntryResults, "^SUCCESS$")), "PARTIAL",
+    FailedHops>0, "FAILED",
+    UnknownHops>0 OR MissingResponses>0 OR isnull(EntryResults), "UNKNOWN",
+    true(), "SUCCESS")
+| eval FailHop=if(HopStatus="FAILED" AND _time=FirstFailTime, LayerName . ": " . API, null())
+| eventstats first(FailHop) as FirstFailedHop by sessionId
+
+``` ---------- 9. Result filter ---------- ```
+<ONLY_FAILED>
+
+``` ---------- 10. Display ---------- ```
+| eval DirectionSymbol=if(Direction="Request", "?", "!")
+| eval Indent=if(Layer=1, "", substr("------------------------------", 1, 4*Layer-6) . "› ")
+| eval Flow=Indent . LayerName . ": " . coalesce(API, "N/A") . " [" . DirectionSymbol . "]"
+| eval Params=if(len(trim(transactionRef))>0, "TxnRefNo: " . transactionRef, null())
+| eval EventTime=strftime(_time, "%Y-%m-%d %H:%M:%S.%3N")
+| table <OUTPUT_COLUMNS>

@@ -1,0 +1,98 @@
+@startuml
+title Observed decision flow · 17 sessions
+start
+switch ( App calls eComm API )
+case ( getProfile )
+#lightgrey:eComm processes internally\n<i>inferred: no Enterprise call logged · 1 session</i>;
+#palegreen:eComm responds to App\n<i>observed · success 1 of 1</i>;
+case ( getAccountList )
+#lightgrey:Enterprise AccountList\ninternal process\n<i>inferred: no downstream call logged · 1 session</i>;
+#palegreen:eComm responds to App\n<i>observed · success 1 of 1</i>;
+case ( getDashboard )
+if (variant 1?) then (inferred: condition unknown · 1 session)
+#lightgrey:Enterprise CustomerProfile\ninternal process\n<i>inferred: no downstream call logged · 1 session</i>;
+#lightgrey:Enterprise AccountSummary\ninternal process\n<i>inferred: no downstream call logged · 3 sessions</i>;
+#lightgrey:Enterprise RewardsBalance\ninternal process\n<i>inferred: no downstream call logged · 3 sessions</i>;
+note right
+  observed in all calls of this API: 2 FAILED, 0 no response, of 3 calls
+  codes: E3001
+end note
+#palegreen:eComm responds to App\n<i>observed · success 1 of 1</i>;
+elseif (variant 2?) then (inferred: condition unknown · 2 sessions)
+#lightgrey:Enterprise AccountSummary\ninternal process\n<i>inferred: no downstream call logged · 3 sessions</i>;
+#lightgrey:Enterprise RewardsBalance\ninternal process\n<i>inferred: no downstream call logged · 3 sessions</i>;
+note right
+  observed in all calls of this API: 2 FAILED, 0 no response, of 3 calls
+  codes: E3001
+end note
+#palegreen:eComm responds to App\n<i>observed · success 1 of 2</i>;
+note right
+  observed in this variant: 1 FAILED, 0 no response, of 2 calls
+  codes: 3001
+end note
+endif
+case ( fundTransfer )
+#palegreen:Enterprise FundTransfer\nvaries by call: see the routing table\n<i>observed · 6 sessions</i>;
+note right
+  observed in all calls of this API: 2 FAILED, 1 no response, of 6 calls
+  codes: E9001, no response, E1020
+end note
+#palegreen:eComm responds to App\n<i>observed · success 3 of 6</i>;
+note right
+  observed in this variant: 2 FAILED, 1 no response, of 6 calls
+  codes: 9001, no response, 1020
+end note
+case ( getAccountDetails )
+#palegreen:Enterprise AccountInquiry\nvia WS /ws/account/inquiry\ncall EAI ACCT ~ INQ01\nACCT ~ BAL02\nACCT ~ LMT03\n<i>observed · 1 session</i>;
+#palegreen:eComm responds to App\n<i>observed · success 1 of 1</i>;
+case ( getCustomer360 )
+#palegreen:Enterprise Customer360\nvia WS /ws/customer/360\ncall EAI CIF1 ~ PRF01\ncall downstream OPI /opi/v2/customer/profile\ncall downstream WAM /wam/v1/limits\ncall downstream CUS /cus/v1/customer/segment\n<i>observed · 1 session</i>;
+#palegreen:eComm responds to App\n<i>observed · success 1 of 1</i>;
+case ( payBill )
+#lightgrey:Enterprise BillPayment\ninternal process\n<i>inferred: no downstream call logged · 1 session</i>;
+note right
+  observed in all calls of this API: 1 FAILED, 0 no response, of 1 call
+  codes: E2001
+end note
+#palegreen:eComm responds to App\n<i>observed · success 0 of 1</i>;
+note right
+  observed in this variant: 1 FAILED, 0 no response, of 1 call
+  codes: 2001
+end note
+case ( validatePayee )
+#lightgrey:eComm processes internally\n<i>inferred: no Enterprise call logged · 1 session</i>;
+#palegreen:eComm responds to App\n<i>observed · success 0 of 1</i>;
+note right
+  observed in this variant: 1 FAILED, 0 no response, of 1 call
+  codes: 1001
+end note
+case ( activateCard )
+#lightgrey:Enterprise CardActivation\ninternal process\n<i>inferred: no downstream call logged · 1 session</i>;
+note right
+  observed in all calls of this API: 1 FAILED, 0 no response, of 1 call
+  codes: E4005
+end note
+#palegreen:eComm responds to App\n<i>observed · success 0 of 1</i>;
+note right
+  observed in this variant: 1 FAILED, 0 no response, of 1 call
+  codes: 4005
+end note
+case ( getLoanQuote )
+#lightgrey:Enterprise LoanQuote\ninternal process\n<i>inferred: no downstream call logged · 1 session</i>;
+note right
+  observed in all calls of this API: 1 FAILED, 0 no response, of 1 call
+  codes: HTTP 503
+end note
+#palegreen:eComm responds to App\n<i>observed · success 0 of 1</i>;
+note right
+  observed in this variant: 1 FAILED, 0 no response, of 1 call
+  codes: 5003
+end note
+endswitch
+stop
+legend right
+  green = observed in the export and raw log
+  grey = inferred, not directly logged
+  notes = observed failures
+endlegend
+@enduml

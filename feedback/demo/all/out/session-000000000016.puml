@@ -1,0 +1,24 @@
+@startuml
+title Session fa4e0000-0000-4000-8000-000000000016\nSessionStatus: FAILED | FirstFailedHop: Enterprise: CardActivation
+hide footbox
+skinparam responseMessageBelowArrow true
+skinparam maxMessageSize 260
+actor App
+participant eComm
+participant Enterprise
+App -[#red]> eComm : [1] activateCard
+activate eComm
+eComm -[#red]> Enterprise : [2] CardActivation
+activate Enterprise
+note over Enterprise #EEEEEE : <i>internal processing only (inferred: no downstream call logged)</i>
+Enterprise -[#red]-> eComm : [3] FAILED · 34 ms
+note right of Enterprise #FFCDD2 : <b>FAILED</b>\nErrCode: E4005
+deactivate Enterprise
+eComm -[#red]-> App : [4] 4005 · 48 ms
+note right of eComm #FFCDD2 : <b>FAILED</b>
+deactivate eComm
+legend right
+  <color:green>green</color> success · <color:red>red</color> failed · <color:orange>orange</color> unknown or no response
+  <i>(Excel only)</i> = no matching raw log line · grey note = inferred
+endlegend
+@enduml

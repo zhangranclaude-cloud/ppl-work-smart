@@ -1,0 +1,37 @@
+@startuml
+title Observed decision flow · 5 sessions
+start
+switch ( App calls eComm API )
+case ( getAccountDetails )
+#palegreen:Enterprise AccountInquiry\nvia WS /ws/account/inquiry\ncall EAI ACCT ~ INQ01\nACCT ~ BAL02\nACCT ~ LMT03\n<i>observed · 1 session</i>;
+#palegreen:eComm responds to App\n<i>observed · success 1 of 1</i>;
+case ( getCustomer360 )
+#palegreen:Enterprise Customer360\nvia WS /ws/customer/360\ncall EAI CIF1 ~ PRF01\ncall downstream OPI /opi/v2/customer/profile\ncall downstream WAM /wam/v1/limits\ncall downstream CUS /cus/v1/customer/segment\n<i>observed · 1 session</i>;
+#palegreen:eComm responds to App\n<i>observed · success 1 of 1</i>;
+case ( fundTransfer )
+#palegreen:Enterprise FundTransfer\nvaries by call: see the routing table\n<i>observed · 2 sessions</i>;
+note right
+  observed in all calls of this API: 1 FAILED, 0 no response, of 2 calls
+  codes: E1020
+end note
+#palegreen:eComm responds to App\n<i>observed · success 0 of 2</i>;
+note right
+  observed in this variant: 2 FAILED, 0 no response, of 2 calls
+  codes: 9001, 1020
+end note
+case ( getDashboard )
+#lightgrey:Enterprise AccountSummary\ninternal process\n<i>inferred: no downstream call logged · 1 session</i>;
+#lightgrey:Enterprise RewardsBalance\ninternal process\n<i>inferred: no downstream call logged · 1 session</i>;
+note right
+  observed in all calls of this API: 1 FAILED, 0 no response, of 1 call
+  codes: E3001
+end note
+#palegreen:eComm responds to App\n<i>observed · success 1 of 1</i>;
+endswitch
+stop
+legend right
+  green = observed in the export and raw log
+  grey = inferred, not directly logged
+  notes = observed failures
+endlegend
+@enduml

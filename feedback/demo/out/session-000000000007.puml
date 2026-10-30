@@ -1,0 +1,32 @@
+@startuml
+title Session fa4e0000-0000-4000-8000-000000000007\nSessionStatus: FAILED | FirstFailedHop: WS: /ws/fund/transfer
+hide footbox
+skinparam responseMessageBelowArrow true
+skinparam maxMessageSize 260
+actor App
+participant eComm
+participant Enterprise
+participant EAI
+App -[#red]> eComm : [1] fundTransfer
+activate eComm
+eComm -[#green]> Enterprise : [2] FundTransfer
+activate Enterprise
+Enterprise -[#red]> Enterprise : [3] WS /ws/fund/transfer
+activate Enterprise
+Enterprise -[#orange]> EAI : [4] FT01 (FT01 ~ A01)
+activate EAI
+note over EAI #FFE0B2 : [4] no response in export or raw log
+deactivate EAI
+Enterprise -[#red]-> Enterprise : [5] 504 · 30005 ms
+note right of Enterprise #FFCDD2 : <b>FAILED</b>
+deactivate Enterprise
+Enterprise -[#green]-> eComm : [6] SUCCESS · 30020 ms <i>(raw log says FAILED)</i>
+deactivate Enterprise
+eComm -[#red]-> App : [7] 9001 · 30033 ms
+note right of eComm #FFCDD2 : <b>FAILED</b>\nErrDesc: Service temporarily unavailable
+deactivate eComm
+legend right
+  <color:green>green</color> success · <color:red>red</color> failed · <color:orange>orange</color> unknown or no response
+  <i>(Excel only)</i> = no matching raw log line · grey note = inferred
+endlegend
+@enduml

@@ -1,0 +1,6 @@
+- session …014 step 3: sessionId emptied
+- session …006 step 9: EventTime moved +2000 ms
+- session …009 step 6: WS response row deleted
+- session …007 step 6: HopStatus changed FAILED → SUCCESS
+- all rows: EventTime shown 8 h ahead of the raw log (export in UTC+8, logs in UTC)
+- session …006: WS /ws/customer/notify request and response added to the log only

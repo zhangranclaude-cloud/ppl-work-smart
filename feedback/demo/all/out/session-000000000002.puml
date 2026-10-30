@@ -1,0 +1,22 @@
+@startuml
+title Session fa4e0000-0000-4000-8000-000000000002\nSessionStatus: SUCCESS | FirstFailedHop: none
+hide footbox
+skinparam responseMessageBelowArrow true
+skinparam maxMessageSize 260
+actor App
+participant eComm
+participant Enterprise
+App -[#green]> eComm : [1] getAccountList
+activate eComm
+eComm -[#green]> Enterprise : [2] AccountList
+activate Enterprise
+note over Enterprise #EEEEEE : <i>internal processing only (inferred: no downstream call logged)</i>
+Enterprise -[#green]-> eComm : [3] 00000 · 50 ms
+deactivate Enterprise
+eComm -[#green]-> App : [4] 0000 · 66 ms
+deactivate eComm
+legend right
+  <color:green>green</color> success · <color:red>red</color> failed · <color:orange>orange</color> unknown or no response
+  <i>(Excel only)</i> = no matching raw log line · grey note = inferred
+endlegend
+@enduml

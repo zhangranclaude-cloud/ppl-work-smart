@@ -1,0 +1,18 @@
+@startuml
+title Session fa4e0000-0000-4000-8000-000000000011\nSessionStatus: FAILED | FirstFailedHop: eComm: validatePayee
+hide footbox
+skinparam responseMessageBelowArrow true
+skinparam maxMessageSize 260
+actor App
+participant eComm
+App -[#red]> eComm : [1] validatePayee
+activate eComm
+note over eComm #EEEEEE : <i>internal processing only (inferred: no downstream call logged)</i>
+eComm -[#red]-> App : [2] 1001 · 20 ms
+note right of eComm #FFCDD2 : <b>FAILED</b>\nErrDesc: Invalid payee account
+deactivate eComm
+legend right
+  <color:green>green</color> success · <color:red>red</color> failed · <color:orange>orange</color> unknown or no response
+  <i>(Excel only)</i> = no matching raw log line · grey note = inferred
+endlegend
+@enduml

@@ -1,0 +1,29 @@
+@startuml
+title Session fa4e0000-0000-4000-8000-000000000015\nSessionStatus: FAILED | FirstFailedHop: Enterprise: RewardsBalance
+hide footbox
+skinparam responseMessageBelowArrow true
+skinparam maxMessageSize 260
+actor App
+participant eComm
+participant Enterprise
+App -[#red]> eComm : [1] getDashboard
+activate eComm
+eComm -[#green]> Enterprise : [2] AccountSummary
+activate Enterprise
+note over Enterprise #EEEEEE : <i>internal processing only (inferred: no downstream call logged)</i>
+Enterprise -[#green]-> eComm : [3] 00000 · 56 ms
+deactivate Enterprise
+eComm -[#red]> Enterprise : [4] RewardsBalance
+activate Enterprise
+note over Enterprise #EEEEEE : <i>internal processing only (inferred: no downstream call logged)</i>
+Enterprise -[#red]-> eComm : [5] FAILED · 29 ms
+note right of Enterprise #FFCDD2 : <b>FAILED</b>\nErrCode: E3001\nErrDesc: Rewards service unavailable
+deactivate Enterprise
+eComm -[#red]-> App : [6] 3001 · 105 ms
+note right of eComm #FFCDD2 : <b>FAILED</b>\nErrDesc: Dashboard partially unavailable
+deactivate eComm
+legend right
+  <color:green>green</color> success · <color:red>red</color> failed · <color:orange>orange</color> unknown or no response
+  <i>(Excel only)</i> = no matching raw log line · grey note = inferred
+endlegend
+@enduml

@@ -1,0 +1,24 @@
+@startuml
+title Session fa4e0000-0000-4000-8000-000000000010\nSessionStatus: FAILED | FirstFailedHop: Enterprise: BillPayment
+hide footbox
+skinparam responseMessageBelowArrow true
+skinparam maxMessageSize 260
+actor App
+participant eComm
+participant Enterprise
+App -[#red]> eComm : [1] payBill
+activate eComm
+eComm -[#red]> Enterprise : [2] BillPayment
+activate Enterprise
+note over Enterprise #EEEEEE : <i>internal processing only (inferred: no downstream call logged)</i>
+Enterprise -[#red]-> eComm : [3] FAILED · 38 ms
+note right of Enterprise #FFCDD2 : <b>FAILED</b>\nErrCode: E2001\nErrDesc: Insufficient balance
+deactivate Enterprise
+eComm -[#red]-> App : [4] 2001 · 51 ms
+note right of eComm #FFCDD2 : <b>FAILED</b>\nErrDesc: Insufficient balance
+deactivate eComm
+legend right
+  <color:green>green</color> success · <color:red>red</color> failed · <color:orange>orange</color> unknown or no response
+  <i>(Excel only)</i> = no matching raw log line · grey note = inferred
+endlegend
+@enduml

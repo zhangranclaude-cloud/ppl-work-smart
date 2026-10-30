@@ -1,0 +1,31 @@
+2026-10-27 01:15:06.869 INFO WSAppLog ["WS:" fa4e0000-0000-4000-8000-000000000004] request: URL?: POST: /ws/fund/transfer "transactionRef : FAKE-TXN-04-2"
+2026-10-27 01:15:06.873 INFO [EAI-Gateway] Request Message <EAI><RqUID>FAKE-TXN-04-2</RqUID><SvcRq><SvcCode>FT01</SvcCode><SvcCode>A01</SvcCode></SvcRq></EAI>
+2026-10-27 01:15:07.060 INFO [EAI-Gateway] Response Message <EAI><RqUID>FAKE-TXN-04-2</RqUID><SvcRs><SvcCode>FT01</SvcCode><SvcCode>A01</SvcCode><StatusCode>0</StatusCode></SvcRs></EAI>
+2026-10-27 01:15:07.076 INFO WSAppLog ["WS:" fa4e0000-0000-4000-8000-000000000004] RESPONSE from Enterprise URL?: POST: /ws/fund/transfer "transactionRef : FAKE-TXN-04-2" status: 200
+2026-10-27 01:15:10.403 INFO WSAppLog ["WS:" fa4e0000-0000-4000-8000-000000000006] request: URL?: POST: /ws/customer/360 "transactionRef : FAKE-TXN-06-2"
+2026-10-27 01:15:10.407 INFO [EAI-Gateway] Request Message <EAI><RqUID>FAKE-TXN-06-2</RqUID><SvcRq><SvcCode>CIF1</SvcCode><SvcCode>PRF01</SvcCode></SvcRq></EAI>
+2026-10-27 01:15:10.566 INFO [EAI-Gateway] Response Message <EAI><RqUID>FAKE-TXN-06-2</RqUID><SvcRs><SvcCode>CIF1</SvcCode><SvcCode>PRF01</SvcCode><StatusCode>0</StatusCode></SvcRs></EAI>
+2026-10-27 01:15:10.569 INFO WSAppLog ["WS:" fa4e0000-0000-4000-8000-000000000006] request: URL?: GET: /opi/v2/customer/profile "transactionRef : FAKE-TXN-06-2"
+2026-10-27 01:15:10.637 INFO WSAppLog ["WS:" fa4e0000-0000-4000-8000-000000000006] Response: URL?: GET: /opi/v2/customer/profile "transactionRef : FAKE-TXN-06-2" status: 200
+2026-10-27 01:15:10.640 INFO WSAppLog ["WS:" fa4e0000-0000-4000-8000-000000000006] request: URL?: GET: /wam/v1/limits "transactionRef : FAKE-TXN-06-2"
+2026-10-27 01:15:10.685 INFO WSAppLog ["WS:" fa4e0000-0000-4000-8000-000000000006] Response: URL?: GET: /wam/v1/limits "transactionRef : FAKE-TXN-06-2" status: 200
+2026-10-27 01:15:10.688 INFO WSAppLog ["WS:" fa4e0000-0000-4000-8000-000000000006] request: URL?: GET: /cus/v1/customer/segment "transactionRef : FAKE-TXN-06-2"
+2026-10-27 01:15:10.721 INFO WSAppLog ["WS:" fa4e0000-0000-4000-8000-000000000006] Response: URL?: GET: /cus/v1/customer/segment "transactionRef : FAKE-TXN-06-2" status: 200
+2026-10-27 01:15:10.731 INFO WSAppLog ["WS:" fa4e0000-0000-4000-8000-000000000006] RESPONSE from Enterprise URL?: POST: /ws/customer/360 "transactionRef : FAKE-TXN-06-2" status: 200
+2026-10-27 01:15:12.264 INFO WSAppLog ["WS:" fa4e0000-0000-4000-8000-000000000007] request: URL?: POST: /ws/fund/transfer "transactionRef : FAKE-TXN-07-2"
+2026-10-27 01:15:12.268 INFO [EAI-Gateway] Request Message <EAI><RqUID>FAKE-TXN-07-2</RqUID><SvcRq><SvcCode>FT01</SvcCode><SvcCode>A01</SvcCode></SvcRq></EAI>
+2026-10-27 01:15:42.269 INFO WSAppLog ["WS:" fa4e0000-0000-4000-8000-000000000007] RESPONSE from Enterprise URL?: POST: /ws/fund/transfer "transactionRef : FAKE-TXN-07-2" status: 504 EAI timeout after 30000 ms
+2026-10-27 01:15:43.798 INFO WSAppLog ["WS:" fa4e0000-0000-4000-8000-000000000009] request: URL?: POST: /ws/fund/transfer "transactionRef : FAKE-TXN-09-2"
+2026-10-27 01:15:43.802 INFO [EAI-Gateway] Request Message <EAI><RqUID>FAKE-TXN-09-2</RqUID><SvcRq><SvcCode>FT01</SvcCode><SvcCode>A01</SvcCode><SvcCode>FT01</SvcCode><SvcCode>A02</SvcCode></SvcRq></EAI>
+2026-10-27 01:15:44.015 INFO [EAI-Gateway] Response Message <EAI><RqUID>FAKE-TXN-09-2</RqUID><SvcRs><SvcCode>FT01</SvcCode><SvcCode>A01</SvcCode><StatusCode>0</StatusCode></SvcRs><SvcRs><SvcCode>FT01</SvcCode><SvcCode>A02</SvcCode><StatusCode>E102</StatusCode></SvcRs></EAI>
+2026-10-27 01:15:44.030 INFO WSAppLog ["WS:" fa4e0000-0000-4000-8000-000000000009] RESPONSE from Enterprise URL?: POST: /ws/fund/transfer "transactionRef : FAKE-TXN-09-2" status: 200
+2026-10-27 01:15:51.717 INFO WSAppLog ["WS:" fa4e0000-0000-4000-8000-000000000012] request: URL?: POST: /ws/fund/transfer "transactionRef : FAKE-TXN-12-2"
+2026-10-27 01:15:51.721 INFO [EAI-Gateway] Request Message <EAI><RqUID>FAKE-TXN-12-2</RqUID><SvcRq><SvcCode>FT01</SvcCode><SvcCode>A01</SvcCode></SvcRq></EAI>
+2026-10-27 01:15:51.721 INFO WSAppLog ["WS:" fa4e0000-0000-4000-8000-000000000013] request: URL?: POST: /ws/fund/transfer "transactionRef : FAKE-TXN-13-2"
+2026-10-27 01:15:51.725 INFO [EAI-Gateway] Request Message <EAI><RqUID>FAKE-TXN-13-2</RqUID><SvcRq><SvcCode>FT01</SvcCode><SvcCode>A01</SvcCode></SvcRq></EAI>
+2026-10-27 01:15:51.901 INFO [EAI-Gateway] Response Message <EAI><RqUID>FAKE-TXN-13-2</RqUID><SvcRs><SvcCode>FT01</SvcCode><SvcCode>A01</SvcCode><StatusCode>0</StatusCode></SvcRs></EAI>
+2026-10-27 01:15:51.912 INFO [EAI-Gateway] Response Message <EAI><RqUID>FAKE-TXN-12-2</RqUID><SvcRs><SvcCode>FT01</SvcCode><SvcCode>A01</SvcCode><StatusCode>0</StatusCode></SvcRs></EAI>
+2026-10-27 01:15:51.917 INFO WSAppLog ["WS:" fa4e0000-0000-4000-8000-000000000013] RESPONSE from Enterprise URL?: POST: /ws/fund/transfer "transactionRef : FAKE-TXN-13-2" status: 200
+2026-10-27 01:15:51.928 INFO WSAppLog ["WS:" fa4e0000-0000-4000-8000-000000000012] RESPONSE from Enterprise URL?: POST: /ws/fund/transfer "transactionRef : FAKE-TXN-12-2" status: 200
+2026-10-27 01:15:56.669 INFO WSAppLog ["WS:" fa4e0000-0000-4000-8000-000000000008] request: URL?: POST: /ws/fund/transfer "transactionRef : FAKE-TXN-08-2"
+2026-10-27 01:15:56.673 INFO [EAI-Gateway] Request Message <EAI><RqUID>FAKE-TXN-08-2</RqUID><SvcRq><SvcCode>FT01</SvcCode><SvcCode>A01</SvcCode></SvcRq></EAI>

@@ -1,0 +1,273 @@
+``` Traceline Phase 5 pre-validation: FAKE, DESENSITIZED mock events, then queries/traceline.final.spl ```
+``` Placeholders are filled with the MOCK format values from mock/phase5/generate.js, not real ones. ```
+| makeresults
+| eval data=mvappend(
+    "1793063702.114|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:02.114 INFO [ECOMM-Message][/sessionId] : fa4e0000-0000-4000-8000-000000000001 getProfileRequest - Request - {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000001\",\"transactionRef\":\"FAKE-TXN-01-1\",\"apiName\":\"getProfile\",\"channel\":\"MB\"},\"data\":{\"customerId\":\"FAKE-CUST-0001\"}}",
+    "1793063702.132|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:02.132 INFO [ECOMM-Message][/sessionId] : fa4e0000-0000-4000-8000-000000000001 getProfileResponse - Response - {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000001\",\"transactionRef\":\"FAKE-TXN-01-1\",\"apiName\":\"getProfile\",\"channel\":\"MB\",\"httpStatus\":200},\"data\":{\"responseCode\":\"0000\"}}",
+    "1793063703.633|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:03.633 INFO [ECOMM-Message][/sessionId] : fa4e0000-0000-4000-8000-000000000002 getAccountListRequest - Request - {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000002\",\"transactionRef\":\"FAKE-TXN-02-1\",\"apiName\":\"getAccountList\",\"channel\":\"MB\"},\"data\":{\"customerId\":\"FAKE-CUST-0002\"}}",
+    "1793063703.639|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:03.639 INFO [Enterprise-HostMessage]['sessionIdentity'] : fa4e0000-0000-4000-8000-000000000002 AccountListRequest [Request] {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000002\",\"transactionRef\":\"FAKE-TXN-02-2\",\"apiName\":\"AccountList\"},\"data\":{\"accountNo\":\"FAKE-ACCT-0002\"}}",
+    "1793063703.689|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:03.689 INFO [Enterprise-HostMessage]['sessionIdentity'] : fa4e0000-0000-4000-8000-000000000002 AccountListResponse [Response] {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000002\",\"transactionRef\":\"FAKE-TXN-02-2\",\"apiName\":\"AccountList\",\"httpStatus\":200},\"data\":{\"responseCode\":\"00000\",\"errorCode\":\"\",\"errorDescription\":\"\"}}",
+    "1793063703.699|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:03.699 INFO [ECOMM-Message][/sessionId] : fa4e0000-0000-4000-8000-000000000002 getAccountListResponse - Response - {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000002\",\"transactionRef\":\"FAKE-TXN-02-1\",\"apiName\":\"getAccountList\",\"channel\":\"MB\",\"httpStatus\":200},\"data\":{\"responseCode\":\"0000\",\"errorCode\":\"\",\"errorDescription\":null}}",
+    "1793063705.200|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:05.200 INFO [ECOMM-Message][/sessionId] : fa4e0000-0000-4000-8000-000000000003 getDashboardRequest - Request - {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000003\",\"transactionRef\":\"FAKE-TXN-03-1\",\"apiName\":\"getDashboard\",\"channel\":\"MB\"},\"data\":{\"customerId\":\"FAKE-CUST-0003\"}}",
+    "1793063705.206|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:05.206 INFO [Enterprise-HostMessage]['sessionIdentity'] : fa4e0000-0000-4000-8000-000000000003 CustomerProfileRequest [Request] {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000003\",\"transactionRef\":\"FAKE-TXN-03-2\",\"apiName\":\"CustomerProfile\"},\"data\":{\"accountNo\":\"FAKE-ACCT-0003\"}}",
+    "1793063705.249|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:05.249 INFO [Enterprise-HostMessage]['sessionIdentity'] : fa4e0000-0000-4000-8000-000000000003 CustomerProfileResponse [Response] {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000003\",\"transactionRef\":\"FAKE-TXN-03-2\",\"apiName\":\"CustomerProfile\",\"httpStatus\":200},\"data\":{\"responseCode\":\"00000\"}}",
+    "1793063705.253|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:05.253 INFO [Enterprise-HostMessage]['sessionIdentity'] : fa4e0000-0000-4000-8000-000000000003 AccountSummaryRequest [Request] {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000003\",\"transactionRef\":\"FAKE-TXN-03-3\",\"apiName\":\"AccountSummary\"},\"data\":{\"accountNo\":\"FAKE-ACCT-0003\"}}",
+    "1793063705.310|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:05.310 INFO [Enterprise-HostMessage]['sessionIdentity'] : fa4e0000-0000-4000-8000-000000000003 AccountSummaryResponse [Response] {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000003\",\"transactionRef\":\"FAKE-TXN-03-3\",\"apiName\":\"AccountSummary\",\"httpStatus\":200},\"data\":{\"responseCode\":\"00000\"}}",
+    "1793063705.314|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:05.314 INFO [Enterprise-HostMessage]['sessionIdentity'] : fa4e0000-0000-4000-8000-000000000003 RewardsBalanceRequest [Request] {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000003\",\"transactionRef\":\"FAKE-TXN-03-4\",\"apiName\":\"RewardsBalance\"},\"data\":{\"accountNo\":\"FAKE-ACCT-0003\"}}",
+    "1793063705.346|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:05.346 INFO [Enterprise-HostMessage]['sessionIdentity'] : fa4e0000-0000-4000-8000-000000000003 RewardsBalanceResponse [Response] {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000003\",\"transactionRef\":\"FAKE-TXN-03-4\",\"apiName\":\"RewardsBalance\",\"httpStatus\":200},\"data\":{\"responseCode\":\"00000\"}}",
+    "1793063705.357|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:05.357 INFO [ECOMM-Message][/sessionId] : fa4e0000-0000-4000-8000-000000000003 getDashboardResponse - Response - {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000003\",\"transactionRef\":\"FAKE-TXN-03-1\",\"apiName\":\"getDashboard\",\"channel\":\"MB\",\"httpStatus\":200},\"data\":{\"responseCode\":\"0000\"}}",
+    "1793063706.858|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:06.858 INFO [ECOMM-Message][/sessionId] : fa4e0000-0000-4000-8000-000000000004 fundTransferRequest - Request - {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000004\",\"transactionRef\":\"FAKE-TXN-04-1\",\"apiName\":\"fundTransfer\",\"channel\":\"MB\"},\"data\":{\"customerId\":\"FAKE-CUST-0004\"}}",
+    "1793063706.864|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:06.864 INFO [Enterprise-HostMessage]['sessionIdentity'] : fa4e0000-0000-4000-8000-000000000004 FundTransferRequest [Request] {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000004\",\"transactionRef\":\"FAKE-TXN-04-2\",\"apiName\":\"FundTransfer\"},\"data\":{\"accountNo\":\"FAKE-ACCT-0004\"}}",
+    "1793063706.869|~|/var/log/pods/microservice-sit-01-ms-fake01.log|~|2026-10-27 01:15:06.869 INFO WSAppLog [\"WS:\" fa4e0000-0000-4000-8000-000000000004] request: URL?: POST: /ws/fund/transfer \"transactionRef : FAKE-TXN-04-2\"",
+    "1793063706.873|~|/var/log/pods/microservice-sit-01-ms-fake01.log|~|2026-10-27 01:15:06.873 INFO [EAI-Gateway] Request Message <EAI><RqUID>FAKE-TXN-04-2</RqUID><SvcRq><SvcCode>FT01</SvcCode><SvcCode>A01</SvcCode></SvcRq></EAI>",
+    "1793063707.060|~|/var/log/pods/microservice-sit-01-ms-fake01.log|~|2026-10-27 01:15:07.060 INFO [EAI-Gateway] Response Message <EAI><RqUID>FAKE-TXN-04-2</RqUID><SvcRs><SvcCode>FT01</SvcCode><SvcCode>A01</SvcCode><StatusCode>0</StatusCode></SvcRs></EAI>",
+    "1793063707.076|~|/var/log/pods/microservice-sit-01-ms-fake01.log|~|2026-10-27 01:15:07.076 INFO WSAppLog [\"WS:\" fa4e0000-0000-4000-8000-000000000004] RESPONSE from Enterprise URL?: POST: /ws/fund/transfer \"transactionRef : FAKE-TXN-04-2\" status: 200",
+    "1793063707.089|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:07.089 INFO [Enterprise-HostMessage]['sessionIdentity'] : fa4e0000-0000-4000-8000-000000000004 FundTransferResponse [Response] {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000004\",\"transactionRef\":\"FAKE-TXN-04-2\",\"apiName\":\"FundTransfer\",\"httpStatus\":200},\"data\":{\"responseCode\":\"00000\"}}",
+    "1793063707.098|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:07.098 INFO [ECOMM-Message][/sessionId] : fa4e0000-0000-4000-8000-000000000004 fundTransferResponse - Response - {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000004\",\"transactionRef\":\"FAKE-TXN-04-1\",\"apiName\":\"fundTransfer\",\"channel\":\"MB\",\"httpStatus\":200},\"data\":{\"responseCode\":\"0000\"}}",
+    "1793063708.599|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:08.599 INFO [ECOMM-Message][/sessionId] : fa4e0000-0000-4000-8000-000000000005 getAccountDetailsRequest - Request - {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000005\",\"transactionRef\":\"FAKE-TXN-05-1\",\"apiName\":\"getAccountDetails\",\"channel\":\"MB\"},\"data\":{\"customerId\":\"FAKE-CUST-0005\"}}",
+    "1793063708.605|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:08.605 INFO [Enterprise-HostMessage]['sessionIdentity'] : fa4e0000-0000-4000-8000-000000000005 AccountInquiryRequest [Request] {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000005\",\"transactionRef\":\"FAKE-TXN-05-2\",\"apiName\":\"AccountInquiry\"},\"data\":{\"accountNo\":\"FAKE-ACCT-0005\"}}",
+    "1793063708.610|~|/var/log/pods/microservice-sit-01_bfs-fake01.log|~|2026-10-27 01:15:08.610 INFO WSAppLog [\"WS:\" fa4e0000-0000-4000-8000-000000000005] request: URL?: POST: /ws/account/inquiry \"transactionRef : FAKE-TXN-05-2\"",
+    "1793063708.614|~|/var/log/pods/microservice-sit-01_bfs-fake01.log|~|2026-10-27 01:15:08.614 INFO [EAI-Gateway] Request Message <EAI><RqUID>FAKE-TXN-05-2</RqUID><SvcRq><SvcCode>ACCT</SvcCode><SvcCode>INQ01</SvcCode><SvcCode>ACCT</SvcCode><SvcCode>BAL02</SvcCode><SvcCode>ACCT</SvcCode><SvcCode>LMT03</SvcCode></SvcRq></EAI>",
+    "1793063708.858|~|/var/log/pods/microservice-sit-01_bfs-fake01.log|~|2026-10-27 01:15:08.858 INFO [EAI-Gateway] Response Message <EAI><RqUID>FAKE-TXN-05-2</RqUID><SvcRs><SvcCode>ACCT</SvcCode><SvcCode>INQ01</SvcCode><StatusCode>0</StatusCode></SvcRs><SvcRs><SvcCode>ACCT</SvcCode><SvcCode>BAL02</SvcCode><StatusCode>0</StatusCode></SvcRs><SvcRs><SvcCode>ACCT</SvcCode><SvcCode>LMT03</SvcCode><StatusCode>0</StatusCode></SvcRs></EAI>",
+    "1793063708.871|~|/var/log/pods/microservice-sit-01_bfs-fake01.log|~|2026-10-27 01:15:08.871 INFO WSAppLog [\"WS:\" fa4e0000-0000-4000-8000-000000000005] RESPONSE from Enterprise URL?: POST: /ws/account/inquiry \"transactionRef : FAKE-TXN-05-2\" status: 200",
+    "1793063708.882|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:08.882 INFO [Enterprise-HostMessage]['sessionIdentity'] : fa4e0000-0000-4000-8000-000000000005 AccountInquiryResponse [Response] {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000005\",\"transactionRef\":\"FAKE-TXN-05-2\",\"apiName\":\"AccountInquiry\",\"httpStatus\":200},\"data\":{\"responseCode\":\"00000\"}}",
+    "1793063708.891|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:08.891 INFO [ECOMM-Message][/sessionId] : fa4e0000-0000-4000-8000-000000000005 getAccountDetailsResponse - Response - {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000005\",\"transactionRef\":\"FAKE-TXN-05-1\",\"apiName\":\"getAccountDetails\",\"channel\":\"MB\",\"httpStatus\":200},\"data\":{\"responseCode\":\"0000\"}}",
+    "1793063710.392|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:10.392 INFO [ECOMM-Message][/sessionId] : fa4e0000-0000-4000-8000-000000000006 getCustomer360Request - Request - {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000006\",\"transactionRef\":\"FAKE-TXN-06-1\",\"apiName\":\"getCustomer360\",\"channel\":\"MB\"},\"data\":{\"customerId\":\"FAKE-CUST-0006\"}}",
+    "1793063710.398|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:10.398 INFO [Enterprise-HostMessage]['sessionIdentity'] : fa4e0000-0000-4000-8000-000000000006 Customer360Request [Request] {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000006\",\"transactionRef\":\"FAKE-TXN-06-2\",\"apiName\":\"Customer360\"},\"data\":{\"accountNo\":\"FAKE-ACCT-0006\"}}",
+    "1793063710.403|~|/var/log/pods/microservice-sit-01-ms-fake01.log|~|2026-10-27 01:15:10.403 INFO WSAppLog [\"WS:\" fa4e0000-0000-4000-8000-000000000006] request: URL?: POST: /ws/customer/360 \"transactionRef : FAKE-TXN-06-2\"",
+    "1793063710.407|~|/var/log/pods/microservice-sit-01-ms-fake01.log|~|2026-10-27 01:15:10.407 INFO [EAI-Gateway] Request Message <EAI><RqUID>FAKE-TXN-06-2</RqUID><SvcRq><SvcCode>CIF1</SvcCode><SvcCode>PRF01</SvcCode></SvcRq></EAI>",
+    "1793063710.566|~|/var/log/pods/microservice-sit-01-ms-fake01.log|~|2026-10-27 01:15:10.566 INFO [EAI-Gateway] Response Message <EAI><RqUID>FAKE-TXN-06-2</RqUID><SvcRs><SvcCode>CIF1</SvcCode><SvcCode>PRF01</SvcCode><StatusCode>0</StatusCode></SvcRs></EAI>",
+    "1793063710.569|~|/var/log/pods/microservice-sit-01-ms-fake01.log|~|2026-10-27 01:15:10.569 INFO WSAppLog [\"WS:\" fa4e0000-0000-4000-8000-000000000006] request: URL?: GET: /opi/v2/customer/profile \"transactionRef : FAKE-TXN-06-2\"",
+    "1793063710.637|~|/var/log/pods/microservice-sit-01-ms-fake01.log|~|2026-10-27 01:15:10.637 INFO WSAppLog [\"WS:\" fa4e0000-0000-4000-8000-000000000006] Response: URL?: GET: /opi/v2/customer/profile \"transactionRef : FAKE-TXN-06-2\" status: 200",
+    "1793063710.640|~|/var/log/pods/microservice-sit-01-ms-fake01.log|~|2026-10-27 01:15:10.640 INFO WSAppLog [\"WS:\" fa4e0000-0000-4000-8000-000000000006] request: URL?: GET: /wam/v1/limits \"transactionRef : FAKE-TXN-06-2\"",
+    "1793063710.685|~|/var/log/pods/microservice-sit-01-ms-fake01.log|~|2026-10-27 01:15:10.685 INFO WSAppLog [\"WS:\" fa4e0000-0000-4000-8000-000000000006] Response: URL?: GET: /wam/v1/limits \"transactionRef : FAKE-TXN-06-2\" status: 200",
+    "1793063710.688|~|/var/log/pods/microservice-sit-01-ms-fake01.log|~|2026-10-27 01:15:10.688 INFO WSAppLog [\"WS:\" fa4e0000-0000-4000-8000-000000000006] request: URL?: GET: /cus/v1/customer/segment \"transactionRef : FAKE-TXN-06-2\"",
+    "1793063710.721|~|/var/log/pods/microservice-sit-01-ms-fake01.log|~|2026-10-27 01:15:10.721 INFO WSAppLog [\"WS:\" fa4e0000-0000-4000-8000-000000000006] Response: URL?: GET: /cus/v1/customer/segment \"transactionRef : FAKE-TXN-06-2\" status: 200",
+    "1793063710.731|~|/var/log/pods/microservice-sit-01-ms-fake01.log|~|2026-10-27 01:15:10.731 INFO WSAppLog [\"WS:\" fa4e0000-0000-4000-8000-000000000006] RESPONSE from Enterprise URL?: POST: /ws/customer/360 \"transactionRef : FAKE-TXN-06-2\" status: 200",
+    "1793063710.743|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:10.743 INFO [Enterprise-HostMessage]['sessionIdentity'] : fa4e0000-0000-4000-8000-000000000006 Customer360Response [Response] {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000006\",\"transactionRef\":\"FAKE-TXN-06-2\",\"apiName\":\"Customer360\",\"httpStatus\":200},\"data\":{\"responseCode\":\"00000\"}}",
+    "1793063710.752|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:10.752 INFO [ECOMM-Message][/sessionId] : fa4e0000-0000-4000-8000-000000000006 getCustomer360Response - Response - {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000006\",\"transactionRef\":\"FAKE-TXN-06-1\",\"apiName\":\"getCustomer360\",\"channel\":\"MB\",\"httpStatus\":200},\"data\":{\"responseCode\":\"0000\"}}",
+    "1793063712.253|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:12.253 INFO [ECOMM-Message][/sessionId] : fa4e0000-0000-4000-8000-000000000007 fundTransferRequest - Request - {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000007\",\"transactionRef\":\"FAKE-TXN-07-1\",\"apiName\":\"fundTransfer\",\"channel\":\"MB\"},\"data\":{\"customerId\":\"FAKE-CUST-0007\"}}",
+    "1793063712.259|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:12.259 INFO [Enterprise-HostMessage]['sessionIdentity'] : fa4e0000-0000-4000-8000-000000000007 FundTransferRequest [Request] {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000007\",\"transactionRef\":\"FAKE-TXN-07-2\",\"apiName\":\"FundTransfer\"},\"data\":{\"accountNo\":\"FAKE-ACCT-0007\"}}",
+    "1793063712.264|~|/var/log/pods/microservice-sit-01-ms-fake01.log|~|2026-10-27 01:15:12.264 INFO WSAppLog [\"WS:\" fa4e0000-0000-4000-8000-000000000007] request: URL?: POST: /ws/fund/transfer \"transactionRef : FAKE-TXN-07-2\"",
+    "1793063712.268|~|/var/log/pods/microservice-sit-01-ms-fake01.log|~|2026-10-27 01:15:12.268 INFO [EAI-Gateway] Request Message <EAI><RqUID>FAKE-TXN-07-2</RqUID><SvcRq><SvcCode>FT01</SvcCode><SvcCode>A01</SvcCode></SvcRq></EAI>",
+    "1793063742.269|~|/var/log/pods/microservice-sit-01-ms-fake01.log|~|2026-10-27 01:15:42.269 INFO WSAppLog [\"WS:\" fa4e0000-0000-4000-8000-000000000007] RESPONSE from Enterprise URL?: POST: /ws/fund/transfer \"transactionRef : FAKE-TXN-07-2\" status: 504 EAI timeout after 30000 ms",
+    "1793063742.279|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:42.279 INFO [Enterprise-HostMessage]['sessionIdentity'] : fa4e0000-0000-4000-8000-000000000007 FundTransferResponse [Response] {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000007\",\"transactionRef\":\"FAKE-TXN-07-2\",\"apiName\":\"FundTransfer\",\"httpStatus\":200},\"data\":{\"errorCode\":\"E9001\",\"errorDescription\":\"Downstream EAI timeout\"}}",
+    "1793063742.286|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:42.286 INFO [ECOMM-Message][/sessionId] : fa4e0000-0000-4000-8000-000000000007 fundTransferResponse - Response - {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000007\",\"transactionRef\":\"FAKE-TXN-07-1\",\"apiName\":\"fundTransfer\",\"channel\":\"MB\",\"httpStatus\":200},\"data\":{\"responseCode\":\"9001\",\"errorDescription\":\"Service temporarily unavailable\"}}",
+    "1793063743.787|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:43.787 INFO [ECOMM-Message][/sessionId] : fa4e0000-0000-4000-8000-000000000009 fundTransferRequest - Request - {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000009\",\"transactionRef\":\"FAKE-TXN-09-1\",\"apiName\":\"fundTransfer\",\"channel\":\"MB\"},\"data\":{\"customerId\":\"FAKE-CUST-0009\"}}",
+    "1793063743.793|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:43.793 INFO [Enterprise-HostMessage]['sessionIdentity'] : fa4e0000-0000-4000-8000-000000000009 FundTransferRequest [Request] {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000009\",\"transactionRef\":\"FAKE-TXN-09-2\",\"apiName\":\"FundTransfer\"},\"data\":{\"accountNo\":\"FAKE-ACCT-0009\"}}",
+    "1793063743.798|~|/var/log/pods/microservice-sit-01-ms-fake01.log|~|2026-10-27 01:15:43.798 INFO WSAppLog [\"WS:\" fa4e0000-0000-4000-8000-000000000009] request: URL?: POST: /ws/fund/transfer \"transactionRef : FAKE-TXN-09-2\"",
+    "1793063743.802|~|/var/log/pods/microservice-sit-01-ms-fake01.log|~|2026-10-27 01:15:43.802 INFO [EAI-Gateway] Request Message <EAI><RqUID>FAKE-TXN-09-2</RqUID><SvcRq><SvcCode>FT01</SvcCode><SvcCode>A01</SvcCode><SvcCode>FT01</SvcCode><SvcCode>A02</SvcCode></SvcRq></EAI>",
+    "1793063744.015|~|/var/log/pods/microservice-sit-01-ms-fake01.log|~|2026-10-27 01:15:44.015 INFO [EAI-Gateway] Response Message <EAI><RqUID>FAKE-TXN-09-2</RqUID><SvcRs><SvcCode>FT01</SvcCode><SvcCode>A01</SvcCode><StatusCode>0</StatusCode></SvcRs><SvcRs><SvcCode>FT01</SvcCode><SvcCode>A02</SvcCode><StatusCode>E102</StatusCode></SvcRs></EAI>",
+    "1793063744.030|~|/var/log/pods/microservice-sit-01-ms-fake01.log|~|2026-10-27 01:15:44.030 INFO WSAppLog [\"WS:\" fa4e0000-0000-4000-8000-000000000009] RESPONSE from Enterprise URL?: POST: /ws/fund/transfer \"transactionRef : FAKE-TXN-09-2\" status: 200",
+    "1793063744.041|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:44.041 INFO [Enterprise-HostMessage]['sessionIdentity'] : fa4e0000-0000-4000-8000-000000000009 FundTransferResponse [Response] {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000009\",\"transactionRef\":\"FAKE-TXN-09-2\",\"apiName\":\"FundTransfer\",\"httpStatus\":200},\"data\":{\"errorCode\":\"E1020\",\"errorDescription\":\"Debit leg failed at host\"}}",
+    "1793063744.049|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:44.049 INFO [ECOMM-Message][/sessionId] : fa4e0000-0000-4000-8000-000000000009 fundTransferResponse - Response - {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000009\",\"transactionRef\":\"FAKE-TXN-09-1\",\"apiName\":\"fundTransfer\",\"channel\":\"MB\",\"httpStatus\":200},\"data\":{\"responseCode\":\"1020\",\"errorDescription\":\"Transfer could not be completed\"}}",
+    "1793063745.550|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:45.550 INFO [ECOMM-Message][/sessionId] : fa4e0000-0000-4000-8000-000000000010 payBillRequest - Request - {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000010\",\"transactionRef\":\"FAKE-TXN-10-1\",\"apiName\":\"payBill\",\"channel\":\"MB\"},\"data\":{\"customerId\":\"FAKE-CUST-0010\"}}",
+    "1793063745.556|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:45.556 INFO [Enterprise-HostMessage]['sessionIdentity'] : fa4e0000-0000-4000-8000-000000000010 BillPaymentRequest [Request] {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000010\",\"transactionRef\":\"FAKE-TXN-10-2\",\"apiName\":\"BillPayment\"},\"data\":{\"accountNo\":\"FAKE-ACCT-0010\"}}",
+    "1793063745.594|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:45.594 INFO [Enterprise-HostMessage]['sessionIdentity'] : fa4e0000-0000-4000-8000-000000000010 BillPaymentResponse [Response] {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000010\",\"transactionRef\":\"FAKE-TXN-10-2\",\"apiName\":\"BillPayment\",\"httpStatus\":200},\"data\":{\"errorCode\":\"E2001\",\"errorDescription\":\"Insufficient balance\"}}",
+    "1793063745.601|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:45.601 INFO [ECOMM-Message][/sessionId] : fa4e0000-0000-4000-8000-000000000010 payBillResponse - Response - {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000010\",\"transactionRef\":\"FAKE-TXN-10-1\",\"apiName\":\"payBill\",\"channel\":\"MB\",\"httpStatus\":200},\"data\":{\"responseCode\":\"2001\",\"errorDescription\":\"Insufficient balance\"}}",
+    "1793063747.102|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:47.102 INFO [ECOMM-Message][/sessionId] : fa4e0000-0000-4000-8000-000000000011 validatePayeeRequest - Request - {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000011\",\"transactionRef\":\"FAKE-TXN-11-1\",\"apiName\":\"validatePayee\",\"channel\":\"MB\"},\"data\":{\"customerId\":\"FAKE-CUST-0011\"}}",
+    "1793063747.122|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:47.122 INFO [ECOMM-Message][/sessionId] : fa4e0000-0000-4000-8000-000000000011 validatePayeeResponse - Response - {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000011\",\"transactionRef\":\"FAKE-TXN-11-1\",\"apiName\":\"validatePayee\",\"channel\":\"MB\",\"httpStatus\":200},\"data\":{\"responseCode\":\"1001\",\"errorDescription\":\"Invalid payee account\"}}",
+    "1793063748.623|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:48.623 INFO [ECOMM-Message][/sessionId] : fa4e0000-0000-4000-8000-000000000016 activateCardRequest - Request - {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000016\",\"transactionRef\":\"FAKE-TXN-16-1\",\"apiName\":\"activateCard\",\"channel\":\"MB\"},\"data\":{\"customerId\":\"FAKE-CUST-0016\"}}",
+    "1793063748.629|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:48.629 INFO [Enterprise-HostMessage]['sessionIdentity'] : fa4e0000-0000-4000-8000-000000000016 CardActivationRequest [Request] {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000016\",\"transactionRef\":\"FAKE-TXN-16-2\",\"apiName\":\"CardActivation\"},\"data\":{\"accountNo\":\"FAKE-ACCT-0016\"}}",
+    "1793063748.663|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:48.663 INFO [Enterprise-HostMessage]['sessionIdentity'] : fa4e0000-0000-4000-8000-000000000016 CardActivationResponse [Response] {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000016\",\"transactionRef\":\"FAKE-TXN-16-2\",\"apiName\":\"CardActivation\",\"httpStatus\":200},\"data\":{\"errorCode\":\"E4005\"}}",
+    "1793063748.671|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:48.671 INFO [ECOMM-Message][/sessionId] : fa4e0000-0000-4000-8000-000000000016 activateCardResponse - Response - {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000016\",\"transactionRef\":\"FAKE-TXN-16-1\",\"apiName\":\"activateCard\",\"channel\":\"MB\",\"httpStatus\":200},\"data\":{\"responseCode\":\"4005\"}}",
+    "1793063750.172|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:50.172 INFO [ECOMM-Message][/sessionId] : fa4e0000-0000-4000-8000-000000000017 getLoanQuoteRequest - Request - {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000017\",\"transactionRef\":\"FAKE-TXN-17-1\",\"apiName\":\"getLoanQuote\",\"channel\":\"MB\"},\"data\":{\"customerId\":\"FAKE-CUST-0017\"}}",
+    "1793063750.178|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:50.178 INFO [Enterprise-HostMessage]['sessionIdentity'] : fa4e0000-0000-4000-8000-000000000017 LoanQuoteRequest [Request] {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000017\",\"transactionRef\":\"FAKE-TXN-17-2\",\"apiName\":\"LoanQuote\"},\"data\":{\"accountNo\":\"FAKE-ACCT-0017\"}}",
+    "1793063750.198|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:50.198 INFO [Enterprise-HostMessage]['sessionIdentity'] : fa4e0000-0000-4000-8000-000000000017 LoanQuoteResponse [Response] {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000017\",\"transactionRef\":\"FAKE-TXN-17-2\",\"apiName\":\"LoanQuote\",\"httpStatus\":503},\"data\":{}}",
+    "1793063750.205|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:50.205 INFO [ECOMM-Message][/sessionId] : fa4e0000-0000-4000-8000-000000000017 getLoanQuoteResponse - Response - {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000017\",\"transactionRef\":\"FAKE-TXN-17-1\",\"apiName\":\"getLoanQuote\",\"channel\":\"MB\",\"httpStatus\":200},\"data\":{\"responseCode\":\"5003\"}}",
+    "1793063751.706|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:51.706 INFO [ECOMM-Message][/sessionId] : fa4e0000-0000-4000-8000-000000000012 fundTransferRequest - Request - {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000012\",\"transactionRef\":\"FAKE-TXN-12-1\",\"apiName\":\"fundTransfer\",\"channel\":\"MB\"},\"data\":{\"customerId\":\"FAKE-CUST-0012\"}}",
+    "1793063751.710|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:51.710 INFO [ECOMM-Message][/sessionId] : fa4e0000-0000-4000-8000-000000000013 fundTransferRequest - Request - {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000013\",\"transactionRef\":\"FAKE-TXN-13-1\",\"apiName\":\"fundTransfer\",\"channel\":\"MB\"},\"data\":{\"customerId\":\"FAKE-CUST-0013\"}}",
+    "1793063751.712|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:51.712 INFO [Enterprise-HostMessage]['sessionIdentity'] : fa4e0000-0000-4000-8000-000000000012 FundTransferRequest [Request] {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000012\",\"transactionRef\":\"FAKE-TXN-12-2\",\"apiName\":\"FundTransfer\"},\"data\":{\"accountNo\":\"FAKE-ACCT-0012\"}}",
+    "1793063751.716|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:51.716 INFO [Enterprise-HostMessage]['sessionIdentity'] : fa4e0000-0000-4000-8000-000000000013 FundTransferRequest [Request] {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000013\",\"transactionRef\":\"FAKE-TXN-13-2\",\"apiName\":\"FundTransfer\"},\"data\":{\"accountNo\":\"FAKE-ACCT-0013\"}}",
+    "1793063751.717|~|/var/log/pods/microservice-sit-01-ms-fake01.log|~|2026-10-27 01:15:51.717 INFO WSAppLog [\"WS:\" fa4e0000-0000-4000-8000-000000000012] request: URL?: POST: /ws/fund/transfer \"transactionRef : FAKE-TXN-12-2\"",
+    "1793063751.721|~|/var/log/pods/microservice-sit-01-ms-fake01.log|~|2026-10-27 01:15:51.721 INFO [EAI-Gateway] Request Message <EAI><RqUID>FAKE-TXN-12-2</RqUID><SvcRq><SvcCode>FT01</SvcCode><SvcCode>A01</SvcCode></SvcRq></EAI>",
+    "1793063751.721|~|/var/log/pods/microservice-sit-01-ms-fake01.log|~|2026-10-27 01:15:51.721 INFO WSAppLog [\"WS:\" fa4e0000-0000-4000-8000-000000000013] request: URL?: POST: /ws/fund/transfer \"transactionRef : FAKE-TXN-13-2\"",
+    "1793063751.725|~|/var/log/pods/microservice-sit-01-ms-fake01.log|~|2026-10-27 01:15:51.725 INFO [EAI-Gateway] Request Message <EAI><RqUID>FAKE-TXN-13-2</RqUID><SvcRq><SvcCode>FT01</SvcCode><SvcCode>A01</SvcCode></SvcRq></EAI>",
+    "1793063751.901|~|/var/log/pods/microservice-sit-01-ms-fake01.log|~|2026-10-27 01:15:51.901 INFO [EAI-Gateway] Response Message <EAI><RqUID>FAKE-TXN-13-2</RqUID><SvcRs><SvcCode>FT01</SvcCode><SvcCode>A01</SvcCode><StatusCode>0</StatusCode></SvcRs></EAI>",
+    "1793063751.912|~|/var/log/pods/microservice-sit-01-ms-fake01.log|~|2026-10-27 01:15:51.912 INFO [EAI-Gateway] Response Message <EAI><RqUID>FAKE-TXN-12-2</RqUID><SvcRs><SvcCode>FT01</SvcCode><SvcCode>A01</SvcCode><StatusCode>0</StatusCode></SvcRs></EAI>",
+    "1793063751.917|~|/var/log/pods/microservice-sit-01-ms-fake01.log|~|2026-10-27 01:15:51.917 INFO WSAppLog [\"WS:\" fa4e0000-0000-4000-8000-000000000013] RESPONSE from Enterprise URL?: POST: /ws/fund/transfer \"transactionRef : FAKE-TXN-13-2\" status: 200",
+    "1793063751.928|~|/var/log/pods/microservice-sit-01-ms-fake01.log|~|2026-10-27 01:15:51.928 INFO WSAppLog [\"WS:\" fa4e0000-0000-4000-8000-000000000012] RESPONSE from Enterprise URL?: POST: /ws/fund/transfer \"transactionRef : FAKE-TXN-12-2\" status: 200",
+    "1793063751.930|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:51.930 INFO [Enterprise-HostMessage]['sessionIdentity'] : fa4e0000-0000-4000-8000-000000000013 FundTransferResponse [Response] {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000013\",\"transactionRef\":\"FAKE-TXN-13-2\",\"apiName\":\"FundTransfer\",\"httpStatus\":200},\"data\":{\"responseCode\":\"00000\"}}",
+    "1793063751.939|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:51.939 INFO [ECOMM-Message][/sessionId] : fa4e0000-0000-4000-8000-000000000013 fundTransferResponse - Response - {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000013\",\"transactionRef\":\"FAKE-TXN-13-1\",\"apiName\":\"fundTransfer\",\"channel\":\"MB\",\"httpStatus\":200},\"data\":{\"responseCode\":\"0000\"}}",
+    "1793063751.941|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:51.941 INFO [Enterprise-HostMessage]['sessionIdentity'] : fa4e0000-0000-4000-8000-000000000012 FundTransferResponse [Response] {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000012\",\"transactionRef\":\"FAKE-TXN-12-2\",\"apiName\":\"FundTransfer\",\"httpStatus\":200},\"data\":{\"responseCode\":\"00000\"}}",
+    "1793063751.950|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:51.950 INFO [ECOMM-Message][/sessionId] : fa4e0000-0000-4000-8000-000000000012 fundTransferResponse - Response - {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000012\",\"transactionRef\":\"FAKE-TXN-12-1\",\"apiName\":\"fundTransfer\",\"channel\":\"MB\",\"httpStatus\":200},\"data\":{\"responseCode\":\"0000\"}}",
+    "1793063753.451|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:53.451 INFO [ECOMM-Message][/sessionId] : fa4e0000-0000-4000-8000-000000000014 getDashboardRequest - Request - {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000014\",\"transactionRef\":\"FAKE-TXN-14-1\",\"apiName\":\"getDashboard\",\"channel\":\"MB\"},\"data\":{\"customerId\":\"FAKE-CUST-0014\"}}",
+    "1793063753.457|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:53.457 INFO [Enterprise-HostMessage]['sessionIdentity'] : fa4e0000-0000-4000-8000-000000000014 AccountSummaryRequest [Request] {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000014\",\"transactionRef\":\"FAKE-TXN-14-2\",\"apiName\":\"AccountSummary\"},\"data\":{\"accountNo\":\"FAKE-ACCT-0014\"}}",
+    "1793063753.510|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:53.510 INFO [Enterprise-HostMessage]['sessionIdentity'] : fa4e0000-0000-4000-8000-000000000014 AccountSummaryResponse [Response] {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000014\",\"transactionRef\":\"FAKE-TXN-14-2\",\"apiName\":\"AccountSummary\",\"httpStatus\":200},\"data\":{\"responseCode\":\"00000\"}}",
+    "1793063753.514|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:53.514 INFO [Enterprise-HostMessage]['sessionIdentity'] : fa4e0000-0000-4000-8000-000000000014 RewardsBalanceRequest [Request] {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000014\",\"transactionRef\":\"FAKE-TXN-14-3\",\"apiName\":\"RewardsBalance\"},\"data\":{\"accountNo\":\"FAKE-ACCT-0014\"}}",
+    "1793063753.541|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:53.541 INFO [Enterprise-HostMessage]['sessionIdentity'] : fa4e0000-0000-4000-8000-000000000014 RewardsBalanceResponse [Response] {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000014\",\"transactionRef\":\"FAKE-TXN-14-3\",\"apiName\":\"RewardsBalance\",\"httpStatus\":200},\"data\":{\"errorCode\":\"E3001\",\"errorDescription\":\"Rewards service unavailable\"}}",
+    "1793063753.551|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:53.551 INFO [ECOMM-Message][/sessionId] : fa4e0000-0000-4000-8000-000000000014 getDashboardResponse - Response - {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000014\",\"transactionRef\":\"FAKE-TXN-14-1\",\"apiName\":\"getDashboard\",\"channel\":\"MB\",\"httpStatus\":200},\"data\":{\"responseCode\":\"0000\"}}",
+    "1793063755.052|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:55.052 INFO [ECOMM-Message][/sessionId] : fa4e0000-0000-4000-8000-000000000015 getDashboardRequest - Request - {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000015\",\"transactionRef\":\"FAKE-TXN-15-1\",\"apiName\":\"getDashboard\",\"channel\":\"MB\"},\"data\":{\"customerId\":\"FAKE-CUST-0015\"}}",
+    "1793063755.058|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:55.058 INFO [Enterprise-HostMessage]['sessionIdentity'] : fa4e0000-0000-4000-8000-000000000015 AccountSummaryRequest [Request] {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000015\",\"transactionRef\":\"FAKE-TXN-15-2\",\"apiName\":\"AccountSummary\"},\"data\":{\"accountNo\":\"FAKE-ACCT-0015\"}}",
+    "1793063755.114|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:55.114 INFO [Enterprise-HostMessage]['sessionIdentity'] : fa4e0000-0000-4000-8000-000000000015 AccountSummaryResponse [Response] {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000015\",\"transactionRef\":\"FAKE-TXN-15-2\",\"apiName\":\"AccountSummary\",\"httpStatus\":200},\"data\":{\"responseCode\":\"00000\"}}",
+    "1793063755.118|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:55.118 INFO [Enterprise-HostMessage]['sessionIdentity'] : fa4e0000-0000-4000-8000-000000000015 RewardsBalanceRequest [Request] {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000015\",\"transactionRef\":\"FAKE-TXN-15-3\",\"apiName\":\"RewardsBalance\"},\"data\":{\"accountNo\":\"FAKE-ACCT-0015\"}}",
+    "1793063755.147|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:55.147 INFO [Enterprise-HostMessage]['sessionIdentity'] : fa4e0000-0000-4000-8000-000000000015 RewardsBalanceResponse [Response] {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000015\",\"transactionRef\":\"FAKE-TXN-15-3\",\"apiName\":\"RewardsBalance\",\"httpStatus\":200},\"data\":{\"errorCode\":\"E3001\",\"errorDescription\":\"Rewards service unavailable\"}}",
+    "1793063755.157|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:55.157 INFO [ECOMM-Message][/sessionId] : fa4e0000-0000-4000-8000-000000000015 getDashboardResponse - Response - {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000015\",\"transactionRef\":\"FAKE-TXN-15-1\",\"apiName\":\"getDashboard\",\"channel\":\"MB\",\"httpStatus\":200},\"data\":{\"responseCode\":\"3001\",\"errorDescription\":\"Dashboard partially unavailable\"}}",
+    "1793063756.658|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:56.658 INFO [ECOMM-Message][/sessionId] : fa4e0000-0000-4000-8000-000000000008 fundTransferRequest - Request - {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000008\",\"transactionRef\":\"FAKE-TXN-08-1\",\"apiName\":\"fundTransfer\",\"channel\":\"MB\"},\"data\":{\"customerId\":\"FAKE-CUST-0008\"}}",
+    "1793063756.664|~|/var/log/pods/sit-01-online-fake01.log|~|2026-10-27 01:15:56.664 INFO [Enterprise-HostMessage]['sessionIdentity'] : fa4e0000-0000-4000-8000-000000000008 FundTransferRequest [Request] {\"_mock\":\"FAKE-DESENSITIZED\",\"header\":{\"sessionId\":\"fa4e0000-0000-4000-8000-000000000008\",\"transactionRef\":\"FAKE-TXN-08-2\",\"apiName\":\"FundTransfer\"},\"data\":{\"accountNo\":\"FAKE-ACCT-0008\"}}",
+    "1793063756.669|~|/var/log/pods/microservice-sit-01-ms-fake01.log|~|2026-10-27 01:15:56.669 INFO WSAppLog [\"WS:\" fa4e0000-0000-4000-8000-000000000008] request: URL?: POST: /ws/fund/transfer \"transactionRef : FAKE-TXN-08-2\"",
+    "1793063756.673|~|/var/log/pods/microservice-sit-01-ms-fake01.log|~|2026-10-27 01:15:56.673 INFO [EAI-Gateway] Request Message <EAI><RqUID>FAKE-TXN-08-2</RqUID><SvcRq><SvcCode>FT01</SvcCode><SvcCode>A01</SvcCode></SvcRq></EAI>")
+| mvexpand data
+| eval f=split(data, "|~|"), _time=tonumber(mvindex(f,0)), source=mvindex(f,1), _raw=mvindex(f,2)
+| fields - data f
+| search (
+       (source="/var/log/pods/sit-01-online-*.log" ("[ECOMM-Message]" OR "[Enterprise-HostMessage]"))
+    OR (
+        (source="/var/log/pods/microservice-sit-01-ms-*.log"
+         OR source="/var/log/pods/microservice-sit-01_rewards*.log"
+         OR source="/var/log/pods/microservice-sit-01_bfs*.log")
+        (
+            (WSAppLog ("request:" OR "RESPONSE from Enterprise" OR "Response:"))
+            OR (EAI SvcCode ("Request Message" OR "Response Message"))
+        )
+    )
+)
+| eval LayerName=case(
+    match(_raw, "<(?:\w+:)?SvcCode\b") AND match(_raw, "(?i)(request|response) message"), "Host",
+    match(_raw, "WSAppLog"), "WS",
+    match(_raw, "\[Enterprise-HostMessage\]"), "Enterprise",
+    match(_raw, "\[ECOMM-Message\]"), "eComm")
+| where isnotnull(LayerName)
+| eval Layer=case(LayerName="eComm",1, LayerName="Enterprise",2, LayerName="WS",3, LayerName="Host",4)
+
+``` ---------- 2. JSON fields: eComm and Enterprise only ---------- ```
+| rex field=_raw "(?s)(?<JsonBlob>\{.*)"
+| eval JsonBlob=if(in(Layer, 1, 2), JsonBlob, null())
+| eval JsonOK=if(isnotnull(JsonBlob), if(json_valid(JsonBlob), 1, 0), null())
+| eval sidJson=json_extract(JsonBlob, "header.sessionId"),
+       TxnJson=json_extract(JsonBlob, "header.transactionRef"),
+       EndpointJson=json_extract(JsonBlob, "header.apiName"),
+       HttpStatus=json_extract(JsonBlob, "header.httpStatus"),
+       RespCode=json_extract(JsonBlob, "data.responseCode"),
+       ErrCode=json_extract(JsonBlob, "data.errorCode"),
+       ErrDesc=json_extract(JsonBlob, "data.errorDescription")
+``` Option A (INDEXED_EXTRACTIONS=json or KV_MODE=json, pure-JSON events): delete the 4 commands above and use: ```
+``` | eval JsonOK=if(in(Layer, 1, 2), 1, null()) ```
+``` | eval sidJson=mvindex('header.sessionId', 0), TxnJson=mvindex('header.transactionRef', 0), ... same for each path ```
+``` Turn empty strings and the words null / none into real nulls, so they never count as "error present". ```
+| foreach sidJson TxnJson EndpointJson HttpStatus RespCode ErrCode ErrDesc
+    [ eval <<FIELD>>=if(match(lower(trim('<<FIELD>>')), "^(null|none)?$"), null(), trim('<<FIELD>>')) ]
+``` Session ID read straight from the text, so truncated JSON (json_valid false) still keeps its session. ```
+| rex field=JsonBlob "\"sessionId\"\s*:\s*\"(?<sidRex>[^\"]+)\""
+
+``` ---------- 3. Direction ---------- ```
+| eval Direction=case(
+    LayerName="eComm"      AND match(_raw, "- Request -"),  "Request",
+    LayerName="eComm"      AND match(_raw, "- Response -"), "Response",
+    LayerName="Enterprise" AND match(_raw, "\[Request\]"),  "Request",
+    LayerName="Enterprise" AND match(_raw, "\[Response\]"), "Response",
+    LayerName="WS"   AND match(_raw, "(?i)request:"), "Request",
+    LayerName="WS"   AND match(_raw, "(?i)(RESPONSE from Enterprise|Response:)"), "Response",
+    LayerName="Host" AND match(_raw, "(?i)Request Message"),  "Request",
+    LayerName="Host" AND match(_raw, "(?i)Response Message"), "Response")
+| where isnotnull(Direction)
+``` ^ [current] markers. If direction is only inside the JSON, test that field instead, e.g. match(DirJson, "(?i)^req"). ```
+
+``` ---------- 4. Session and link keys ---------- ```
+| rex field=_raw "\[ECOMM-Message\]\[\/sessionId\]\s*:\s*(?<sidEcommText>[0-9a-fA-F-]{36})"
+| rex field=_raw "\[Enterprise-HostMessage\]\['sessionIdentity'\]\s*:\s*(?<sidEnterpriseText>[0-9a-fA-F-]{36})"
+| rex field=_raw "\[\"?\s*WS:\"?\s*(?<sidWS>[0-9a-fA-F-]{36})\s*\]"
+``` ^ [current] text-format session patterns, kept as fallbacks ```
+| eval sidEcomm=if(LayerName="eComm", coalesce(sidJson, sidRex, sidEcommText), null()),
+       sidEnterprise=if(LayerName="Enterprise", coalesce(sidJson, sidRex, sidEnterpriseText), null())
+| eval sessionId=coalesce(sidEcomm, sidEnterprise, sidWS)
+| rex field=_raw "(?:transactionReferenceNumber|transactionRef)\s*:\s*(?<transactionRef>[^\"\s,;}]+)"
+| eval transactionRef=coalesce(TxnJson, transactionRef)
+| rex field=_raw "<RqUID>(?<hostRef>[^<]+)</RqUID>"
+| eval LinkKey=coalesce(transactionRef, hostRef)
+| eval LinkKey=if(match(LinkKey, "^(?i)(n/?a|null|none|-|0+)$"), null(), LinkKey)
+``` Link only when a LinkKey belongs to exactly one session; never guess. ```
+| eventstats dc(sessionId) as SidPerLinkKey first(sessionId) as sidViaLink by LinkKey
+| eval sidViaLink=if(SidPerLinkKey=1, sidViaLink, null())
+| eval LinkedBy=case(isnotnull(sessionId),"sessionId", isnotnull(sidViaLink),"LinkKey", SidPerLinkKey>1,"ambiguous", true(),"none")
+``` Unlinked events get a key of their own, so they are never paired with other sessions. ```
+| eval sessionId=coalesce(sessionId, sidViaLink, "unlinked:" . substr(md5(_raw), 1, 12))
+``` ^ OPTIONAL: delete to list every session in the time range ```
+
+``` ---------- 5. Endpoint, URL, service codes ---------- ```
+| rex field=_raw "(?i)(?<EndpointText>[^\[\]\+\s\"{}:,]+(?:Request|Response))\b"
+| eval Endpoint=coalesce(EndpointJson, EndpointText)
+| rex field=_raw "(?:(?<EnterpriseEndpoint>[^\]]+)\])"
+| rex field=_raw "URL\?:\s+\S+:\s*(?<URL>/\S+)"
+| rex field=_raw max_match=0 "<(?:\w+:)?SvcCode\b[^>]*>(?<SvcCode>[^<]+)</(?:\w+:)?SvcCode>"
+| where LayerName!="Host" OR mvcount(SvcCode)>=1
+
+``` ---------- 6. HopStatus: per response event ---------- ```
+| rex field=_raw "(?:RESPONSE from Enterprise|Response:).*\bstatus:\s*(?<WsStatus>\d{3})"
+``` ^ OPTIONAL: delete if WS responses carry no status ```
+| rex field=_raw max_match=0 "<StatusCode>(?<HostStatus>[^<]+)</StatusCode>"
+| eval HostBad=mvmap(HostStatus, if(in(upper(trim(HostStatus)), "0"), null(), HostStatus))
+| eval HopStatus=case(
+    Direction="Request", "N/A",
+    JsonOK=0, "UNKNOWN",
+    isnotnull(HttpStatus) AND NOT in(tostring(HttpStatus), "200"), "FAILED",
+    isnotnull(ErrCode) AND NOT in(tostring(ErrCode), "0000","00000"), "FAILED",
+    isnotnull(ErrDesc), "FAILED",
+    match(_raw, "(?i)\b(exception|timed? ?out)\b"), "FAILED",
+    isnotnull(HostBad), "FAILED",
+    isnotnull(RespCode), if(in(tostring(RespCode), "0000","00000"), "SUCCESS", "FAILED"),
+    isnotnull(HostStatus), "SUCCESS",
+    isnotnull(WsStatus), if(in(tostring(WsStatus), "200", "0000","00000"), "SUCCESS", "FAILED"),
+    isnotnull(HttpStatus), "SUCCESS",
+    true(), "UNKNOWN")
+``` ^ The match(_raw, "(?i)\b(exception|timed? ?out)\b") line is OPTIONAL: delete it rather than leave the pattern empty (an empty pattern matches everything). ```
+| eval RespCode=coalesce(RespCode, WsStatus, mvjoin(HostStatus, ","))
+
+``` ---------- 7. Order, pairing, elapsed time, missing responses ---------- ```
+| eval SortKey=if(Direction="Request", Layer, -Layer)
+| sort 0 sessionId _time SortKey
+| streamstats count as Step by sessionId
+| eval WsURL=if(LayerName="WS", URL, null())
+| streamstats last(WsURL) as LastWsURL by sessionId
+| eval pairIndex=mvrange(0, ceil(mvcount(SvcCode)/2))
+| eval HostPairs=mvmap(pairIndex,
+    mvindex(SvcCode, pairIndex*2) . " ~ " .
+    coalesce(mvindex(SvcCode, (pairIndex*2)+1), mvindex(SvcCode, pairIndex*2)))
+| eval HostServices=if(LayerName="Host", mvjoin(HostPairs, " | "), null())
+``` ^ [current] SvcCode values read as main/sub pairs ```
+| eval API=case(
+    LayerName="eComm", Endpoint,
+    LayerName="Enterprise", Endpoint,
+    LayerName="WS", coalesce(URL, LastWsURL, EnterpriseEndpoint, "N/A"),
+    LayerName="Host", coalesce(mvindex(SvcCode, 0), EnterpriseEndpoint))
+| eval PairKey=case(
+    LayerName="Host", coalesce(mvindex(SvcCode, 0), EnterpriseEndpoint, ""),
+    true(), replace(API, "(?i)(Request|Response)$", ""))
+| eval ReqTime=if(Direction="Request", _time, null())
+| streamstats last(ReqTime) as LastReqTime by sessionId Layer PairKey
+| eval ElapsedMs=if(Direction="Response" AND isnotnull(LastReqTime),
+    round((_time-LastReqTime)*1000, 0), null())
+| eventstats count(eval(Direction="Request")) as nReq count(eval(Direction="Response")) as nResp by sessionId Layer PairKey
+| eval RespMissing=if(Direction="Request" AND nResp<nReq, 1, 0)
+
+``` ---------- 8. SessionStatus and FirstFailedHop: per sessionId ---------- ```
+| eventstats min(Layer) as EntryLayer by sessionId
+| eval EntryResult=if(Layer=EntryLayer AND Direction="Response", HopStatus, null()),
+       FailKey=if(HopStatus="FAILED", _time . "|" . (9-Layer) . "|" . LayerName . ": " . coalesce(API, "N/A"), null())
+``` ^ FailKey sorts by time, then deepest layer first at equal times ```
+| eventstats count(eval(HopStatus="FAILED")) as FailedHops
+             count(eval(HopStatus="UNKNOWN")) as UnknownHops
+             sum(RespMissing) as MissingResponses
+             values(EntryResult) as EntryResults
+             min(FailKey) as FirstFailKey
+             by sessionId
+| eval SessionStatus=case(
+    like(sessionId, "unlinked:%"), "UNKNOWN",
+    isnotnull(mvfind(EntryResults, "^FAILED$")), "FAILED",
+    FailedHops>0 AND isnotnull(mvfind(EntryResults, "^SUCCESS$")), "PARTIAL",
+    FailedHops>0, "FAILED",
+    UnknownHops>0 OR MissingResponses>0 OR isnull(EntryResults), "UNKNOWN",
+    true(), "SUCCESS")
+| eval FirstFailedHop=mvindex(split(FirstFailKey, "|"), 2)
+
+``` ---------- 9. Result filter ---------- ```
+``` ^ OPTIONAL: delete, or use | where in(SessionStatus,"FAILED","PARTIAL") or | where HopStatus="FAILED" ```
+
+``` ---------- 10. Display ---------- ```
+| eval DirectionSymbol=if(Direction="Request", "?", "!")
+| eval Indent=if(Layer=1, "", substr("------------------------------", 1, 4*Layer-6) . "› ")
+| eval Flow=Indent . LayerName . ": " . coalesce(API, "N/A") . " [" . DirectionSymbol . "]"
+| eval Params=if(isnotnull(transactionRef), "TxnRefNo: " . transactionRef, null())
+| eval EventTime=strftime(_time, "%Y-%m-%d %H:%M:%S.%3N")
+| table Step EventTime sessionId Flow HostServices Params ElapsedMs RespCode ErrCode ErrDesc HopStatus SessionStatus FirstFailedHop
+

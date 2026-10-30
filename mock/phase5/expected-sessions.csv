@@ -1,0 +1,18 @@
+scenario,sessionId,sessionStatus,firstFailedHop,title
+A,fa4e0000-0000-4000-8000-000000000001,SUCCESS,,eComm internal processing only
+B,fa4e0000-0000-4000-8000-000000000002,SUCCESS,,eComm calls one Enterprise API; Enterprise processes internally (empty and null error fields)
+C,fa4e0000-0000-4000-8000-000000000003,SUCCESS,,eComm calls three Enterprise APIs in sequence
+D,fa4e0000-0000-4000-8000-000000000004,SUCCESS,,Enterprise calls one EAI service with a single sub-service
+E,fa4e0000-0000-4000-8000-000000000005,SUCCESS,,Enterprise calls one EAI service with three sub-services (WS on the bfs pod)
+F,fa4e0000-0000-4000-8000-000000000006,SUCCESS,,"Enterprise calls EAI plus OPI, WAM and CUS (downstream calls logged by WS)"
+G1,fa4e0000-0000-4000-8000-000000000007,FAILED,WS: /ws/fund/transfer,Downstream timeout: Host request gets no response; WS logs an explicit timeout
+G1b,fa4e0000-0000-4000-8000-000000000008,UNKNOWN,,Timeout with no response logged at any layer (still in flight at the end of the window)
+G2,fa4e0000-0000-4000-8000-000000000009,FAILED,Host: FT01,EAI returns an error status for one sub-service pair
+G3,fa4e0000-0000-4000-8000-000000000010,FAILED,Enterprise: BillPayment,Enterprise returns HTTP 200 with errorCode and errorDescription
+G4,fa4e0000-0000-4000-8000-000000000011,FAILED,eComm: validatePayee,eComm returns a non-success code with errorDescription
+H,fa4e0000-0000-4000-8000-000000000012,SUCCESS,,Two sessions interleaved in time (session 1 of 2)
+H,fa4e0000-0000-4000-8000-000000000013,SUCCESS,,"Two sessions interleaved in time (session 2 of 2), starts 4 ms after session 1"
+I1,fa4e0000-0000-4000-8000-000000000014,PARTIAL,Enterprise: RewardsBalance,"One Enterprise API succeeds, another fails, eComm still returns success"
+I2,fa4e0000-0000-4000-8000-000000000015,FAILED,Enterprise: RewardsBalance,"One Enterprise API succeeds, another fails, eComm returns an error"
+G3b,fa4e0000-0000-4000-8000-000000000016,FAILED,Enterprise: CardActivation,"Enterprise returns HTTP 200 with errorCode only (no description, no response code)"
+G5,fa4e0000-0000-4000-8000-000000000017,FAILED,Enterprise: LoanQuote,Enterprise returns HTTP 503 with no business code

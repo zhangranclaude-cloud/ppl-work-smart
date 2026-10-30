@@ -1,0 +1,45 @@
+@startuml
+title Session fa4e0000-0000-4000-8000-000000000006\nSessionStatus: SUCCESS | FirstFailedHop: none
+hide footbox
+skinparam responseMessageBelowArrow true
+skinparam maxMessageSize 260
+actor App
+participant eComm
+participant Enterprise
+participant EAI
+participant OPI
+participant WAM
+participant CUS
+App -[#green]> eComm : [1] getCustomer360
+activate eComm
+eComm -[#green]> Enterprise : [2] Customer360
+activate Enterprise
+Enterprise -[#green]> Enterprise : [3] WS /ws/customer/360
+activate Enterprise
+Enterprise -[#green]> EAI : [4] CIF1 (CIF1 ~ PRF01)
+activate EAI
+EAI -[#green]-> Enterprise : [5] 0 · 159 ms
+deactivate EAI
+Enterprise -[#green]> OPI : [6] /opi/v2/customer/profile
+activate OPI
+OPI -[#green]-> Enterprise : [7] 200 · 68 ms
+deactivate OPI
+Enterprise -[#green]> WAM : [8] /wam/v1/limits
+activate WAM
+WAM -[#green]-> Enterprise : [9] 200 · 45 ms
+deactivate WAM
+Enterprise -[#green]> CUS : [10] /cus/v1/customer/segment
+activate CUS
+CUS -[#green]-> Enterprise : [11] 200 · 33 ms
+deactivate CUS
+Enterprise -[#green]-> Enterprise : [12] 200 · 328 ms
+deactivate Enterprise
+Enterprise -[#green]-> eComm : [13] 00000 · 345 ms
+deactivate Enterprise
+eComm -[#green]-> App : [14] 0000 · 360 ms
+deactivate eComm
+legend right
+  <color:green>green</color> success · <color:red>red</color> failed · <color:orange>orange</color> unknown or no response
+  <i>(Excel only)</i> = no matching raw log line · grey note = inferred
+endlegend
+@enduml

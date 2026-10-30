@@ -1,0 +1,30 @@
+@startuml
+title Session fa4e0000-0000-4000-8000-000000000004\nSessionStatus: SUCCESS | FirstFailedHop: none
+hide footbox
+skinparam responseMessageBelowArrow true
+skinparam maxMessageSize 260
+actor App
+participant eComm
+participant Enterprise
+participant EAI
+App -[#green]> eComm : [1] fundTransfer
+activate eComm
+eComm -[#green]> Enterprise : [2] FundTransfer
+activate Enterprise
+Enterprise -[#green]> Enterprise : [3] WS /ws/fund/transfer
+activate Enterprise
+Enterprise -[#green]> EAI : [4] FT01 (FT01 ~ A01)
+activate EAI
+EAI -[#green]-> Enterprise : [5] 0 · 187 ms
+deactivate EAI
+Enterprise -[#green]-> Enterprise : [6] 200 · 207 ms
+deactivate Enterprise
+Enterprise -[#green]-> eComm : [7] 00000 · 225 ms
+deactivate Enterprise
+eComm -[#green]-> App : [8] 0000 · 240 ms
+deactivate eComm
+legend right
+  <color:green>green</color> success · <color:red>red</color> failed · <color:orange>orange</color> unknown or no response
+  <i>(Excel only)</i> = no matching raw log line · grey note = inferred
+endlegend
+@enduml

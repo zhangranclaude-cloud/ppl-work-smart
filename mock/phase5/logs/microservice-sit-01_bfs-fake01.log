@@ -1,0 +1,4 @@
+2026-10-27 01:15:08.610 INFO WSAppLog ["WS:" fa4e0000-0000-4000-8000-000000000005] request: URL?: POST: /ws/account/inquiry "transactionRef : FAKE-TXN-05-2"
+2026-10-27 01:15:08.614 INFO [EAI-Gateway] Request Message <EAI><RqUID>FAKE-TXN-05-2</RqUID><SvcRq><SvcCode>ACCT</SvcCode><SvcCode>INQ01</SvcCode><SvcCode>ACCT</SvcCode><SvcCode>BAL02</SvcCode><SvcCode>ACCT</SvcCode><SvcCode>LMT03</SvcCode></SvcRq></EAI>
+2026-10-27 01:15:08.858 INFO [EAI-Gateway] Response Message <EAI><RqUID>FAKE-TXN-05-2</RqUID><SvcRs><SvcCode>ACCT</SvcCode><SvcCode>INQ01</SvcCode><StatusCode>0</StatusCode></SvcRs><SvcRs><SvcCode>ACCT</SvcCode><SvcCode>BAL02</SvcCode><StatusCode>0</StatusCode></SvcRs><SvcRs><SvcCode>ACCT</SvcCode><SvcCode>LMT03</SvcCode><StatusCode>0</StatusCode></SvcRs></EAI>
+2026-10-27 01:15:08.871 INFO WSAppLog ["WS:" fa4e0000-0000-4000-8000-000000000005] RESPONSE from Enterprise URL?: POST: /ws/account/inquiry "transactionRef : FAKE-TXN-05-2" status: 200

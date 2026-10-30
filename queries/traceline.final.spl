@@ -1,0 +1,175 @@
+``` ============================================================================================ ```
+``` Traceline final SPL - trace mode: one or a few sessions, for the Excel export and the sequence diagram ```
+``` Placeholders look like <UPPER_SNAKE>. Replace every one; see the fill table. ```
+``` [current] = value taken from the existing query: check it against your logs. ```
+``` OPTIONAL = the whole line may be deleted. ```
+``` JSON extraction: option B (rex + json_extract, Splunk 8.1+). Option A is in section 2 as comments. ```
+``` ============================================================================================ ```
+
+``` ---------- 0. Base search: index and time first ---------- ```
+index IN (<INDEX>) earliest=<TIME_EARLIEST> latest=<TIME_LATEST>
+(
+       (source="<BASE_PATH>sit-01-online-*.log" ("[ECOMM-Message]" OR "[Enterprise-HostMessage]"))
+    OR (
+        (source="<BASE_PATH>microservice-sit-01-ms-*.log"
+         OR source="<BASE_PATH>microservice-sit-01_rewards*.log"
+         OR source="<BASE_PATH>microservice-sit-01_bfs*.log")
+        (
+            (WSAppLog ("request:" OR "RESPONSE from Enterprise" OR "Response:"))
+            OR (EAI SvcCode ("Request Message" OR "Response Message"))
+        )
+    )
+)
+``` ^ [current] sources and match terms. WSAppLog has no wildcards so the index lexicon can be used. ```
+
+``` ---------- 1. Layer: deepest layer checked first ---------- ```
+| eval LayerName=case(
+    match(_raw, "<(?:\w+:)?SvcCode\b") AND match(_raw, "(?i)(request|response) message"), "Host",
+    match(_raw, "WSAppLog"), "WS",
+    match(_raw, "\[Enterprise-HostMessage\]"), "Enterprise",
+    match(_raw, "\[ECOMM-Message\]"), "eComm")
+| where isnotnull(LayerName)
+| eval Layer=case(LayerName="eComm",1, LayerName="Enterprise",2, LayerName="WS",3, LayerName="Host",4)
+
+``` ---------- 2. JSON fields: eComm and Enterprise only ---------- ```
+| rex field=_raw "<JSON_BLOB_REGEX>"
+| eval JsonBlob=if(in(Layer, 1, 2), JsonBlob, null())
+| eval JsonOK=if(isnotnull(JsonBlob), if(json_valid(JsonBlob), 1, 0), null())
+| eval sidJson=json_extract(JsonBlob, "<JSON_SESSION_PATH>"),
+       TxnJson=json_extract(JsonBlob, "<JSON_TXNREF_PATH>"),
+       EndpointJson=json_extract(JsonBlob, "<JSON_ENDPOINT_PATH>"),
+       HttpStatus=json_extract(JsonBlob, "<JSON_HTTPSTATUS_PATH>"),
+       RespCode=json_extract(JsonBlob, "<JSON_RESPCODE_PATH>"),
+       ErrCode=json_extract(JsonBlob, "<JSON_ERRCODE_PATH>"),
+       ErrDesc=json_extract(JsonBlob, "<JSON_ERRDESC_PATH>")
+``` Option A (INDEXED_EXTRACTIONS=json or KV_MODE=json, pure-JSON events): delete the 4 commands above and use: ```
+``` | eval JsonOK=if(in(Layer, 1, 2), 1, null()) ```
+``` | eval sidJson=mvindex('<JSON_SESSION_PATH>', 0), TxnJson=mvindex('<JSON_TXNREF_PATH>', 0), ... same for each path ```
+``` Turn empty strings and the words null / none into real nulls, so they never count as "error present". ```
+| foreach sidJson TxnJson EndpointJson HttpStatus RespCode ErrCode ErrDesc
+    [ eval <<FIELD>>=if(match(lower(trim('<<FIELD>>')), "^(null|none)?$"), null(), trim('<<FIELD>>')) ]
+``` Session ID read straight from the text, so truncated JSON (json_valid false) still keeps its session. ```
+| rex field=JsonBlob "\"<JSON_SESSION_KEY>\"\s*:\s*\"(?<sidRex>[^\"]+)\""
+
+``` ---------- 3. Direction ---------- ```
+| eval Direction=case(
+    LayerName="eComm"      AND match(_raw, "- Request -"),  "Request",
+    LayerName="eComm"      AND match(_raw, "- Response -"), "Response",
+    LayerName="Enterprise" AND match(_raw, "\[Request\]"),  "Request",
+    LayerName="Enterprise" AND match(_raw, "\[Response\]"), "Response",
+    LayerName="WS"   AND match(_raw, "(?i)request:"), "Request",
+    LayerName="WS"   AND match(_raw, "(?i)(RESPONSE from Enterprise|Response:)"), "Response",
+    LayerName="Host" AND match(_raw, "(?i)Request Message"),  "Request",
+    LayerName="Host" AND match(_raw, "(?i)Response Message"), "Response")
+| where isnotnull(Direction)
+``` ^ [current] markers. If direction is only inside the JSON, test that field instead, e.g. match(DirJson, "(?i)^req"). ```
+
+``` ---------- 4. Session and link keys ---------- ```
+| rex field=_raw "\[ECOMM-Message\]\[\/sessionId\]\s*:\s*(?<sidEcommText>[0-9a-fA-F-]{36})"
+| rex field=_raw "\[Enterprise-HostMessage\]\['sessionIdentity'\]\s*:\s*(?<sidEnterpriseText>[0-9a-fA-F-]{36})"
+| rex field=_raw "\[\"?\s*WS:\"?\s*(?<sidWS>[0-9a-fA-F-]{36})\s*\]"
+``` ^ [current] text-format session patterns, kept as fallbacks ```
+| eval sidEcomm=if(LayerName="eComm", coalesce(sidJson, sidRex, sidEcommText), null()),
+       sidEnterprise=if(LayerName="Enterprise", coalesce(sidJson, sidRex, sidEnterpriseText), null())
+| eval sessionId=coalesce(sidEcomm, sidEnterprise, sidWS)
+| rex field=_raw "(?:transactionReferenceNumber|transactionRef)\s*:\s*(?<transactionRef>[^\"\s,;}]+)"
+| eval transactionRef=coalesce(TxnJson, transactionRef)
+| rex field=_raw "<HOST_LINK_REGEX>"
+| eval LinkKey=coalesce(transactionRef, hostRef)
+| eval LinkKey=if(match(LinkKey, "^(?i)(n/?a|null|none|-|0+)$"), null(), LinkKey)
+``` Link only when a LinkKey belongs to exactly one session; never guess. ```
+| eventstats dc(sessionId) as SidPerLinkKey first(sessionId) as sidViaLink by LinkKey
+| eval sidViaLink=if(SidPerLinkKey=1, sidViaLink, null())
+| eval LinkedBy=case(isnotnull(sessionId),"sessionId", isnotnull(sidViaLink),"LinkKey", SidPerLinkKey>1,"ambiguous", true(),"none")
+``` Unlinked events get a key of their own, so they are never paired with other sessions. ```
+| eval sessionId=coalesce(sessionId, sidViaLink, "unlinked:" . substr(md5(_raw), 1, 12))
+| search sessionId IN (<SESSION_ID>)
+``` ^ OPTIONAL: delete to list every session in the time range ```
+
+``` ---------- 5. Endpoint, URL, service codes ---------- ```
+| rex field=_raw "(?i)(?<EndpointText>[^\[\]\+\s\"{}:,]+(?:Request|Response))\b"
+| eval Endpoint=coalesce(EndpointJson, EndpointText)
+| rex field=_raw "(?:(?<EnterpriseEndpoint>[^\]]+)\])"
+| rex field=_raw "URL\?:\s+\S+:\s*(?<URL>/\S+)"
+| rex field=_raw max_match=0 "<(?:\w+:)?SvcCode\b[^>]*>(?<SvcCode>[^<]+)</(?:\w+:)?SvcCode>"
+| where LayerName!="Host" OR mvcount(SvcCode)>=1
+
+``` ---------- 6. HopStatus: per response event ---------- ```
+| rex field=_raw "<WS_STATUS_REGEX>"
+``` ^ OPTIONAL: delete if WS responses carry no status ```
+| rex field=_raw max_match=0 "<HOST_STATUS_REGEX>"
+| eval HostBad=mvmap(HostStatus, if(in(upper(trim(HostStatus)), <HOST_SUCCESS_VALUES>), null(), HostStatus))
+| eval HopStatus=case(
+    Direction="Request", "N/A",
+    JsonOK=0, "UNKNOWN",
+    isnotnull(HttpStatus) AND NOT in(tostring(HttpStatus), <HTTP_SUCCESS_LIST>), "FAILED",
+    isnotnull(ErrCode) AND NOT in(tostring(ErrCode), <SUCCESS_CODE_LIST>), "FAILED",
+    isnotnull(ErrDesc), "FAILED",
+    match(_raw, "<FAIL_PATTERN>"), "FAILED",
+    isnotnull(HostBad), "FAILED",
+    isnotnull(RespCode), if(in(tostring(RespCode), <SUCCESS_CODE_LIST>), "SUCCESS", "FAILED"),
+    isnotnull(HostStatus), "SUCCESS",
+    isnotnull(WsStatus), if(in(tostring(WsStatus), <HTTP_SUCCESS_LIST>, <SUCCESS_CODE_LIST>), "SUCCESS", "FAILED"),
+    isnotnull(HttpStatus), "SUCCESS",
+    true(), "UNKNOWN")
+``` ^ The match(_raw, "<FAIL_PATTERN>") line is OPTIONAL: delete it rather than leave the pattern empty (an empty pattern matches everything). ```
+| eval RespCode=coalesce(RespCode, WsStatus, mvjoin(HostStatus, ","))
+
+``` ---------- 7. Order, pairing, elapsed time, missing responses ---------- ```
+| eval SortKey=if(Direction="Request", Layer, -Layer)
+| sort 0 sessionId _time SortKey
+| streamstats count as Step by sessionId
+| eval WsURL=if(LayerName="WS", URL, null())
+| streamstats last(WsURL) as LastWsURL by sessionId
+| eval pairIndex=mvrange(0, ceil(mvcount(SvcCode)/2))
+| eval HostPairs=mvmap(pairIndex,
+    mvindex(SvcCode, pairIndex*2) . " ~ " .
+    coalesce(mvindex(SvcCode, (pairIndex*2)+1), mvindex(SvcCode, pairIndex*2)))
+| eval HostServices=if(LayerName="Host", mvjoin(HostPairs, " | "), null())
+``` ^ [current] SvcCode values read as main/sub pairs ```
+| eval API=case(
+    LayerName="eComm", Endpoint,
+    LayerName="Enterprise", Endpoint,
+    LayerName="WS", coalesce(URL, LastWsURL, EnterpriseEndpoint, "N/A"),
+    LayerName="Host", coalesce(mvindex(SvcCode, 0), EnterpriseEndpoint))
+| eval PairKey=case(
+    LayerName="Host", coalesce(mvindex(SvcCode, 0), EnterpriseEndpoint, ""),
+    true(), replace(API, "(?i)(Request|Response)$", ""))
+| eval ReqTime=if(Direction="Request", _time, null())
+| streamstats last(ReqTime) as LastReqTime by sessionId Layer PairKey
+| eval ElapsedMs=if(Direction="Response" AND isnotnull(LastReqTime),
+    round((_time-LastReqTime)*1000, 0), null())
+| eventstats count(eval(Direction="Request")) as nReq count(eval(Direction="Response")) as nResp by sessionId Layer PairKey
+| eval RespMissing=if(Direction="Request" AND nResp<nReq, 1, 0)
+
+``` ---------- 8. SessionStatus and FirstFailedHop: per sessionId ---------- ```
+| eventstats min(Layer) as EntryLayer by sessionId
+| eval EntryResult=if(Layer=EntryLayer AND Direction="Response", HopStatus, null()),
+       FailKey=if(HopStatus="FAILED", _time . "|" . (9-Layer) . "|" . LayerName . ": " . coalesce(API, "N/A"), null())
+``` ^ FailKey sorts by time, then deepest layer first at equal times ```
+| eventstats count(eval(HopStatus="FAILED")) as FailedHops
+             count(eval(HopStatus="UNKNOWN")) as UnknownHops
+             sum(RespMissing) as MissingResponses
+             values(EntryResult) as EntryResults
+             min(FailKey) as FirstFailKey
+             by sessionId
+| eval SessionStatus=case(
+    like(sessionId, "unlinked:%"), "UNKNOWN",
+    isnotnull(mvfind(EntryResults, "^FAILED$")), "FAILED",
+    FailedHops>0 AND isnotnull(mvfind(EntryResults, "^SUCCESS$")), "PARTIAL",
+    FailedHops>0, "FAILED",
+    UnknownHops>0 OR MissingResponses>0 OR isnull(EntryResults), "UNKNOWN",
+    true(), "SUCCESS")
+| eval FirstFailedHop=mvindex(split(FirstFailKey, "|"), 2)
+
+``` ---------- 9. Result filter ---------- ```
+<ONLY_FAILED>
+``` ^ OPTIONAL: delete, or use | where in(SessionStatus,"FAILED","PARTIAL") or | where HopStatus="FAILED" ```
+
+``` ---------- 10. Display ---------- ```
+| eval DirectionSymbol=if(Direction="Request", "?", "!")
+| eval Indent=if(Layer=1, "", substr("------------------------------", 1, 4*Layer-6) . "› ")
+| eval Flow=Indent . LayerName . ": " . coalesce(API, "N/A") . " [" . DirectionSymbol . "]"
+| eval Params=if(isnotnull(transactionRef), "TxnRefNo: " . transactionRef, null())
+| eval EventTime=strftime(_time, "%Y-%m-%d %H:%M:%S.%3N")
+| table Step EventTime sessionId Flow HostServices Params ElapsedMs RespCode ErrCode ErrDesc HopStatus SessionStatus FirstFailedHop
