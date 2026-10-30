@@ -1,0 +1,747 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Traceline Mock Logs</title>
+<style>
+:root {
+  --bg: #f5f6f8; --panel: #ffffff; --text: #1d2330; --muted: #667085; --border: #d9dde3;
+  --accent: #2f6fdf; --accent-weak: #e8f0fd; --danger: #c43d3d; --code: #f2f4f7;
+  --l1: #2f6fdf; --l2: #0f8a6a; --l3: #b26b00; --l4: #8a3fc7;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14171c; --panel: #1c2027; --text: #e6e8eb; --muted: #9aa3af; --border: #323844;
+    --accent: #6c9cff; --accent-weak: #24324d; --danger: #ff7a7a; --code: #232831;
+    --l1: #6c9cff; --l2: #3cc9a0; --l3: #f0a93b; --l4: #c08bf0;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+header { display: flex; align-items: baseline; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--panel); }
+header h1 { font-size: 17px; margin: 0; }
+header p { margin: 0; color: var(--muted); font-size: 13px; }
+main { display: grid; grid-template-columns: minmax(380px, 520px) 1fr; gap: 12px; padding: 12px 16px; height: calc(100vh - 50px); }
+@media (max-width: 900px) { main { grid-template-columns: 1fr; height: auto; } }
+.pane { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+.tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); padding: 0 8px; flex-wrap: wrap; }
+.tabs button { border: 0; background: none; color: var(--muted); padding: 10px 10px 8px; cursor: pointer; border-bottom: 2px solid transparent; font: inherit; }
+.tabs button.active { color: var(--text); border-bottom-color: var(--accent); font-weight: 600; }
+.tabs .count { font-size: 11px; color: var(--muted); margin-left: 4px; }
+.body { overflow: auto; padding: 12px; flex: 1; min-height: 0; }
+.toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+button.btn { font: inherit; font-size: 13px; padding: 5px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--panel); color: var(--text); cursor: pointer; }
+button.btn:hover { border-color: var(--accent); }
+button.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+button.btn.small { font-size: 12px; padding: 2px 8px; }
+button.icon { border: 0; background: none; color: var(--muted); cursor: pointer; font-size: 15px; padding: 2px 6px; border-radius: 4px; }
+button.icon:hover { color: var(--danger); background: var(--code); }
+.card { border: 1px solid var(--border); border-left: 4px solid var(--c, var(--accent)); border-radius: 6px; padding: 8px 10px; margin: 8px 0; background: var(--panel); }
+.card .card { margin-left: 4px; }
+.card-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.card-head .tag { font-size: 11px; font-weight: 700; color: var(--c); text-transform: uppercase; letter-spacing: .04em; }
+.card-head .spacer { flex: 1; }
+.l1 { --c: var(--l1); } .l2 { --c: var(--l2); } .l3 { --c: var(--l3); } .l4 { --c: var(--l4); }
+.row { display: flex; gap: 8px; flex-wrap: wrap; }
+.field { display: flex; flex-direction: column; gap: 2px; flex: 1 1 120px; min-width: 0; margin-bottom: 6px; }
+.field.wide { flex-basis: 100%; }
+.field.check { flex-direction: row; align-items: center; gap: 6px; }
+.field > span { font-size: 11px; color: var(--muted); }
+input, select, textarea { font: inherit; font-size: 13px; color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: 5px; padding: 4px 6px; width: 100%; min-width: 0; }
+.field.check input { width: auto; }
+textarea { font-family: ui-monospace, Consolas, monospace; font-size: 12px; resize: vertical; }
+input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent-weak); border-color: var(--accent); }
+.params { margin: 4px 0 6px; }
+.params .prow { display: grid; grid-template-columns: 1fr 1.4fr 82px 26px; gap: 4px; margin-bottom: 4px; }
+.sub { font-size: 11px; color: var(--muted); margin: 6px 0 2px; }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.chip { display: inline-flex; align-items: center; gap: 2px; background: var(--code); border-radius: 12px; padding: 1px 4px 1px 9px; font-family: ui-monospace, Consolas, monospace; font-size: 12px; }
+.chip button { border: 0; background: none; color: var(--muted); cursor: pointer; }
+.chips input { width: 110px; }
+.hint { color: var(--muted); font-size: 12px; margin: 4px 0 8px; }
+.hint code, td code { background: var(--code); padding: 0 4px; border-radius: 3px; }
+table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+th, td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+th { position: sticky; top: -12px; background: var(--panel); font-weight: 600; color: var(--muted); }
+td.flow { font-family: ui-monospace, Consolas, monospace; white-space: pre; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+td.time { white-space: nowrap; font-variant-numeric: tabular-nums; }
+tr.session-break td { border-top: 2px solid var(--border); }
+.log { font-family: ui-monospace, Consolas, monospace; font-size: 12px; white-space: pre; }
+.log div { padding: 1px 0 1px 8px; border-left: 3px solid var(--c, var(--border)); margin-bottom: 1px; }
+.log .src { color: var(--muted); }
+.log .noise { opacity: .55; }
+pre.spl { font-family: ui-monospace, Consolas, monospace; font-size: 12px; background: var(--code); padding: 10px; border-radius: 6px; margin: 0; white-space: pre; overflow: auto; }
+.sources-list { display: grid; grid-template-columns: 1fr auto auto; gap: 4px 10px; align-items: center; font-size: 12.5px; margin-top: 6px; }
+.sources-list code { word-break: break-all; }
+h3 { font-size: 13px; margin: 14px 0 6px; }
+h3:first-child { margin-top: 0; }
+.toast { position: fixed; bottom: 16px; right: 16px; background: var(--text); color: var(--bg); padding: 6px 12px; border-radius: 6px; font-size: 13px; opacity: 0; transition: opacity .2s; pointer-events: none; }
+.toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Traceline Mock Logs</h1>
+  <p>Build a transaction flow, generate mock logs for all four layers, and test the Splunk query against them.</p>
+</header>
+<main>
+  <section class="pane">
+    <nav class="tabs" id="left-tabs"></nav>
+    <div class="body" id="left-body"></div>
+  </section>
+  <section class="pane">
+    <nav class="tabs" id="right-tabs"></nav>
+    <div class="body" id="right-body"></div>
+  </section>
+</main>
+<div class="toast" id="toast"></div>
+
+<input type="file" id="file-input" hidden>
+
+<!-- Bundled copy of queries/traceline.spl. Use "Load .spl file" in the Query tab to pick up a newer version. -->
+<script type="text/plain" id="bundled-query">
+``` Traceline: end-to-end trace of a request across eComm -> Enterprise -> WS -> Host ```
+``` Set the session filter in step 5, or leave "*" to list every session in the time range. ```
+
+(source="/var/log/pods/sit-01-online-*.log" ("[ECOMM-Message]" OR "[Enterprise-HostMessage]"))
+OR (
+    (source="/var/log/pods/microservice-sit-01-ms-*.log"
+     OR source="/var/log/pods/microservice-sit-01_rewards*.log"
+     OR source="/var/log/pods/microservice-sit-01_bfs*.log")
+    (
+        ("*WSAppLog*" ("request:" OR "RESPONSE from Enterprise" OR "Response:"))
+        OR ("<EAI>" "<SvcCode>" ("Request Message" OR "Response Message"))
+    )
+)
+
+``` ---------- 1. Layer ---------- ```
+| eval LayerName=case(
+    match(_raw, "\[ECOMM-Message\]"), "eComm",
+    match(_raw, "\[Enterprise-HostMessage\]"), "Enterprise",
+    match(_raw, "<SvcCode>") AND match(_raw, "(?i)(request|response) message"), "Host",
+    match(_raw, "WSAppLog"), "WS")
+| where isnotnull(LayerName)
+| eval Layer=case(LayerName="eComm",1, LayerName="Enterprise",2, LayerName="WS",3, LayerName="Host",4)
+
+``` ---------- 2. Direction ---------- ```
+| eval Direction=case(
+    LayerName="eComm"      AND match(_raw, "- Request -"),  "Request",
+    LayerName="eComm"      AND match(_raw, "- Response -"), "Response",
+    LayerName="Enterprise" AND match(_raw, "\[Request\]"),  "Request",
+    LayerName="Enterprise" AND match(_raw, "\[Response\]"), "Response",
+    LayerName="WS"   AND match(_raw, "(?i)request:"), "Request",
+    LayerName="WS"   AND match(_raw, "(?i)(RESPONSE from Enterprise|Response:)"), "Response",
+    LayerName="Host" AND match(_raw, "(?i)Request Message"),  "Request",
+    LayerName="Host" AND match(_raw, "(?i)Response Message"), "Response")
+| where isnotnull(Direction)
+
+``` ---------- 3. Correlation keys ---------- ```
+| rex field=_raw "\[ECOMM-Message\]\[\/sessionId\]\s*:\s*(?<sidEcomm>[0-9a-fA-F-]{36})"
+| rex field=_raw "\[Enterprise-HostMessage\]\['sessionIdentity'\]\s*:\s*(?<sidEnterprise>[0-9a-fA-F-]{36})"
+| rex field=_raw "\[\"?\s*WS:\"?\s*(?<sidWS>[0-9a-fA-F-]{36})\s*\]"
+| eval sessionId=coalesce(sidEcomm, sidEnterprise, sidWS)
+| rex field=_raw "(?:transactionReferenceNumber|transactionRef)\s*:\s*(?<transactionRef>[^\"]+)"
+| rex field=_raw "<RqUID>(?<hostRef>[^<]+)</RqUID>"
+``` ^ TODO: placeholder. Replace <RqUID> with the Host XML tag that holds an ID also logged by the WS layer. ```
+| eval LinkKey=coalesce(transactionRef, hostRef)
+| rex field=_raw "(?<sidAny>[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})"
+
+``` ---------- 4. Link events without a sessionId through LinkKey ---------- ```
+| eventstats first(sessionId) as sidViaLink by LinkKey
+| eval LinkedBy=case(isnotnull(sessionId),"sessionId", isnotnull(sidViaLink),"LinkKey", isnotnull(sidAny),"any-UUID", true(),"none")
+| eval sessionId=coalesce(sessionId, sidViaLink, sidAny, "unlinked")
+
+``` ---------- 5. Filter: put one session ID here, or leave "*" for all ---------- ```
+| search sessionId="*"
+
+``` ---------- 6. Endpoint / URL / service codes ---------- ```
+| rex field=_raw "(?<Endpoint1>[^\[\]\+\s]*?(?i)Request|Response)\s*"
+| rex field=_raw "(?i)endpoint?\s*:\s*(?<Endpoint2>[^ ]+)\s*(?i)(?<Endpoint3>[^\s]+)"
+| eval Endpoint=coalesce(Endpoint1, Endpoint2, Endpoint3)
+| rex field=_raw "(?:(?<EnterpriseEndpoint>[^\]]+)\])"
+| rex field=_raw "URL\?:\s+\S+:\s*(?<URL>/\S+)"
+| rex field=_raw max_match=0 "<SvcCode>(?<SvcCode>[^<]+)</SvcCode>"
+| where LayerName!="Host" OR mvcount(SvcCode)>=1
+
+``` ---------- 7. Sort: by session, then time; at equal times requests go down the layers, responses come back up ---------- ```
+| eval SortKey=if(Direction="Request", Layer, -Layer)
+| sort 0 sessionId _time SortKey
+| eval WsURL=if(LayerName="WS", URL, null())
+| streamstats last(WsURL) as LastWsURL by sessionId
+
+``` ---------- 8. Host service pairs ---------- ```
+| eval pairIndex=mvrange(0, ceil(mvcount(SvcCode)/2))
+| eval HostPairs=mvmap(pairIndex,
+    mvindex(SvcCode, pairIndex*2) . " ~ " .
+    coalesce(mvindex(SvcCode, (pairIndex*2)+1), mvindex(SvcCode, pairIndex*2)))
+| eval HostServices=if(LayerName="Host", mvjoin(HostPairs, " | "), null())
+
+``` ---------- 9. API and elapsed time ---------- ```
+``` A parent never calls the same child API twice concurrently, so each response pairs with the latest matching request. ```
+| eval API=case(
+    LayerName="eComm", Endpoint,
+    LayerName="Enterprise", Endpoint,
+    LayerName="WS", coalesce(URL, LastWsURL, EnterpriseEndpoint, "N/A"),
+    LayerName="Host", EnterpriseEndpoint)
+| eval PairKey=case(LayerName="Host", coalesce(EnterpriseEndpoint, ""), true(), API)
+| eval ReqTime=if(Direction="Request", _time, null())
+| streamstats last(ReqTime) as LastReqTime by sessionId Layer PairKey
+| eval ElapsedMs=if(Direction="Response" AND isnotnull(LastReqTime),
+    round((_time-LastReqTime)*1000, 0), null())
+
+``` ---------- 10. Display ---------- ```
+| eval DirectionSymbol=if(Direction="Request", "?", "!")
+| eval Indent=case(Layer=1,"", Layer=2,"--› ", Layer=3,"------› ", Layer=4,"----------› ")
+| eval Flow=Indent . LayerName . ": " . coalesce(API, "N/A") . " [" . DirectionSymbol . "]"
+| eval Params=if(isnotnull(transactionRef) AND len(trim(transactionRef))>0,
+    "TxnRefNo: " . transactionRef, null())
+| streamstats count as Step by sessionId
+| eval EventTime=strftime(_time, "%Y-%m-%d %H:%M:%S.%3N")
+| table sessionId Step EventTime Flow HostServices Params ElapsedMs LinkKey LinkedBy
+</script>
+
+<script>
+// ---- core: state, generation and SPL building (no DOM) ----
+
+const STORAGE_KEY = 'traceline-mock-v1';
+const LAYERS = ['eComm', 'Enterprise', 'WS', 'Host'];
+const LAYER_CLASS = { eComm: 'l1', Enterprise: 'l2', WS: 'l3', Host: 'l4' };
+const INDENT = { eComm: '', Enterprise: '--› ', WS: '------› ', Host: '----------› ' };
+const WS_SOURCES = ['ms', 'rewards', 'bfs'];
+
+function defaultState() {
+  return {
+    seed: 1,
+    settings: {
+      sessions: 1, start: '2026-10-26T10:00:00.000', staggerMs: 0,
+      gapMs: 5, jitterMs: 0, noise: false, applyBaseSearch: true,
+    },
+    sources: {
+      online: '/var/log/pods/sit-01-online-{pod}.log',
+      ms: '/var/log/pods/microservice-sit-01-ms-{pod}.log',
+      rewards: '/var/log/pods/microservice-sit-01_rewards-{pod}.log',
+      bfs: '/var/log/pods/microservice-sit-01_bfs-{pod}.log',
+    },
+    templates: {
+      eComm: {
+        req: '{ts} INFO [ECOMM-Message][/sessionId] : {sid} {api}Request - Request - {params}',
+        resp: '{ts} INFO [ECOMM-Message][/sessionId] : {sid} {api}Response - Response - {params}',
+        paramFormat: '{k}: {v}', paramSep: ', ',
+      },
+      Enterprise: {
+        req: "{ts} INFO [Enterprise-HostMessage]['sessionIdentity'] : {sid} {api}Request [Request] {params}",
+        resp: "{ts} INFO [Enterprise-HostMessage]['sessionIdentity'] : {sid} {api}Response [Response] {params}",
+        paramFormat: '{k}: {v}', paramSep: ', ',
+      },
+      WS: {
+        req: '{ts} INFO WSAppLog ["WS:" {sid}] request: URL?: POST: {url} "transactionRef : {linkRef}" {params}',
+        resp: '{ts} INFO WSAppLog ["WS:" {sid}] RESPONSE from Enterprise URL?: POST: {url} "transactionRef : {linkRef}" {params}',
+        paramFormat: '{k}: {v}', paramSep: ', ',
+      },
+      Host: {
+        req: '{ts} INFO [EAI-Gateway] Request Message <EAI><RqUID>{linkRef}</RqUID>{codes}{params}</EAI>',
+        resp: '{ts} INFO [EAI-Gateway] Response Message <EAI><RqUID>{linkRef}</RqUID>{codes}{params}</EAI>',
+        codeBlock: '<SvcCode>{main}</SvcCode><SvcCode>{sub}</SvcCode>',
+        paramFormat: '<{k}>{v}</{k}>', paramSep: '',
+      },
+    },
+    flow: [
+      {
+        name: 'getAccountSummary', latency: 30,
+        params: [
+          { k: 'channel', v: '{pick:MB|IB}', where: 'req' },
+          { k: 'accountNo', v: '{num:10}', where: 'req' },
+          { k: 'status', v: '00', where: 'resp' },
+        ],
+        enterprise: [
+          {
+            name: 'AccountInquiry', wsUrl: '/ws/account/inquiry', wsSource: 'ms', latency: 20,
+            params: [{ k: 'customerId', v: 'C{num:8}', where: 'req' }],
+            hosts: [
+              { main: 'ACCT', subs: ['INQ01', 'BAL02'], latency: 15, params: [{ k: 'RespCode', v: '0000', where: 'resp' }] },
+            ],
+          },
+          {
+            name: 'RewardsBalance', wsUrl: '/ws/rewards/balance', wsSource: 'rewards', latency: 10,
+            params: [], hosts: [],
+          },
+        ],
+      },
+      { name: 'validateLoginRule', latency: 8, params: [], enterprise: [] },
+    ],
+    query: null,
+  };
+}
+
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const pick = (r, list) => list[Math.floor(r() * list.length)];
+const digits = (r, n) => Array.from({ length: n }, () => Math.floor(r() * 10)).join('');
+const uuid = r => 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c =>
+  (c === 'x' ? Math.floor(r() * 16) : 8 + Math.floor(r() * 4)).toString(16));
+const podId = r => {
+  const c = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  const s = n => Array.from({ length: n }, () => pick(r, c)).join('');
+  return `${s(9)}-${s(5)}`;
+};
+
+// Single-pass placeholder fill: substituted values are never expanded again.
+const fill = (tpl, vars) => tpl.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? vars[k] : m));
+
+function evalValue(v, r, ctx) {
+  return String(v ?? '').replace(/\{(uuid|seq|sid|num:\d+|pick:[^}]*)\}/g, (m, tok) => {
+    if (tok === 'uuid') return uuid(r);
+    if (tok === 'seq') return String(ctx.seq);
+    if (tok === 'sid') return ctx.sid;
+    if (tok.startsWith('num:')) return digits(r, +tok.slice(4));
+    return pick(r, tok.slice(5).split('|'));
+  });
+}
+
+const pad = (n, w = 2) => String(n).padStart(w, '0');
+function fmtTime(ms) {
+  const d = new Date(ms);
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ` +
+    `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}.${pad(d.getMilliseconds(), 3)}`;
+}
+
+function generate(state) {
+  const r = mulberry32(state.seed);
+  const S = state.settings;
+  const pods = Object.fromEntries(Object.keys(state.sources).map(k => [k, podId(r)]));
+  const sourceOf = key => fill(state.sources[key] || '', { pod: pods[key] });
+  const events = [];
+  const trace = [];
+  const start = Date.parse(S.start) || Date.now();
+  const jitter = () => (S.jitterMs > 0 ? Math.round(r() * S.jitterMs) : 0);
+
+  for (let s = 0; s < Math.max(1, S.sessions | 0); s++) {
+    const sid = uuid(r);
+    let t = start + s * (S.staggerMs | 0);
+    let seq = 0;
+    const step = () => { t += (S.gapMs | 0) + jitter(); };
+    const values = params => {
+      seq++;
+      return new Map((params || []).map(p => [p, evalValue(p.v, r, { seq, sid })]));
+    };
+    const renderParams = (layer, params, vals, dir) => {
+      const tpl = state.templates[layer];
+      return (params || [])
+        .filter(p => p.k && (p.where === 'both' || p.where === dir))
+        .map(p => fill(tpl.paramFormat, { k: p.k, v: vals.get(p) }))
+        .join(tpl.paramSep);
+    };
+    // Emits one log line and its expected-trace row; returns the row.
+    const emit = (layer, dir, sourceKey, vars, row) => {
+      const raw = fill(state.templates[layer][dir], { ...vars, ts: fmtTime(t), sid });
+      events.push({ t, source: sourceOf(sourceKey), raw, layer, sid });
+      const out = { sid, t, layer, dir, ...row, params: vars.params };
+      trace.push(out);
+      return out;
+    };
+    const respond = (reqRow, layer, sourceKey, vars, row) => {
+      const resp = emit(layer, 'resp', sourceKey, vars, row);
+      resp.elapsed = resp.t - reqRow.t;
+    };
+
+    if (S.noise) {
+      events.push({ t: t + 1, source: sourceOf('online'), sid, noise: true,
+        raw: `${fmtTime(t + 1)} DEBUG [ECOMM-Message][/sessionId] : ${sid} evaluating business rule RULE_${digits(r, 3)}` });
+      events.push({ t: t + 2, source: sourceOf('online').replace('online', 'batch'), sid, noise: true,
+        raw: `${fmtTime(t + 2)} INFO [ECOMM-Message][/sessionId] : ${sid} noiseRequest - Request - wrong source` });
+    }
+
+    for (const e of state.flow) {
+      const ev = values(e.params);
+      const eReq = emit('eComm', 'req', 'online', { api: e.name, params: renderParams('eComm', e.params, ev, 'req') }, { api: e.name });
+      step();
+      for (const en of e.enterprise || []) {
+        const nv = values(en.params);
+        const linkRef = 'TXN' + digits(r, 10);
+        const ws = WS_SOURCES.includes(en.wsSource) ? en.wsSource : 'ms';
+        const nVars = dir => ({ api: en.name, url: en.wsUrl, linkRef, params: renderParams('Enterprise', en.params, nv, dir) });
+        const wVars = dir => ({ api: en.name, url: en.wsUrl, linkRef, params: renderParams('WS', en.params, nv, dir) });
+        const nReq = emit('Enterprise', 'req', 'online', nVars('req'), { api: en.name });
+        step();
+        const wReq = emit('WS', 'req', ws, wVars('req'), { api: en.wsUrl });
+        step();
+        if (S.noise) {
+          events.push({ t, source: sourceOf(ws), sid, noise: true,
+            raw: `${fmtTime(t)} DEBUG WSAppLog ["WS:" ${sid}] cache lookup for ${en.wsUrl}` });
+        }
+        for (const ho of en.hosts || []) {
+          const hv = values(ho.params);
+          const subs = (ho.subs || []).filter(Boolean);
+          const codes = subs.length
+            ? subs.map(sub => fill(state.templates.Host.codeBlock, { main: ho.main, sub })).join('')
+            : `<SvcCode>${ho.main}</SvcCode>`;
+          const hVars = dir => ({ main: ho.main, codes, linkRef, params: renderParams('Host', ho.params, hv, dir) });
+          const hRow = { api: ho.main, codes: subs.length ? `${ho.main} › ${subs.join(', ')}` : ho.main };
+          const hReq = emit('Host', 'req', ws, hVars('req'), hRow);
+          t += (ho.latency | 0) + jitter();
+          respond(hReq, 'Host', ws, hVars('resp'), hRow);
+          step();
+        }
+        t += (en.latency | 0) + jitter();
+        respond(wReq, 'WS', ws, wVars('resp'), { api: en.wsUrl });
+        step();
+        respond(nReq, 'Enterprise', 'online', nVars('resp'), { api: en.name });
+        step();
+      }
+      t += (e.latency | 0) + jitter();
+      respond(eReq, 'eComm', 'online', { api: e.name, params: renderParams('eComm', e.params, ev, 'resp') }, { api: e.name });
+      step();
+    }
+  }
+  events.sort((a, b) => a.t - b.t);
+  return { events, trace };
+}
+
+function splitQuery(query) {
+  const lines = query.split(/\r?\n/);
+  let i = lines.findIndex(l => l.trim().startsWith('|'));
+  if (i < 0) i = lines.length;
+  const base = lines.slice(0, i).filter(l => !/^\s*```.*```\s*$/.test(l)).join('\n').trim();
+  return { base, rest: lines.slice(i).join('\n').trim() };
+}
+
+function buildTestSpl(state, events, query) {
+  const esc = s => s.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  const data = events.map(e => `    "${esc([(e.t / 1000).toFixed(3), e.source, e.raw].join('|~|'))}"`).join(',\n');
+  const { base, rest } = splitQuery(query);
+  return [
+    '``` Traceline mock data: generated events, then the query under test ```',
+    '| makeresults',
+    `| eval data=mvappend(\n${data})`,
+    '| mvexpand data',
+    '| eval f=split(data, "|~|"), _time=tonumber(mvindex(f,0)), source=mvindex(f,1), _raw=mvindex(f,2)',
+    '| fields - data f',
+    state.settings.applyBaseSearch && base ? `| search ${base}` : '``` base search filter skipped ```',
+    rest,
+  ].join('\n');
+}
+
+// ---- ui ----
+
+let state = loadState();
+const bundledQuery = document.getElementById('bundled-query').textContent.trim();
+let leftTab = 'Flow';
+let rightTab = 'Expected trace';
+let lastGen = { events: [], trace: [] };
+
+function loadState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (saved && saved.flow) return Object.assign(defaultState(), saved);
+  } catch (e) { /* storage unavailable or corrupt: fall back to defaults */ }
+  return defaultState();
+}
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) { /* ignore */ }
+}
+const currentQuery = () => state.query ?? bundledQuery;
+
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (v == null || v === false) continue;
+    if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else if (k === 'class') el.className = v;
+    else if (k === 'value') el.value = v;
+    else if (k === 'checked') el.checked = v;
+    else if (k === 'style') el.style.cssText = v;
+    else el.setAttribute(k, v === true ? '' : v);
+  }
+  for (const c of kids.flat(Infinity)) {
+    if (c == null || c === false) continue;
+    el.append(c instanceof Node ? c : document.createTextNode(String(c)));
+  }
+  return el;
+}
+
+let regenTimer;
+function changed() {
+  saveState();
+  clearTimeout(regenTimer);
+  regenTimer = setTimeout(renderRight, 120);
+}
+function structural() { renderLeft(); changed(); }
+
+function field(label, obj, key, opts = {}) {
+  const type = opts.type || 'text';
+  let input;
+  if (opts.options) {
+    input = h('select', {}, opts.options.map(o => h('option', { value: o }, o)));
+    input.value = obj[key];
+  } else if (opts.textarea) {
+    input = h('textarea', { rows: opts.rows || 2, spellcheck: 'false' });
+    input.value = obj[key] ?? '';
+  } else {
+    input = h('input', { type, placeholder: opts.placeholder, step: opts.step });
+    if (type === 'checkbox') input.checked = !!obj[key]; else input.value = obj[key] ?? '';
+  }
+  const ev = type === 'checkbox' || opts.options ? 'change' : 'input';
+  input.addEventListener(ev, () => {
+    obj[key] = type === 'checkbox' ? input.checked : type === 'number' ? Number(input.value) : input.value;
+    changed();
+  });
+  return h('label', { class: 'field' + (opts.wide ? ' wide' : '') + (type === 'checkbox' ? ' check' : '') },
+    type === 'checkbox' ? [input, h('span', {}, label)] : [h('span', {}, label), input]);
+}
+
+function paramsEditor(node) {
+  node.params = node.params || [];
+  const wrap = h('div', { class: 'params' });
+  wrap.append(h('div', { class: 'sub' }, `Parameters (${node.params.length})`));
+  node.params.forEach((p, i) => {
+    const k = h('input', { value: p.k, placeholder: 'key' });
+    k.addEventListener('input', () => { p.k = k.value; changed(); });
+    const v = h('input', { value: p.v, placeholder: 'value or {uuid} {num:6} {pick:A|B} {seq}' });
+    v.addEventListener('input', () => { p.v = v.value; changed(); });
+    const w = h('select', {}, ['req', 'resp', 'both'].map(o => h('option', { value: o }, o)));
+    w.value = p.where || 'req';
+    w.addEventListener('change', () => { p.where = w.value; changed(); });
+    wrap.append(h('div', { class: 'prow' }, k, v, w,
+      h('button', { class: 'icon', title: 'Remove parameter', onclick: () => { node.params.splice(i, 1); structural(); } }, '×')));
+  });
+  wrap.append(h('button', { class: 'btn small', onclick: () => { node.params.push({ k: '', v: '', where: 'req' }); structural(); } }, '+ Parameter'));
+  return wrap;
+}
+
+function cardHead(layerLabel, list, index) {
+  return h('div', { class: 'card-head' },
+    h('span', { class: 'tag' }, layerLabel),
+    h('span', { class: 'spacer' }),
+    h('button', { class: 'icon', title: 'Move up', onclick: () => { if (index > 0) { [list[index - 1], list[index]] = [list[index], list[index - 1]]; structural(); } } }, '↑'),
+    h('button', { class: 'icon', title: 'Duplicate', onclick: () => { list.splice(index + 1, 0, structuredClone(list[index])); structural(); } }, '⧉'),
+    h('button', { class: 'icon', title: 'Remove', onclick: () => { list.splice(index, 1); structural(); } }, '×'));
+}
+
+function hostCard(list, i) {
+  const ho = list[i];
+  ho.subs = ho.subs || [];
+  const add = h('input', { placeholder: 'add sub code ↵' });
+  add.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && add.value.trim()) { ho.subs.push(add.value.trim()); structural(); }
+  });
+  return h('div', { class: 'card l4' },
+    cardHead('Host service', list, i),
+    h('div', { class: 'row' },
+      field('Main service code', ho, 'main'),
+      field('Latency ms', ho, 'latency', { type: 'number' })),
+    h('div', { class: 'sub' }, 'Sub-service codes'),
+    h('div', { class: 'chips' },
+      ho.subs.map((s, j) => h('span', { class: 'chip' }, s,
+        h('button', { title: 'Remove', onclick: () => { ho.subs.splice(j, 1); structural(); } }, '×'))),
+      add),
+    paramsEditor(ho));
+}
+
+function enterpriseCard(list, i) {
+  const en = list[i];
+  en.hosts = en.hosts || [];
+  return h('div', { class: 'card l2' },
+    cardHead('Enterprise API → WS', list, i),
+    h('div', { class: 'row' },
+      field('Enterprise API', en, 'name'),
+      field('Latency ms', en, 'latency', { type: 'number' })),
+    h('div', { class: 'row' },
+      field('WS URL', en, 'wsUrl'),
+      field('WS log source', en, 'wsSource', { options: WS_SOURCES })),
+    paramsEditor(en),
+    en.hosts.map((_, j) => hostCard(en.hosts, j)),
+    h('button', { class: 'btn small', onclick: () => {
+      en.hosts.push({ main: 'SVC', subs: ['SUB01'], latency: 10, params: [] }); structural();
+    } }, '+ Host service'));
+}
+
+function ecommCard(list, i) {
+  const e = list[i];
+  e.enterprise = e.enterprise || [];
+  return h('div', { class: 'card l1' },
+    cardHead('eComm API', list, i),
+    h('div', { class: 'row' },
+      field('eComm API', e, 'name'),
+      field('Processing ms', e, 'latency', { type: 'number' })),
+    paramsEditor(e),
+    e.enterprise.length ? null : h('div', { class: 'hint' }, 'No Enterprise calls: eComm handles this API itself.'),
+    e.enterprise.map((_, j) => enterpriseCard(e.enterprise, j)),
+    h('button', { class: 'btn small', onclick: () => {
+      e.enterprise.push({ name: 'NewEnterpriseApi', wsUrl: '/ws/new/api', wsSource: 'ms', latency: 10, params: [], hosts: [] }); structural();
+    } }, '+ Enterprise call'));
+}
+
+const LEFT = {
+  Flow: () => [
+    h('div', { class: 'hint' }, 'One session runs the eComm APIs in order. Each eComm API can call Enterprise APIs (logged on the eComm pod and on the WS pod), and each of those can call Host services.'),
+    state.flow.map((_, i) => ecommCard(state.flow, i)),
+    h('button', { class: 'btn', onclick: () => { state.flow.push({ name: 'newEcommApi', latency: 10, params: [], enterprise: [] }); structural(); } }, '+ eComm API'),
+  ],
+  Settings: () => {
+    const S = state.settings;
+    return [
+      h('h3', {}, 'Sessions and timing'),
+      h('div', { class: 'row' },
+        field('Sessions', S, 'sessions', { type: 'number' }),
+        field('Start time (local)', S, 'start', { placeholder: '2026-10-26T10:00:00.000' })),
+      h('div', { class: 'row' },
+        field('Session stagger ms', S, 'staggerMs', { type: 'number' }),
+        field('Gap between steps ms', S, 'gapMs', { type: 'number' }),
+        field('Random jitter ms', S, 'jitterMs', { type: 'number' })),
+      h('div', { class: 'hint' }, 'Small stagger interleaves sessions. Gap 0 gives parent and child the same timestamp, which tests the request/response sort order.'),
+      field('Add noise events that the query should filter out', S, 'noise', { type: 'checkbox' }),
+      field('Apply the base search as | search in the test SPL', S, 'applyBaseSearch', { type: 'checkbox' }),
+      h('div', { class: 'toolbar' },
+        h('button', { class: 'btn', onclick: () => { state.seed = (Math.random() * 2 ** 31) | 0; changed(); toast('New random values'); } }, 'Re-roll random values')),
+      h('h3', {}, 'Scenario'),
+      h('div', { class: 'toolbar' },
+        h('button', { class: 'btn', onclick: () => download('traceline-scenario.json', JSON.stringify(state, null, 2)) }, 'Export JSON'),
+        h('button', { class: 'btn', onclick: () => pickFile('.json', text => {
+          try { state = Object.assign(defaultState(), JSON.parse(text)); structural(); toast('Scenario imported'); }
+          catch (e) { toast('Not a valid scenario file'); }
+        }) }, 'Import JSON'),
+        h('button', { class: 'btn', onclick: () => {
+          if (confirm('Reset flow, templates and settings to the defaults?')) { state = defaultState(); structural(); }
+        } }, 'Reset all')),
+    ];
+  },
+  Templates: () => [
+    h('div', { class: 'hint' }, 'Placeholders: ', ...['{ts}', '{sid}', '{api}', '{params}', '{url}', '{linkRef}', '{codes}', '{main}'].map(p => [h('code', {}, p), ' ']),
+      '. Edit these to match your real log lines; the query is tested against exactly this text.'),
+    LAYERS.map(layer => {
+      const t = state.templates[layer];
+      return h('div', { class: 'card ' + LAYER_CLASS[layer] },
+        h('div', { class: 'card-head' }, h('span', { class: 'tag' }, layer)),
+        field('Request line', t, 'req', { textarea: true, wide: true }),
+        field('Response line', t, 'resp', { textarea: true, wide: true }),
+        layer === 'Host' ? field('{codes}: repeated once per sub-service code ({main}, {sub})', t, 'codeBlock', { wide: true }) : null,
+        h('div', { class: 'row' },
+          field('Parameter format ({k}, {v})', t, 'paramFormat'),
+          field('Separator', t, 'paramSep')));
+    }),
+    h('h3', {}, 'Log sources ({pod} = random pod id)'),
+    Object.keys(state.sources).map(k => field(k, state.sources, k, { wide: true })),
+  ],
+};
+
+function renderTabs(navId, names, active, onPick, counts = {}) {
+  const nav = document.getElementById(navId);
+  nav.replaceChildren(...names.map(n => h('button', { class: n === active ? 'active' : '', onclick: () => onPick(n) },
+    n, counts[n] != null ? h('span', { class: 'count' }, counts[n]) : null)));
+}
+
+function renderLeft() {
+  renderTabs('left-tabs', Object.keys(LEFT), leftTab, n => { leftTab = n; renderLeft(); });
+  const body = document.getElementById('left-body');
+  const top = body.scrollTop;
+  body.replaceChildren(...[LEFT[leftTab]()].flat(Infinity).filter(Boolean));
+  body.scrollTop = top;
+}
+
+const RIGHT = {
+  'Expected trace': gen => {
+    const sessions = [...new Set(gen.trace.map(r => r.sid))];
+    const rows = [];
+    for (const sid of sessions) {
+      gen.trace.filter(r => r.sid === sid).forEach((r, i) => {
+        rows.push(h('tr', { class: i === 0 && rows.length ? 'session-break' : '' },
+          h('td', {}, h('code', { title: sid }, sid.slice(0, 8))),
+          h('td', { class: 'num' }, i + 1),
+          h('td', { class: 'time' }, fmtTime(r.t)),
+          h('td', { class: 'flow', style: `color: var(--${LAYER_CLASS[r.layer]})` },
+            `${INDENT[r.layer]}${r.layer}: ${r.api || 'N/A'} [${r.dir === 'req' ? '?' : '!'}]`),
+          h('td', {}, r.codes || ''),
+          h('td', {}, r.params || ''),
+          h('td', { class: 'num' }, r.elapsed ?? '')));
+      });
+    }
+    return [
+      h('div', { class: 'hint' }, 'The flow exactly as generated, in true order. Run the Test SPL in Splunk and compare its Flow, HostServices, Params and ElapsedMs columns with this table.'),
+      h('table', {}, h('thead', {}, h('tr', {}, ['Session', 'Step', 'EventTime', 'Flow', 'Service codes', 'Params', 'ElapsedMs'].map(c => h('th', {}, c)))),
+        h('tbody', {}, rows)),
+    ];
+  },
+  'Raw logs': gen => {
+    const bySource = new Map();
+    gen.events.forEach(e => bySource.set(e.source, (bySource.get(e.source) || []).concat(e)));
+    return [
+      h('div', { class: 'toolbar' },
+        h('button', { class: 'btn', onclick: () => copy(gen.events.map(e => e.raw).join('\n')) }, 'Copy all lines'),
+        h('button', { class: 'btn', onclick: () => download('traceline-mock-all.log', gen.events.map(e => `${e.source}\t${e.raw}`).join('\n')) }, 'Download all (source⇥line)')),
+      h('div', { class: 'sources-list' }, [...bySource].map(([src, evs]) => [
+        h('code', {}, src), h('span', { class: 'hint', style: 'margin:0' }, `${evs.length} lines`),
+        h('button', { class: 'btn small', onclick: () => download(src.split('/').pop(), evs.map(e => e.raw).join('\n')) }, 'Download'),
+      ])),
+      h('div', { class: 'hint' }, 'If you upload these files to Splunk, set each file\'s source to the path shown so the base search matches. Faded lines are noise.'),
+      h('div', { class: 'log' }, gen.events.map(e => h('div', { class: (e.noise ? 'noise ' : '') + (LAYER_CLASS[e.layer] || '') },
+        h('span', { class: 'src' }, e.source.split('/').pop() + '  '), e.raw))),
+    ];
+  },
+  'Test SPL': gen => {
+    const spl = buildTestSpl(state, gen.events, currentQuery());
+    return [
+      h('div', { class: 'toolbar' },
+        h('button', { class: 'btn primary', onclick: () => copy(spl) }, 'Copy SPL'),
+        h('button', { class: 'btn', onclick: () => download('traceline-test.spl', spl) }, 'Download .spl')),
+      h('div', { class: 'hint' }, 'Paste into Splunk Search and run it (any time range: makeresults ignores it). It builds the mock events inline, applies the base search with ',
+        h('code', {}, '| search'), ', then runs the rest of the query from the Query tab. No data upload needed.'),
+      h('pre', { class: 'spl' }, spl),
+    ];
+  },
+  Query: () => {
+    const ta = h('textarea', { rows: 30, spellcheck: 'false', style: 'height: calc(100% - 80px)' });
+    ta.value = currentQuery();
+    ta.addEventListener('input', () => { state.query = ta.value; saveState(); });
+    return [
+      h('div', { class: 'toolbar' },
+        h('button', { class: 'btn', onclick: () => pickFile('.spl,.txt', text => { state.query = text; changed(); renderRight(); toast('Query loaded'); }) }, 'Load .spl file'),
+        h('button', { class: 'btn', onclick: () => { state.query = null; changed(); renderRight(); toast('Reset to bundled query'); } }, 'Reset to bundled'),
+        h('span', { class: 'hint', style: 'margin:0' }, state.query == null ? 'Using the bundled copy of queries/traceline.spl' : 'Using an edited query')),
+      ta,
+    ];
+  },
+};
+
+function renderRight() {
+  lastGen = generate(state);
+  const counts = { 'Expected trace': lastGen.trace.length, 'Raw logs': lastGen.events.length };
+  renderTabs('right-tabs', Object.keys(RIGHT), rightTab, n => { rightTab = n; renderRight(); }, counts);
+  const body = document.getElementById('right-body');
+  body.replaceChildren(...[RIGHT[rightTab](lastGen)].flat(Infinity).filter(Boolean));
+}
+
+function download(name, text) {
+  const a = h('a', { href: URL.createObjectURL(new Blob([text], { type: 'text/plain' })), download: name });
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+function copy(text) {
+  navigator.clipboard.writeText(text).then(() => toast('Copied'), () => toast('Copy failed: select the text manually'));
+}
+function pickFile(accept, onText) {
+  const input = document.getElementById('file-input');
+  input.accept = accept;
+  input.onchange = () => { const f = input.files[0]; if (f) f.text().then(onText); input.value = ''; };
+  input.click();
+}
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 1600);
+}
+
+renderLeft();
+renderRight();
+</script>
+</body>
+</html>
