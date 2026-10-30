@@ -61,7 +61,7 @@ class Session {
     events.push({ t: this.t, source: BASE_PATH + source, raw });
     hops.push({ scenario: this.scenario, sessionId: this.sid, step: ++this.step, eventTime: ts(this.t),
       hostServices: '', elapsedMs: '', ...row });
-    this.wait(1); // keeps every timestamp in a session strictly increasing
+    this.wait(this.sameMs ? 0 : 1); // keeps timestamps strictly increasing, except in the same-millisecond scenario
   }
 
   ecomm(api, resp, children = () => {}) {
@@ -71,7 +71,7 @@ class Session {
       `${ts(this.t)} INFO [ECOMM-Message][/sessionId] : ${this.sid} ${api}Request - Request - ` +
       JSON.stringify({ _mock: MOCK, header, data: { customerId: `FAKE-CUST-${pad(this.n, 4)}` } }),
       { layer: 'eComm', direction: 'Request', api, hopStatus: 'N/A' });
-    this.wait(5);
+    this.wait(this.sameMs ? 0 : 5);
     children();
     if (!resp) return;
     this.wait(resp.proc ?? 8);
@@ -88,7 +88,7 @@ class Session {
       `${ts(this.t)} INFO [Enterprise-HostMessage]['sessionIdentity'] : ${this.sid} ${api}Request [Request] ` +
       JSON.stringify({ _mock: MOCK, header, data: { accountNo: `FAKE-ACCT-${pad(this.n, 4)}` } }),
       { layer: 'Enterprise', direction: 'Request', api, hopStatus: 'N/A' });
-    this.wait(4);
+    this.wait(this.sameMs ? 0 : 4);
     children(header.transactionRef);
     if (!resp) return;
     this.wait(resp.proc ?? 30);
@@ -212,6 +212,15 @@ scenario(16, 'G3b', 'Enterprise returns HTTP 200 with errorCode only (no descrip
 scenario(17, 'G5', 'Enterprise returns HTTP 503 with no business code', 'FAILED', 'Enterprise: LoanQuote', s =>
   s.ecomm('getLoanQuote', { data: { responseCode: '5003' }, proc: 6, expect: 'FAILED' }, () =>
     s.ent('LoanQuote', { http: 503, data: {}, proc: 15, expect: 'FAILED' })));
+
+scenario(18, 'G6', 'eComm returns success code 0000 but also an errorDescription (FAILED by the current definition)', 'FAILED', 'eComm: getStatements', s =>
+  s.ecomm('getStatements', { data: { responseCode: '0000', errorDescription: 'Older statements temporarily unavailable' }, proc: 21, expect: 'FAILED' }));
+
+scenario(19, 'T', 'Parent and child logged in the same millisecond (tests request-down / response-up order at equal times)', 'SUCCESS', '', s => {
+  s.sameMs = true;
+  s.ecomm('getLimits', { data: { responseCode: '0000' }, proc: 0, expect: 'SUCCESS' }, () =>
+    s.ent('LimitInquiry', { data: { responseCode: '00000' }, proc: 30, expect: 'SUCCESS' }));
+});
 
 // H: two sessions whose events interleave in time.
 {

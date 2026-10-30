@@ -43,11 +43,13 @@ Response HopStatus is listed in the order the responses occur. Every request is 
 | G3b* | Enterprise HTTP 200 + `errorCode` only | Enterprise FAILED, eComm FAILED | FAILED | `Enterprise: CardActivation` |
 | G4 | eComm non-success code + `errorDescription` | eComm FAILED | FAILED | `eComm: validatePayee` |
 | G5* | Enterprise HTTP 503, no business code | Enterprise FAILED, eComm FAILED | FAILED | `Enterprise: LoanQuote` |
+| G6* | eComm returns success code `0000` **and** an `errorDescription` | eComm FAILED (by the current definition: a description means failure) | FAILED | `eComm: getStatements` |
+| T* | eComm and Enterprise requests in the same millisecond, and their responses in the same millisecond | Enterprise, eComm SUCCESS; order must be eComm ? → Enterprise ? → Enterprise ! → eComm ! | SUCCESS | |
 | H | Two sessions like D, starting 4 ms apart | all SUCCESS in both | SUCCESS, SUCCESS | |
 | I1 | One Enterprise API succeeds, one fails; eComm returns `0000` | Enterprise SUCCESS, Enterprise FAILED, eComm SUCCESS | **PARTIAL** | `Enterprise: RewardsBalance` |
 | I2 | Same, but eComm returns an error | Enterprise SUCCESS, Enterprise FAILED, eComm FAILED | **FAILED** | `Enterprise: RewardsBalance` |
 
-\* Not in the brief. Added so that each HopStatus rule (error code alone, HTTP status alone) is caught by at least one scenario.
+\* Not in the brief. Added so that every HopStatus rule (error code alone, HTTP status alone, description alone) and the equal-timestamp sort order decide at least one scenario. Removing any one of these rules from `check.js` makes the check fail.
 
 ## Assumptions made for the mock
 

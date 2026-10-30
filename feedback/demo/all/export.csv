@@ -50,10 +50,10 @@ Step,EventTime,sessionId,Flow,HostServices,Params,ElapsedMs,RespCode,ErrCode,Err
 5,2026-10-27 01:15:42.269,fa4e0000-0000-4000-8000-000000000007,------› WS: /ws/fund/transfer [!],,TxnRefNo: FAKE-TXN-07-2,30005,504,,,FAILED,FAILED,WS: /ws/fund/transfer
 6,2026-10-27 01:15:42.279,fa4e0000-0000-4000-8000-000000000007,--› Enterprise: FundTransfer [!],,TxnRefNo: FAKE-TXN-07-2,30020,,E9001,Downstream EAI timeout,FAILED,FAILED,WS: /ws/fund/transfer
 7,2026-10-27 01:15:42.286,fa4e0000-0000-4000-8000-000000000007,eComm: fundTransfer [!],,TxnRefNo: FAKE-TXN-07-1,30033,9001,,Service temporarily unavailable,FAILED,FAILED,WS: /ws/fund/transfer
-1,2026-10-27 01:15:56.658,fa4e0000-0000-4000-8000-000000000008,eComm: fundTransfer [?],,TxnRefNo: FAKE-TXN-08-1,,,,,N/A,UNKNOWN,
-2,2026-10-27 01:15:56.664,fa4e0000-0000-4000-8000-000000000008,--› Enterprise: FundTransfer [?],,TxnRefNo: FAKE-TXN-08-2,,,,,N/A,UNKNOWN,
-3,2026-10-27 01:15:56.669,fa4e0000-0000-4000-8000-000000000008,------› WS: /ws/fund/transfer [?],,TxnRefNo: FAKE-TXN-08-2,,,,,N/A,UNKNOWN,
-4,2026-10-27 01:15:56.673,fa4e0000-0000-4000-8000-000000000008,----------› Host: FT01 [?],FT01 ~ A01,,,,,,N/A,UNKNOWN,
+1,2026-10-27 01:15:59.716,fa4e0000-0000-4000-8000-000000000008,eComm: fundTransfer [?],,TxnRefNo: FAKE-TXN-08-1,,,,,N/A,UNKNOWN,
+2,2026-10-27 01:15:59.722,fa4e0000-0000-4000-8000-000000000008,--› Enterprise: FundTransfer [?],,TxnRefNo: FAKE-TXN-08-2,,,,,N/A,UNKNOWN,
+3,2026-10-27 01:15:59.727,fa4e0000-0000-4000-8000-000000000008,------› WS: /ws/fund/transfer [?],,TxnRefNo: FAKE-TXN-08-2,,,,,N/A,UNKNOWN,
+4,2026-10-27 01:15:59.731,fa4e0000-0000-4000-8000-000000000008,----------› Host: FT01 [?],FT01 ~ A01,,,,,,N/A,UNKNOWN,
 1,2026-10-27 01:15:43.787,fa4e0000-0000-4000-8000-000000000009,eComm: fundTransfer [?],,TxnRefNo: FAKE-TXN-09-1,,,,,N/A,FAILED,Host: FT01
 2,2026-10-27 01:15:43.793,fa4e0000-0000-4000-8000-000000000009,--› Enterprise: FundTransfer [?],,TxnRefNo: FAKE-TXN-09-2,,,,,N/A,FAILED,Host: FT01
 3,2026-10-27 01:15:43.798,fa4e0000-0000-4000-8000-000000000009,------› WS: /ws/fund/transfer [?],,TxnRefNo: FAKE-TXN-09-2,,,,,N/A,FAILED,Host: FT01
@@ -68,34 +68,34 @@ Step,EventTime,sessionId,Flow,HostServices,Params,ElapsedMs,RespCode,ErrCode,Err
 4,2026-10-27 01:15:45.601,fa4e0000-0000-4000-8000-000000000010,eComm: payBill [!],,TxnRefNo: FAKE-TXN-10-1,51,2001,,Insufficient balance,FAILED,FAILED,Enterprise: BillPayment
 1,2026-10-27 01:15:47.102,fa4e0000-0000-4000-8000-000000000011,eComm: validatePayee [?],,TxnRefNo: FAKE-TXN-11-1,,,,,N/A,FAILED,eComm: validatePayee
 2,2026-10-27 01:15:47.122,fa4e0000-0000-4000-8000-000000000011,eComm: validatePayee [!],,TxnRefNo: FAKE-TXN-11-1,20,1001,,Invalid payee account,FAILED,FAILED,eComm: validatePayee
-1,2026-10-27 01:15:51.706,fa4e0000-0000-4000-8000-000000000012,eComm: fundTransfer [?],,TxnRefNo: FAKE-TXN-12-1,,,,,N/A,SUCCESS,
-2,2026-10-27 01:15:51.712,fa4e0000-0000-4000-8000-000000000012,--› Enterprise: FundTransfer [?],,TxnRefNo: FAKE-TXN-12-2,,,,,N/A,SUCCESS,
-3,2026-10-27 01:15:51.717,fa4e0000-0000-4000-8000-000000000012,------› WS: /ws/fund/transfer [?],,TxnRefNo: FAKE-TXN-12-2,,,,,N/A,SUCCESS,
-4,2026-10-27 01:15:51.721,fa4e0000-0000-4000-8000-000000000012,----------› Host: FT01 [?],FT01 ~ A01,,,,,,N/A,SUCCESS,
-5,2026-10-27 01:15:51.912,fa4e0000-0000-4000-8000-000000000012,----------› Host: FT01 [!],FT01 ~ A01,,191,0,,,SUCCESS,SUCCESS,
-6,2026-10-27 01:15:51.928,fa4e0000-0000-4000-8000-000000000012,------› WS: /ws/fund/transfer [!],,TxnRefNo: FAKE-TXN-12-2,211,200,,,SUCCESS,SUCCESS,
-7,2026-10-27 01:15:51.941,fa4e0000-0000-4000-8000-000000000012,--› Enterprise: FundTransfer [!],,TxnRefNo: FAKE-TXN-12-2,229,00000,,,SUCCESS,SUCCESS,
-8,2026-10-27 01:15:51.950,fa4e0000-0000-4000-8000-000000000012,eComm: fundTransfer [!],,TxnRefNo: FAKE-TXN-12-1,244,0000,,,SUCCESS,SUCCESS,
-1,2026-10-27 01:15:51.710,fa4e0000-0000-4000-8000-000000000013,eComm: fundTransfer [?],,TxnRefNo: FAKE-TXN-13-1,,,,,N/A,SUCCESS,
-2,2026-10-27 01:15:51.716,fa4e0000-0000-4000-8000-000000000013,--› Enterprise: FundTransfer [?],,TxnRefNo: FAKE-TXN-13-2,,,,,N/A,SUCCESS,
-3,2026-10-27 01:15:51.721,fa4e0000-0000-4000-8000-000000000013,------› WS: /ws/fund/transfer [?],,TxnRefNo: FAKE-TXN-13-2,,,,,N/A,SUCCESS,
-4,2026-10-27 01:15:51.725,fa4e0000-0000-4000-8000-000000000013,----------› Host: FT01 [?],FT01 ~ A01,,,,,,N/A,SUCCESS,
-5,2026-10-27 01:15:51.901,fa4e0000-0000-4000-8000-000000000013,----------› Host: FT01 [!],FT01 ~ A01,,176,0,,,SUCCESS,SUCCESS,
-6,2026-10-27 01:15:51.917,fa4e0000-0000-4000-8000-000000000013,------› WS: /ws/fund/transfer [!],,TxnRefNo: FAKE-TXN-13-2,196,200,,,SUCCESS,SUCCESS,
-7,2026-10-27 01:15:51.930,fa4e0000-0000-4000-8000-000000000013,--› Enterprise: FundTransfer [!],,TxnRefNo: FAKE-TXN-13-2,214,00000,,,SUCCESS,SUCCESS,
-8,2026-10-27 01:15:51.939,fa4e0000-0000-4000-8000-000000000013,eComm: fundTransfer [!],,TxnRefNo: FAKE-TXN-13-1,229,0000,,,SUCCESS,SUCCESS,
-1,2026-10-27 01:15:53.451,fa4e0000-0000-4000-8000-000000000014,eComm: getDashboard [?],,TxnRefNo: FAKE-TXN-14-1,,,,,N/A,PARTIAL,Enterprise: RewardsBalance
-2,2026-10-27 01:15:53.457,fa4e0000-0000-4000-8000-000000000014,--› Enterprise: AccountSummary [?],,TxnRefNo: FAKE-TXN-14-2,,,,,N/A,PARTIAL,Enterprise: RewardsBalance
-3,2026-10-27 01:15:53.510,fa4e0000-0000-4000-8000-000000000014,--› Enterprise: AccountSummary [!],,TxnRefNo: FAKE-TXN-14-2,53,00000,,,SUCCESS,PARTIAL,Enterprise: RewardsBalance
-4,2026-10-27 01:15:53.514,fa4e0000-0000-4000-8000-000000000014,--› Enterprise: RewardsBalance [?],,TxnRefNo: FAKE-TXN-14-3,,,,,N/A,PARTIAL,Enterprise: RewardsBalance
-5,2026-10-27 01:15:53.541,fa4e0000-0000-4000-8000-000000000014,--› Enterprise: RewardsBalance [!],,TxnRefNo: FAKE-TXN-14-3,27,,E3001,Rewards service unavailable,FAILED,PARTIAL,Enterprise: RewardsBalance
-6,2026-10-27 01:15:53.551,fa4e0000-0000-4000-8000-000000000014,eComm: getDashboard [!],,TxnRefNo: FAKE-TXN-14-1,100,0000,,,SUCCESS,PARTIAL,Enterprise: RewardsBalance
-1,2026-10-27 01:15:55.052,fa4e0000-0000-4000-8000-000000000015,eComm: getDashboard [?],,TxnRefNo: FAKE-TXN-15-1,,,,,N/A,FAILED,Enterprise: RewardsBalance
-2,2026-10-27 01:15:55.058,fa4e0000-0000-4000-8000-000000000015,--› Enterprise: AccountSummary [?],,TxnRefNo: FAKE-TXN-15-2,,,,,N/A,FAILED,Enterprise: RewardsBalance
-3,2026-10-27 01:15:55.114,fa4e0000-0000-4000-8000-000000000015,--› Enterprise: AccountSummary [!],,TxnRefNo: FAKE-TXN-15-2,56,00000,,,SUCCESS,FAILED,Enterprise: RewardsBalance
-4,2026-10-27 01:15:55.118,fa4e0000-0000-4000-8000-000000000015,--› Enterprise: RewardsBalance [?],,TxnRefNo: FAKE-TXN-15-3,,,,,N/A,FAILED,Enterprise: RewardsBalance
-5,2026-10-27 01:15:55.147,fa4e0000-0000-4000-8000-000000000015,--› Enterprise: RewardsBalance [!],,TxnRefNo: FAKE-TXN-15-3,29,,E3001,Rewards service unavailable,FAILED,FAILED,Enterprise: RewardsBalance
-6,2026-10-27 01:15:55.157,fa4e0000-0000-4000-8000-000000000015,eComm: getDashboard [!],,TxnRefNo: FAKE-TXN-15-1,105,3001,,Dashboard partially unavailable,FAILED,FAILED,Enterprise: RewardsBalance
+1,2026-10-27 01:15:54.764,fa4e0000-0000-4000-8000-000000000012,eComm: fundTransfer [?],,TxnRefNo: FAKE-TXN-12-1,,,,,N/A,SUCCESS,
+2,2026-10-27 01:15:54.770,fa4e0000-0000-4000-8000-000000000012,--› Enterprise: FundTransfer [?],,TxnRefNo: FAKE-TXN-12-2,,,,,N/A,SUCCESS,
+3,2026-10-27 01:15:54.775,fa4e0000-0000-4000-8000-000000000012,------› WS: /ws/fund/transfer [?],,TxnRefNo: FAKE-TXN-12-2,,,,,N/A,SUCCESS,
+4,2026-10-27 01:15:54.779,fa4e0000-0000-4000-8000-000000000012,----------› Host: FT01 [?],FT01 ~ A01,,,,,,N/A,SUCCESS,
+5,2026-10-27 01:15:54.970,fa4e0000-0000-4000-8000-000000000012,----------› Host: FT01 [!],FT01 ~ A01,,191,0,,,SUCCESS,SUCCESS,
+6,2026-10-27 01:15:54.986,fa4e0000-0000-4000-8000-000000000012,------› WS: /ws/fund/transfer [!],,TxnRefNo: FAKE-TXN-12-2,211,200,,,SUCCESS,SUCCESS,
+7,2026-10-27 01:15:54.999,fa4e0000-0000-4000-8000-000000000012,--› Enterprise: FundTransfer [!],,TxnRefNo: FAKE-TXN-12-2,229,00000,,,SUCCESS,SUCCESS,
+8,2026-10-27 01:15:55.008,fa4e0000-0000-4000-8000-000000000012,eComm: fundTransfer [!],,TxnRefNo: FAKE-TXN-12-1,244,0000,,,SUCCESS,SUCCESS,
+1,2026-10-27 01:15:54.768,fa4e0000-0000-4000-8000-000000000013,eComm: fundTransfer [?],,TxnRefNo: FAKE-TXN-13-1,,,,,N/A,SUCCESS,
+2,2026-10-27 01:15:54.774,fa4e0000-0000-4000-8000-000000000013,--› Enterprise: FundTransfer [?],,TxnRefNo: FAKE-TXN-13-2,,,,,N/A,SUCCESS,
+3,2026-10-27 01:15:54.779,fa4e0000-0000-4000-8000-000000000013,------› WS: /ws/fund/transfer [?],,TxnRefNo: FAKE-TXN-13-2,,,,,N/A,SUCCESS,
+4,2026-10-27 01:15:54.783,fa4e0000-0000-4000-8000-000000000013,----------› Host: FT01 [?],FT01 ~ A01,,,,,,N/A,SUCCESS,
+5,2026-10-27 01:15:54.959,fa4e0000-0000-4000-8000-000000000013,----------› Host: FT01 [!],FT01 ~ A01,,176,0,,,SUCCESS,SUCCESS,
+6,2026-10-27 01:15:54.975,fa4e0000-0000-4000-8000-000000000013,------› WS: /ws/fund/transfer [!],,TxnRefNo: FAKE-TXN-13-2,196,200,,,SUCCESS,SUCCESS,
+7,2026-10-27 01:15:54.988,fa4e0000-0000-4000-8000-000000000013,--› Enterprise: FundTransfer [!],,TxnRefNo: FAKE-TXN-13-2,214,00000,,,SUCCESS,SUCCESS,
+8,2026-10-27 01:15:54.997,fa4e0000-0000-4000-8000-000000000013,eComm: fundTransfer [!],,TxnRefNo: FAKE-TXN-13-1,229,0000,,,SUCCESS,SUCCESS,
+1,2026-10-27 01:15:56.509,fa4e0000-0000-4000-8000-000000000014,eComm: getDashboard [?],,TxnRefNo: FAKE-TXN-14-1,,,,,N/A,PARTIAL,Enterprise: RewardsBalance
+2,2026-10-27 01:15:56.515,fa4e0000-0000-4000-8000-000000000014,--› Enterprise: AccountSummary [?],,TxnRefNo: FAKE-TXN-14-2,,,,,N/A,PARTIAL,Enterprise: RewardsBalance
+3,2026-10-27 01:15:56.568,fa4e0000-0000-4000-8000-000000000014,--› Enterprise: AccountSummary [!],,TxnRefNo: FAKE-TXN-14-2,53,00000,,,SUCCESS,PARTIAL,Enterprise: RewardsBalance
+4,2026-10-27 01:15:56.572,fa4e0000-0000-4000-8000-000000000014,--› Enterprise: RewardsBalance [?],,TxnRefNo: FAKE-TXN-14-3,,,,,N/A,PARTIAL,Enterprise: RewardsBalance
+5,2026-10-27 01:15:56.599,fa4e0000-0000-4000-8000-000000000014,--› Enterprise: RewardsBalance [!],,TxnRefNo: FAKE-TXN-14-3,27,,E3001,Rewards service unavailable,FAILED,PARTIAL,Enterprise: RewardsBalance
+6,2026-10-27 01:15:56.609,fa4e0000-0000-4000-8000-000000000014,eComm: getDashboard [!],,TxnRefNo: FAKE-TXN-14-1,100,0000,,,SUCCESS,PARTIAL,Enterprise: RewardsBalance
+1,2026-10-27 01:15:58.110,fa4e0000-0000-4000-8000-000000000015,eComm: getDashboard [?],,TxnRefNo: FAKE-TXN-15-1,,,,,N/A,FAILED,Enterprise: RewardsBalance
+2,2026-10-27 01:15:58.116,fa4e0000-0000-4000-8000-000000000015,--› Enterprise: AccountSummary [?],,TxnRefNo: FAKE-TXN-15-2,,,,,N/A,FAILED,Enterprise: RewardsBalance
+3,2026-10-27 01:15:58.172,fa4e0000-0000-4000-8000-000000000015,--› Enterprise: AccountSummary [!],,TxnRefNo: FAKE-TXN-15-2,56,00000,,,SUCCESS,FAILED,Enterprise: RewardsBalance
+4,2026-10-27 01:15:58.176,fa4e0000-0000-4000-8000-000000000015,--› Enterprise: RewardsBalance [?],,TxnRefNo: FAKE-TXN-15-3,,,,,N/A,FAILED,Enterprise: RewardsBalance
+5,2026-10-27 01:15:58.205,fa4e0000-0000-4000-8000-000000000015,--› Enterprise: RewardsBalance [!],,TxnRefNo: FAKE-TXN-15-3,29,,E3001,Rewards service unavailable,FAILED,FAILED,Enterprise: RewardsBalance
+6,2026-10-27 01:15:58.215,fa4e0000-0000-4000-8000-000000000015,eComm: getDashboard [!],,TxnRefNo: FAKE-TXN-15-1,105,3001,,Dashboard partially unavailable,FAILED,FAILED,Enterprise: RewardsBalance
 1,2026-10-27 01:15:48.623,fa4e0000-0000-4000-8000-000000000016,eComm: activateCard [?],,TxnRefNo: FAKE-TXN-16-1,,,,,N/A,FAILED,Enterprise: CardActivation
 2,2026-10-27 01:15:48.629,fa4e0000-0000-4000-8000-000000000016,--› Enterprise: CardActivation [?],,TxnRefNo: FAKE-TXN-16-2,,,,,N/A,FAILED,Enterprise: CardActivation
 3,2026-10-27 01:15:48.663,fa4e0000-0000-4000-8000-000000000016,--› Enterprise: CardActivation [!],,TxnRefNo: FAKE-TXN-16-2,34,,E4005,,FAILED,FAILED,Enterprise: CardActivation
@@ -104,3 +104,9 @@ Step,EventTime,sessionId,Flow,HostServices,Params,ElapsedMs,RespCode,ErrCode,Err
 2,2026-10-27 01:15:50.178,fa4e0000-0000-4000-8000-000000000017,--› Enterprise: LoanQuote [?],,TxnRefNo: FAKE-TXN-17-2,,,,,N/A,FAILED,Enterprise: LoanQuote
 3,2026-10-27 01:15:50.198,fa4e0000-0000-4000-8000-000000000017,--› Enterprise: LoanQuote [!],,TxnRefNo: FAKE-TXN-17-2,20,,,,FAILED,FAILED,Enterprise: LoanQuote
 4,2026-10-27 01:15:50.205,fa4e0000-0000-4000-8000-000000000017,eComm: getLoanQuote [!],,TxnRefNo: FAKE-TXN-17-1,33,5003,,,FAILED,FAILED,Enterprise: LoanQuote
+1,2026-10-27 01:15:51.706,fa4e0000-0000-4000-8000-000000000018,eComm: getStatements [?],,TxnRefNo: FAKE-TXN-18-1,,,,,N/A,FAILED,eComm: getStatements
+2,2026-10-27 01:15:51.733,fa4e0000-0000-4000-8000-000000000018,eComm: getStatements [!],,TxnRefNo: FAKE-TXN-18-1,27,0000,,Older statements temporarily unavailable,FAILED,FAILED,eComm: getStatements
+1,2026-10-27 01:15:53.234,fa4e0000-0000-4000-8000-000000000019,eComm: getLimits [?],,TxnRefNo: FAKE-TXN-19-1,,,,,N/A,SUCCESS,
+2,2026-10-27 01:15:53.234,fa4e0000-0000-4000-8000-000000000019,--› Enterprise: LimitInquiry [?],,TxnRefNo: FAKE-TXN-19-2,,,,,N/A,SUCCESS,
+3,2026-10-27 01:15:53.264,fa4e0000-0000-4000-8000-000000000019,--› Enterprise: LimitInquiry [!],,TxnRefNo: FAKE-TXN-19-2,30,00000,,,SUCCESS,SUCCESS,
+4,2026-10-27 01:15:53.264,fa4e0000-0000-4000-8000-000000000019,eComm: getLimits [!],,TxnRefNo: FAKE-TXN-19-1,30,0000,,,SUCCESS,SUCCESS,

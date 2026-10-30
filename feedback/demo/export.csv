@@ -35,9 +35,9 @@ Step,EventTime,sessionId,Flow,HostServices,Params,ElapsedMs,RespCode,ErrCode,Err
 5,2026-10-27 09:15:44.015,fa4e0000-0000-4000-8000-000000000009,----------› Host: FT01 [!],FT01 ~ A01 | FT01 ~ A02,,213,"0,E102",,,FAILED,FAILED,Host: FT01
 7,2026-10-27 09:15:44.041,fa4e0000-0000-4000-8000-000000000009,--› Enterprise: FundTransfer [!],,TxnRefNo: FAKE-TXN-09-2,248,,E1020,Debit leg failed at host,FAILED,FAILED,Host: FT01
 8,2026-10-27 09:15:44.049,fa4e0000-0000-4000-8000-000000000009,eComm: fundTransfer [!],,TxnRefNo: FAKE-TXN-09-1,262,1020,,Transfer could not be completed,FAILED,FAILED,Host: FT01
-1,2026-10-27 09:15:53.451,fa4e0000-0000-4000-8000-000000000014,eComm: getDashboard [?],,TxnRefNo: FAKE-TXN-14-1,,,,,N/A,PARTIAL,Enterprise: RewardsBalance
-2,2026-10-27 09:15:53.457,fa4e0000-0000-4000-8000-000000000014,--› Enterprise: AccountSummary [?],,TxnRefNo: FAKE-TXN-14-2,,,,,N/A,PARTIAL,Enterprise: RewardsBalance
-3,2026-10-27 09:15:53.510,,--› Enterprise: AccountSummary [!],,TxnRefNo: FAKE-TXN-14-2,53,00000,,,SUCCESS,PARTIAL,Enterprise: RewardsBalance
-4,2026-10-27 09:15:53.514,fa4e0000-0000-4000-8000-000000000014,--› Enterprise: RewardsBalance [?],,TxnRefNo: FAKE-TXN-14-3,,,,,N/A,PARTIAL,Enterprise: RewardsBalance
-5,2026-10-27 09:15:53.541,fa4e0000-0000-4000-8000-000000000014,--› Enterprise: RewardsBalance [!],,TxnRefNo: FAKE-TXN-14-3,27,,E3001,Rewards service unavailable,FAILED,PARTIAL,Enterprise: RewardsBalance
-6,2026-10-27 09:15:53.551,fa4e0000-0000-4000-8000-000000000014,eComm: getDashboard [!],,TxnRefNo: FAKE-TXN-14-1,100,0000,,,SUCCESS,PARTIAL,Enterprise: RewardsBalance
+1,2026-10-27 09:15:56.509,fa4e0000-0000-4000-8000-000000000014,eComm: getDashboard [?],,TxnRefNo: FAKE-TXN-14-1,,,,,N/A,PARTIAL,Enterprise: RewardsBalance
+2,2026-10-27 09:15:56.515,fa4e0000-0000-4000-8000-000000000014,--› Enterprise: AccountSummary [?],,TxnRefNo: FAKE-TXN-14-2,,,,,N/A,PARTIAL,Enterprise: RewardsBalance
+3,2026-10-27 09:15:56.568,,--› Enterprise: AccountSummary [!],,TxnRefNo: FAKE-TXN-14-2,53,00000,,,SUCCESS,PARTIAL,Enterprise: RewardsBalance
+4,2026-10-27 09:15:56.572,fa4e0000-0000-4000-8000-000000000014,--› Enterprise: RewardsBalance [?],,TxnRefNo: FAKE-TXN-14-3,,,,,N/A,PARTIAL,Enterprise: RewardsBalance
+5,2026-10-27 09:15:56.599,fa4e0000-0000-4000-8000-000000000014,--› Enterprise: RewardsBalance [!],,TxnRefNo: FAKE-TXN-14-3,27,,E3001,Rewards service unavailable,FAILED,PARTIAL,Enterprise: RewardsBalance
+6,2026-10-27 09:15:56.609,fa4e0000-0000-4000-8000-000000000014,eComm: getDashboard [!],,TxnRefNo: FAKE-TXN-14-1,100,0000,,,SUCCESS,PARTIAL,Enterprise: RewardsBalance

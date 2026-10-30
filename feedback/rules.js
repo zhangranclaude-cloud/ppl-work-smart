@@ -19,7 +19,8 @@ const leaves = (o, p = '', out = new Map()) => {
 };
 const add = (map, k, init) => (map.has(k) ? map.get(k) : map.set(k, init()).get(k));
 
-module.exports = function analyseRules({ cfg, sessions, sessionCalls, logUsable, downstreamOf, shortSid, OUT }) {
+module.exports = function analyseRules({ cfg, sessions, sessionCalls, logUsable, downstreamOf, shortSid, fmt, OUT }) {
+  const et = r => (r.t ? fmt(r.t.ms) : r.EventTime); // readable EventTime, also when Excel stored it as a date number
   const sids = [...sessions.keys()].sort();
   if (sids.length < 2) {
     fs.writeFileSync(path.join(OUT, 'rules.md'), '# Processing rules\n\nSkipped: only one session in the export. Rules are not derived from a single session unless explicitly requested.\n');
@@ -139,7 +140,7 @@ module.exports = function analyseRules({ cfg, sessions, sessionCalls, logUsable,
       const rel = tEnd(a) == null ? 'undetermined' : tStart(b) >= tEnd(a) ? 'sequential' : 'overlapping';
       s[rel]++;
       if (!s.example || rel === 'overlapping') {
-        s.example = `${label(a)}: request ${a.r.EventTime}, response ${a.resp?.EventTime ?? 'none'}${elapsed(a) != null ? ` (ElapsedMs ${elapsed(a)})` : ''}; next ${label(b)} request ${b.r.EventTime}`
+        s.example = `${label(a)}: request ${et(a.r)}, response ${a.resp ? et(a.resp) : 'none'}${elapsed(a) != null ? ` (ElapsedMs ${elapsed(a)})` : ''}; next ${label(b)} request ${et(b.r)}`
           + (tEnd(a) != null ? ` → gap ${tStart(b) - tEnd(a)} ms` : '');
       }
     }

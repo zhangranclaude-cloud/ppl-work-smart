@@ -2,10 +2,10 @@
 
 ## 1. Inputs
 
-- **Export:** `export.csv`: 105 rows, 17 session(s).
+- **Export:** `export.csv`: 111 rows, 19 session(s).
 - **Columns:** all 13 expected columns present.
 - **EventTime format:** ms precision.
-- **Raw log:** `raw.log`: 105 events (0 multi-line), 105 recognised as a layer request or response.
+- **Raw log:** `raw.log`: 111 events (0 multi-line), 111 recognised as a layer request or response.
 - **Clock offset:** none detected.
 - **Tolerance:** ±500 ms after the offset (widened to the export's time precision when it has no milliseconds).
 
@@ -15,7 +15,7 @@ Keys: sessionId, layer, direction and API (with any `Request`/`Response` suffix 
 
 | Match | Meaning | Rows |
 |---|---|---|
-| EXACT | All keys match; same timestamp | 105 |
+| EXACT | All keys match; same timestamp | 111 |
 | NEAR | All keys match; timestamp within ±500 ms | 0 |
 | TIME-MISMATCH | All keys match, but the timestamp is beyond tolerance | 0 |
 | WEAK-API | Same session, layer and direction within tolerance; the API differs | 0 |
@@ -79,6 +79,8 @@ None.
 - `session-000000000015.puml`: session `fa4e0000-0000-4000-8000-000000000015`, FAILED, first failed: Enterprise: RewardsBalance
 - `session-000000000016.puml`: session `fa4e0000-0000-4000-8000-000000000016`, FAILED, first failed: Enterprise: CardActivation
 - `session-000000000017.puml`: session `fa4e0000-0000-4000-8000-000000000017`, FAILED, first failed: Enterprise: LoanQuote
+- `session-000000000018.puml`: session `fa4e0000-0000-4000-8000-000000000018`, FAILED, first failed: eComm: getStatements
+- `session-000000000019.puml`: session `fa4e0000-0000-4000-8000-000000000019`, SUCCESS
 
 ## 5. Diagram vs evidence
 
@@ -168,6 +170,16 @@ None.
 
 - **Directly supported:** 4 of 4 arrows match a raw log line with all keys and the timestamp.
 - **Inferred:** the App participant (no App logs; the first arrow is inferred from the eComm request); "internal processing only" for Enterprise LoanQuote, because no downstream call was logged between its request and response.
+
+**Session `000000000018`**
+
+- **Directly supported:** 2 of 2 arrows match a raw log line with all keys and the timestamp.
+- **Inferred:** the App participant (no App logs; the first arrow is inferred from the eComm request); "internal processing only" for eComm getStatements, because no downstream call was logged between its request and response.
+
+**Session `000000000019`**
+
+- **Directly supported:** 4 of 4 arrows match a raw log line with all keys and the timestamp.
+- **Inferred:** the App participant (no App logs; the first arrow is inferred from the eComm request); "internal processing only" for Enterprise LimitInquiry, because no downstream call was logged between its request and response.
 
 ## 6. Host SvcCode pairing checks
 

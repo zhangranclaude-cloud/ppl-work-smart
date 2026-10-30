@@ -57,7 +57,7 @@ A pair of calls is **sequential** when the next request is logged at or after th
 |---|---|---|---|---|---|
 | WS /ws/customer/360 | 1 | overlapping | 2 / 1 / 0 | — | WAM /wam/v1/limits: request 2026-10-27 09:15:10.640, response 2026-10-27 09:15:12.685 (ElapsedMs 45); next CUS /cus/v1/customer/segment request 2026-10-27 09:15:10.688 → gap -1997 ms |
 | WS /ws/fund/transfer | 2 | one call each time | 0 / 0 / 0 | EAI FT01 ~ A01 in 1 of 2; EAI FT01 ~ A01 \| FT01 ~ A02 in 1 of 2 | — |
-| eComm getDashboard | 1 | sequential | 1 / 0 / 0 | — | Enterprise AccountSummary: request 2026-10-27 09:15:53.457, response 2026-10-27 09:15:53.510 (ElapsedMs 53); next Enterprise RewardsBalance request 2026-10-27 09:15:53.514 → gap 4 ms |
+| eComm getDashboard | 1 | sequential | 1 / 0 / 0 | — | Enterprise AccountSummary: request 2026-10-27 09:15:56.515, response 2026-10-27 09:15:56.568 (ElapsedMs 53); next Enterprise RewardsBalance request 2026-10-27 09:15:56.572 → gap 4 ms |
 
 ## 4. Failure handling
 

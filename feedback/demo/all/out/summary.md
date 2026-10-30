@@ -1,6 +1,6 @@
 # Processing rules: summary
 
-**Based on** 17 sessions (2026-10-27 to 2026-10-27). Rules marked "seen once" still need confirming.
+**Based on** 19 sessions (2026-10-27 to 2026-10-27). Rules marked "seen once" still need confirming.
 
 ## How each request is handled
 
@@ -24,6 +24,9 @@
 - **CardActivation** (Enterprise) handles it itself, with no further calls (seen in 1 session).
 - **getLoanQuote** (eComm) calls the Enterprise API LoanQuote (seen in 1 session).
 - **LoanQuote** (Enterprise) handles it itself, with no further calls (seen in 1 session).
+- **getStatements** (eComm) handles it itself, with no further calls (seen in 1 session).
+- **getLimits** (eComm) calls the Enterprise API LimitInquiry (seen in 1 session).
+- **LimitInquiry** (Enterprise) handles it itself, with no further calls (seen in 1 session).
 
 ## Where it fails
 
@@ -50,8 +53,10 @@ How errors travel back to the app:
 - **getAccountList:** 66 ms (one call).
 - **getCustomer360:** 360 ms (one call).
 - **getDashboard:** typically 105 ms (range 100–157 ms, 3 calls).
+- **getLimits:** 30 ms (one call).
 - **getLoanQuote:** 33 ms (one call).
 - **getProfile:** 18 ms (one call).
+- **getStatements:** 27 ms (one call).
 - **payBill:** 51 ms (one call).
 - **validatePayee:** 20 ms (one call).
 - Unusually slow: 3 hops; see the latency section of rules.md.
@@ -61,5 +66,5 @@ How errors travel back to the app:
 - eComm getDashboard: the request fields logged don't explain the different routes. Add the deciding field (product, channel, customer segment…) to the log or the export.
 - Enterprise FundTransfer: the request fields logged don't explain the different routes. Add the deciding field (product, channel, customer segment…) to the log or the export.
 - SvcCode → backend system (BWC, ICH, …): give the mapping in the config (`svcSystems`), or include the backend logs.
-- Latency baselines with fewer than 3 samples (22 endpoint(s)): more sessions per endpoint are needed before calling anything an outlier.
-- 17 behaviours were seen in only one session; rules.md lists them.
+- Latency baselines with fewer than 3 samples (25 endpoint(s)): more sessions per endpoint are needed before calling anything an outlier.
+- 20 behaviours were seen in only one session; rules.md lists them.

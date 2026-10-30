@@ -2,13 +2,13 @@
 
 ## Coverage
 
-- **Sessions:** 17, from 2026-10-27 to 2026-10-27.
-- **Distinct layer + API combinations:** 29. **Distinct EAI SvcCode combinations:** 4 (FT01 ~ A01; ACCT ~ INQ01 | ACCT ~ BAL02 | ACCT ~ LMT03; CIF1 ~ PRF01; FT01 ~ A01 | FT01 ~ A02).
+- **Sessions:** 19, from 2026-10-27 to 2026-10-27.
+- **Distinct layer + API combinations:** 32. **Distinct EAI SvcCode combinations:** 4 (FT01 ~ A01; ACCT ~ INQ01 | ACCT ~ BAL02 | ACCT ~ LMT03; CIF1 ~ PRF01; FT01 ~ A01 | FT01 ~ A02).
 
 | Phase 5 scenario | Covered by | Sessions |
 |---|---|---|
-| A: eComm internal processing only | 000000000001, 000000000011 | 2 |
-| B: eComm → one Enterprise API, Enterprise internal | 000000000002, 000000000010, 000000000016, 000000000017 | 4 |
+| A: eComm internal processing only | 000000000001, 000000000011, 000000000018 | 3 |
+| B: eComm → one Enterprise API, Enterprise internal | 000000000002, 000000000010, 000000000016, 000000000017, 000000000019 | 5 |
 | C: eComm → several Enterprise APIs | 000000000003, 000000000014, 000000000015 | 3 |
 | D: EAI service with one sub-service | 000000000004, 000000000006, 000000000007, 000000000008, 000000000012, 000000000013 | 6 |
 | E: EAI service with several sub-services | 000000000005, 000000000009 | 2 |
@@ -16,7 +16,7 @@
 | G1: Timeout or missing response | 000000000007, 000000000008 | 2 |
 | G2: EAI returns an error | 000000000009 | 1 |
 | G3: Enterprise HTTP 200 with business error | 000000000007, 000000000009, 000000000010, 000000000014, 000000000015, 000000000016 | 6 |
-| G4: eComm non-success code with description | 000000000007, 000000000009, 000000000010, 000000000011, 000000000015 | 5 |
+| G4: eComm non-success code with description | 000000000007, 000000000009, 000000000010, 000000000011, 000000000015, 000000000018 | 6 |
 | H: Sessions interleaved in time | 000000000012, 000000000013 | 2 |
 | I: One Enterprise call succeeds, another fails | 000000000014, 000000000015 | 2 |
 
@@ -33,8 +33,10 @@ Condition comes from the caller's request JSON: a field whose value is the same 
 | eComm getCustomer360 | always (every observed call) | call 1 Enterprise API: Customer360 | 1 | low (single sample) |
 | eComm getDashboard | unknown: no request field separates the variants | call 3 Enterprise APIs: CustomerProfile → AccountSummary → RewardsBalance | 1 | low (single sample) |
 | eComm getDashboard | unknown: no request field separates the variants | call 2 Enterprise APIs: AccountSummary → RewardsBalance | 2 | medium |
+| eComm getLimits | always (every observed call) | call 1 Enterprise API: LimitInquiry | 1 | low (single sample) |
 | eComm getLoanQuote | always (every observed call) | call 1 Enterprise API: LoanQuote | 1 | low (single sample) |
 | eComm getProfile | always (every observed call) | internal process | 1 | low (single sample) |
+| eComm getStatements | always (every observed call) | internal process | 1 | low (single sample) |
 | eComm payBill | always (every observed call) | call 1 Enterprise API: BillPayment | 1 | low (single sample) |
 | eComm validatePayee | always (every observed call) | internal process | 1 | low (single sample) |
 | Enterprise AccountInquiry | always (every observed call) | via WS /ws/account/inquiry; call EAI ACCT ~ INQ01 \| ACCT ~ BAL02 \| ACCT ~ LMT03 | 1 | low (single sample) |
@@ -46,6 +48,7 @@ Condition comes from the caller's request JSON: a field whose value is the same 
 | Enterprise CustomerProfile | always (every observed call) | internal process | 1 | low (single sample) |
 | Enterprise FundTransfer | unknown: no request field separates the variants | via WS /ws/fund/transfer; call EAI FT01 ~ A01 | 5 | high |
 | Enterprise FundTransfer | unknown: no request field separates the variants | via WS /ws/fund/transfer; call EAI FT01 ~ A01 \| FT01 ~ A02 | 1 | low (single sample) |
+| Enterprise LimitInquiry | always (every observed call) | internal process | 1 | low (single sample) |
 | Enterprise LoanQuote | always (every observed call) | internal process | 1 | low (single sample) |
 | Enterprise RewardsBalance | always (every observed call) | internal process | 3 | high |
 
@@ -86,6 +89,7 @@ Failure point = the earliest hop that failed or never got a response (a missing 
 | 000000000015 | Enterprise RewardsBalance (step 4) | ErrCode E3001, "Rewards service unavailable", HTTP 200 | no | no | 3001 FAILED "Dashboard partially unavailable" |
 | 000000000016 | Enterprise CardActivation (step 2) | ErrCode E4005, HTTP 200 | no | no | 4005 FAILED |
 | 000000000017 | Enterprise LoanQuote (step 2) | HTTP 503 | no | no | 5003 FAILED |
+| 000000000018 | eComm getStatements (step 1) | RespCode 0000, "Older statements temporarily unavailable", HTTP 200 | no | no | 0000 FAILED "Older statements temporarily unavailable" |
 
 ## 5. Data propagation
 
@@ -93,8 +97,8 @@ Failure point = the earliest hop that failed or never got a response (a missing 
 
 | Layer | Carries sessionId | Linked through LinkKey | Not linked |
 |---|---|---|---|
-| eComm | 33 | 0 | 0 |
-| Enterprise | 37 | 0 | 0 |
+| eComm | 37 | 0 | 0 |
+| Enterprise | 39 | 0 | 0 |
 | WS | 21 | 0 | 0 |
 | Host | 0 | 14 | 0 |
 
@@ -102,7 +106,7 @@ Failure point = the earliest hop that failed or never got a response (a missing 
 
 | Edge | Observed | Sessions |
 |---|---|---|
-| eComm → Enterprise | new value generated | 15 |
+| eComm → Enterprise | new value generated | 16 |
 | Enterprise → WS | same value | 8 |
 | WS → Host | same value, renamed to the Host link tag (<RqUID>…</RqUID>) | 8 |
 | WS → OPI | same value | 1 |
@@ -113,7 +117,7 @@ Failure point = the earliest hop that failed or never got a response (a missing 
 
 | Field | Into layer | Observed | Sessions |
 |---|---|---|---|
-| data.customerId | Enterprise | not passed on | 15 |
+| data.customerId | Enterprise | not passed on | 16 |
 | data.customerId | WS | not passed on | 8 |
 | data.customerId | Host | not passed on | 8 |
 | data.customerId | OPI | not passed on | 1 |
@@ -133,6 +137,7 @@ Failure point = the earliest hop that failed or never got a response (a missing 
 | Enterprise Customer360 | 1 | 345 | 345 | 345 | n < 3: no outlier test |
 | Enterprise CustomerProfile | 1 | 43 | 43 | 43 | n < 3: no outlier test |
 | Enterprise FundTransfer | 5 | 214 | 229 | 30020 | 1 outlier(s) |
+| Enterprise LimitInquiry | 1 | 30 | 30 | 30 | n < 3: no outlier test |
 | Enterprise LoanQuote | 1 | 20 | 20 | 20 | n < 3: no outlier test |
 | Enterprise RewardsBalance | 3 | 27 | 29 | 32 | none |
 | Host ACCT | 1 | 244 | 244 | 244 | n < 3: no outlier test |
@@ -149,8 +154,10 @@ Failure point = the earliest hop that failed or never got a response (a missing 
 | eComm getAccountList | 1 | 66 | 66 | 66 | n < 3: no outlier test |
 | eComm getCustomer360 | 1 | 360 | 360 | 360 | n < 3: no outlier test |
 | eComm getDashboard | 3 | 100 | 105 | 157 | none |
+| eComm getLimits | 1 | 30 | 30 | 30 | n < 3: no outlier test |
 | eComm getLoanQuote | 1 | 33 | 33 | 33 | n < 3: no outlier test |
 | eComm getProfile | 1 | 18 | 18 | 18 | n < 3: no outlier test |
+| eComm getStatements | 1 | 27 | 27 | 27 | n < 3: no outlier test |
 | eComm payBill | 1 | 51 | 51 | 51 | n < 3: no outlier test |
 | eComm validatePayee | 1 | 20 | 20 | 20 | n < 3: no outlier test |
 
@@ -173,6 +180,7 @@ Failure point = the earliest hop that failed or never got a response (a missing 
 | Enterprise Customer360 | 1 | 0 | 0% | 0 | 0 |
 | Enterprise CustomerProfile | 1 | 0 | 0% | 0 | 0 |
 | Enterprise FundTransfer | 5 | 2 | 40% | 1 | 0 |
+| Enterprise LimitInquiry | 1 | 0 | 0% | 0 | 0 |
 | Enterprise LoanQuote | 1 | 1 | 100% | 0 | 0 |
 | Enterprise RewardsBalance | 3 | 2 | 67% | 0 | 0 |
 | Host ACCT | 1 | 0 | 0% | 0 | 0 |
@@ -189,8 +197,10 @@ Failure point = the earliest hop that failed or never got a response (a missing 
 | eComm getAccountList | 1 | 0 | 0% | 0 | 0 |
 | eComm getCustomer360 | 1 | 0 | 0% | 0 | 0 |
 | eComm getDashboard | 3 | 1 | 33% | 0 | 0 |
+| eComm getLimits | 1 | 0 | 0% | 0 | 0 |
 | eComm getLoanQuote | 1 | 1 | 100% | 0 | 0 |
 | eComm getProfile | 1 | 0 | 0% | 0 | 0 |
+| eComm getStatements | 1 | 1 | 100% | 0 | 0 |
 | eComm payBill | 1 | 1 | 100% | 0 | 0 |
 | eComm validatePayee | 1 | 1 | 100% | 0 | 0 |
 
@@ -225,6 +235,7 @@ Failure point = the earliest hop that failed or never got a response (a missing 
 - `000000000015`: Enterprise RewardsBalance: **E3001** → eComm getDashboard: **3001** _(wrapped: same number, new prefix (E3001 → 3001))_
 - `000000000016`: Enterprise CardActivation: **E4005** → eComm activateCard: **4005** _(wrapped: same number, new prefix (E4005 → 4005))_
 - `000000000017`: Enterprise LoanQuote: **HTTP 503** → eComm getLoanQuote: **5003** _(different code (HTTP 503 → 5003))_
+- `000000000018`: eComm getStatements: **FAILED**
 
 **Retries:**
 
@@ -257,7 +268,7 @@ _No endpoint was called again after a failure in the same caller._
 - eComm fundTransfer: call 1 Enterprise API: FundTransfer (6 sessions)
 - Enterprise AccountSummary: internal process (3 sessions)
 - Enterprise RewardsBalance: internal process (3 sessions)
-- transactionRef on eComm → Enterprise: new value generated (15 session(s))
+- transactionRef on eComm → Enterprise: new value generated (16 session(s))
 - transactionRef on Enterprise → WS: same value (8 session(s))
 - transactionRef on WS → Host: same value, renamed to the Host link tag (<RqUID>…</RqUID>) (8 session(s))
 
@@ -267,8 +278,10 @@ _No endpoint was called again after a failure in the same caller._
 - eComm getAccountDetails: call 1 Enterprise API: AccountInquiry (1 session)
 - eComm getAccountList: call 1 Enterprise API: AccountList (1 session)
 - eComm getCustomer360: call 1 Enterprise API: Customer360 (1 session)
+- eComm getLimits: call 1 Enterprise API: LimitInquiry (1 session)
 - eComm getLoanQuote: call 1 Enterprise API: LoanQuote (1 session)
 - eComm getProfile: internal process (1 session)
+- eComm getStatements: internal process (1 session)
 - eComm payBill: call 1 Enterprise API: BillPayment (1 session)
 - eComm validatePayee: internal process (1 session)
 - Enterprise AccountInquiry: via WS /ws/account/inquiry; call EAI ACCT ~ INQ01 | ACCT ~ BAL02 | ACCT ~ LMT03 (1 session)
@@ -277,6 +290,7 @@ _No endpoint was called again after a failure in the same caller._
 - Enterprise CardActivation: internal process (1 session)
 - Enterprise Customer360: via WS /ws/customer/360; call EAI CIF1 ~ PRF01; call downstream OPI /opi/v2/customer/profile; call downstream WAM /wam/v1/limits; call downstream CUS /cus/v1/customer/segment (1 session)
 - Enterprise CustomerProfile: internal process (1 session)
+- Enterprise LimitInquiry: internal process (1 session)
 - Enterprise LoanQuote: internal process (1 session)
 - transactionRef on WS → OPI: same value (1 session(s))
 - transactionRef on WS → WAM: same value (1 session(s))
@@ -285,12 +299,14 @@ _No endpoint was called again after a failure in the same caller._
 **Inferred but unverified:**
 
 - eComm getProfile: "internal process" means no downstream call was logged; the processing itself is not visible.
+- eComm getStatements: "internal process" means no downstream call was logged; the processing itself is not visible.
 - eComm validatePayee: "internal process" means no downstream call was logged; the processing itself is not visible.
 - Enterprise AccountList: "internal process" means no downstream call was logged; the processing itself is not visible.
 - Enterprise AccountSummary: "internal process" means no downstream call was logged; the processing itself is not visible.
 - Enterprise BillPayment: "internal process" means no downstream call was logged; the processing itself is not visible.
 - Enterprise CardActivation: "internal process" means no downstream call was logged; the processing itself is not visible.
 - Enterprise CustomerProfile: "internal process" means no downstream call was logged; the processing itself is not visible.
+- Enterprise LimitInquiry: "internal process" means no downstream call was logged; the processing itself is not visible.
 - Enterprise LoanQuote: "internal process" means no downstream call was logged; the processing itself is not visible.
 - Enterprise RewardsBalance: "internal process" means no downstream call was logged; the processing itself is not visible.
 - WS is drawn as Enterprise calling its own web service (Phase 0 Q8 not yet confirmed).
@@ -311,8 +327,10 @@ _No endpoint was called again after a failure in the same caller._
 - eComm getAccountList → call 1 Enterprise API: AccountList: seen once; one more session would confirm it.
 - eComm getCustomer360 → call 1 Enterprise API: Customer360: seen once; one more session would confirm it.
 - eComm getDashboard → call 3 Enterprise APIs: CustomerProfile → AccountSummary → RewardsBalance: seen once; one more session would confirm it.
+- eComm getLimits → call 1 Enterprise API: LimitInquiry: seen once; one more session would confirm it.
 - eComm getLoanQuote → call 1 Enterprise API: LoanQuote: seen once; one more session would confirm it.
 - eComm getProfile → internal process: seen once; one more session would confirm it.
+- eComm getStatements → internal process: seen once; one more session would confirm it.
 - eComm payBill → call 1 Enterprise API: BillPayment: seen once; one more session would confirm it.
 - eComm validatePayee → internal process: seen once; one more session would confirm it.
 - Enterprise AccountInquiry → via WS /ws/account/inquiry; call EAI ACCT ~ INQ01 | ACCT ~ BAL02 | ACCT ~ LMT03: seen once; one more session would confirm it.
@@ -322,8 +340,9 @@ _No endpoint was called again after a failure in the same caller._
 - Enterprise Customer360 → via WS /ws/customer/360; call EAI CIF1 ~ PRF01; call downstream OPI /opi/v2/customer/profile; call downstream WAM /wam/v1/limits; call downstream CUS /cus/v1/customer/segment: seen once; one more session would confirm it.
 - Enterprise CustomerProfile → internal process: seen once; one more session would confirm it.
 - Enterprise FundTransfer → via WS /ws/fund/transfer; call EAI FT01 ~ A01 | FT01 ~ A02: seen once; one more session would confirm it.
+- Enterprise LimitInquiry → internal process: seen once; one more session would confirm it.
 - Enterprise LoanQuote → internal process: seen once; one more session would confirm it.
 - eComm getDashboard: the request fields logged don't explain the different routes. Add the deciding field (product, channel, customer segment…) to the log or the export.
 - Enterprise FundTransfer: the request fields logged don't explain the different routes. Add the deciding field (product, channel, customer segment…) to the log or the export.
 - SvcCode → backend system (BWC, ICH, …): give the mapping in the config (`svcSystems`), or include the backend logs.
-- Latency baselines with fewer than 3 samples (22 endpoint(s)): more sessions per endpoint are needed before calling anything an outlier.
+- Latency baselines with fewer than 3 samples (25 endpoint(s)): more sessions per endpoint are needed before calling anything an outlier.

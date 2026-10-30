@@ -1,5 +1,5 @@
 @startuml
-title Observed decision flow · 17 sessions
+title Observed decision flow · 19 sessions
 start
 switch ( App calls eComm API )
 case ( getProfile )
@@ -88,6 +88,16 @@ note right
   observed in this variant: 1 FAILED, 0 no response, of 1 call
   codes: 5003
 end note
+case ( getStatements )
+#lightgrey:eComm processes internally\n<i>inferred: no Enterprise call logged · 1 session</i>;
+#palegreen:eComm responds to App\n<i>observed · success 0 of 1</i>;
+note right
+  observed in this variant: 1 FAILED, 0 no response, of 1 call
+  codes: FAILED
+end note
+case ( getLimits )
+#lightgrey:Enterprise LimitInquiry\ninternal process\n<i>inferred: no downstream call logged · 1 session</i>;
+#palegreen:eComm responds to App\n<i>observed · success 1 of 1</i>;
 endswitch
 stop
 legend right

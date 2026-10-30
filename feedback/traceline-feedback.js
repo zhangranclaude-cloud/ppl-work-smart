@@ -81,6 +81,10 @@ function parseCsv(text) {
 function parseXlsx(buf) {
   const files = {};
   const eocd = buf.lastIndexOf(Buffer.from([0x50, 0x4b, 0x05, 0x06]));
+  if (eocd < 0 || buf.readUInt32LE(0) !== 0x04034b50) {
+    console.error(`${args.excel} is not a valid .xlsx file (it is not a zip archive). Save the export as CSV, or re-save it from Excel as .xlsx.`);
+    process.exit(1);
+  }
   let p = buf.readUInt32LE(eocd + 16);
   for (let i = 0, n = buf.readUInt16LE(eocd + 10); i < n; i++) {
     const method = buf.readUInt16LE(p + 10), size = buf.readUInt32LE(p + 20);
@@ -306,7 +310,8 @@ const dq = {
   hopNotInExcel: [],
   contradictions: [],
   sessionStatus: [],
-  excelFormat: rows.some(r => r.t && (r.t.excelFormat || r.t.excelSerial)),
+  excelFormat: rows.some(r => r.t && r.t.excelFormat),
+  excelSerial: rows.some(r => r.t && r.t.excelSerial),
 };
 // The raw response for an export request that has no response row, if the log has one.
 const logResponseFor = (sid, r) => dq.unmappedLog.find(e => e.sessionId === sid && e.layer === r.layer && e.direction === 'Response'
@@ -419,7 +424,7 @@ function plantuml(sid, list) {
 fs.mkdirSync(OUT, { recursive: true });
 fs.writeFileSync(path.join(OUT, 'alignment.csv'), [
   ['excelRow', 'Step', 'sessionId', 'layer', 'direction', 'api', 'excelTime', 'logLine', 'logTime', 'deltaMs', 'match'].join(','),
-  ...rows.map(r => [r.excelRow, r.Step, r.sessionId, r.layer, r.direction, r.api, r.EventTime, r.log?.line ?? '',
+  ...rows.map(r => [r.excelRow, r.Step, r.sessionId, r.layer, r.direction, r.api, r.t ? fmt(r.t.ms) : r.EventTime, r.log?.line ?? '',
     r.log ? fmt(r.log.time) : '', r.delta ?? '', r.level].map(cell).join(',')),
 ].join('\n') + '\n');
 
@@ -440,7 +445,7 @@ md.push('# Traceline feedback report', '');
 md.push('## 1. Inputs', '');
 md.push(`- **Export:** \`${path.basename(args.excel)}\`: ${rows.length} rows, ${sessions.size} session(s).`);
 md.push(`- **Columns:** ${missingCols.length ? `missing ${missingCols.join(', ')}` : 'all 13 expected columns present'}${extraCols.length ? `; extra: ${extraCols.join(', ')}` : ''}.`);
-md.push(`- **EventTime format:** ${[...new Set(rows.map(r => (r.t ? r.t.precision : 'unreadable')))].join(', ')} precision${dq.excelFormat ? '. **Excel has reformatted the times**; milliseconds may be lost, which weakens matching' : ''}.`);
+md.push(`- **EventTime format:** ${[...new Set(rows.map(r => (r.t ? r.t.precision : 'unreadable')))].join(', ')} precision${dq.excelFormat ? '. **Excel has rewritten the times as text**; milliseconds may be lost, which weakens matching' : ''}${dq.excelSerial ? '. Times are stored as Excel date numbers; converted, milliseconds kept' : ''}.`);
 md.push(`- **Raw log:** \`${path.basename(args.log)}\`: ${logEvents.length} events (${logEvents.filter(e => e.raw.includes('\n')).length} multi-line), ${logUsable.length} recognised as a layer request or response${preamble.length ? `; ${preamble.length} line(s) before the first timestamp ignored` : ''}.`);
 md.push(`- **Clock offset:** ${offsetMs ? `log = export ${offsetMs > 0 ? '+' : '−'} ${Math.abs(offsetMs) / 3600000} h (detected from ${topVotes} of ${keyed} rows, applied before matching)` : 'none detected'}.`);
 md.push(`- **Tolerance:** ±${cfg.toleranceMs} ms after the offset (widened to the export's time precision when it has no milliseconds).`, '');
@@ -464,7 +469,7 @@ md.push(list([...dq.missingResponse.map(x => ({ ...x, kind: 'request with no res
       ? `**Raw log line ${inLog.line} has the response**, so the export is missing a row (filtered out, or lost in export or desensitizing).`
       : 'The raw log has no response either: a genuine missing response, such as a timeout or a request still in flight.');
   }), '');
-md.push(`### 3.3 Timestamps beyond tolerance (±${cfg.toleranceMs} ms)`, '', list(dq.timeBeyond, r => `${rowRef(r)}: export ${r.EventTime}, log line ${r.log.line} ${fmt(r.log.time)} (Δ ${r.delta - 0} ms after offset)`), '');
+md.push(`### 3.3 Timestamps beyond tolerance (±${cfg.toleranceMs} ms)`, '', list(dq.timeBeyond, r => `${rowRef(r)}: export ${fmt(r.t.ms)}, log line ${r.log.line} ${fmt(r.log.time)} (Δ ${r.delta - 0} ms after offset)`), '');
 if (dq.weak.length) md.push('Weaker matches to review:', '', list(dq.weak, r => `${rowRef(r)} → log line ${r.log.line} (${r.level}${r.level === 'WEAK-API' ? `: log API \`${r.log.api}\`` : ''})`), '');
 md.push('### 3.4 Export rows with no raw log line', '', list(dq.noLog, rowRef), '');
 md.push('### 3.5 Raw log lines not mapped to any export row', '', list(dq.unmappedLog, logRef), '');
@@ -518,6 +523,6 @@ md.push('Always true of this diagram: the Host arrow is labelled with the **firs
 fs.writeFileSync(path.join(OUT, 'report.md'), md.filter(l => l !== undefined).join('\n'));
 
 // Phase 7: rules across sessions (rules.md, decision-flow.puml, summary.md).
-require('./rules')({ cfg, sessions, sessionCalls, logUsable, downstreamOf, shortSid, OUT });
+require('./rules')({ cfg, sessions, sessionCalls, logUsable, downstreamOf, shortSid, fmt, OUT });
 console.log(`Wrote ${path.join(OUT, 'report.md')}, alignment.csv and ${diagrams.length} diagram(s).`);
 console.log(`Rows: ${rows.length}; match levels: ${Object.entries(levelCounts).map(([k, v]) => `${k} ${v}`).join(', ')}; offset ${offsetMs / 3600000} h.`);

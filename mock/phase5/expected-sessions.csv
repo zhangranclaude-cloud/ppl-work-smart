@@ -16,3 +16,5 @@ I1,fa4e0000-0000-4000-8000-000000000014,PARTIAL,Enterprise: RewardsBalance,"One 
 I2,fa4e0000-0000-4000-8000-000000000015,FAILED,Enterprise: RewardsBalance,"One Enterprise API succeeds, another fails, eComm returns an error"
 G3b,fa4e0000-0000-4000-8000-000000000016,FAILED,Enterprise: CardActivation,"Enterprise returns HTTP 200 with errorCode only (no description, no response code)"
 G5,fa4e0000-0000-4000-8000-000000000017,FAILED,Enterprise: LoanQuote,Enterprise returns HTTP 503 with no business code
+G6,fa4e0000-0000-4000-8000-000000000018,FAILED,eComm: getStatements,eComm returns success code 0000 but also an errorDescription (FAILED by the current definition)
+T,fa4e0000-0000-4000-8000-000000000019,SUCCESS,,Parent and child logged in the same millisecond (tests request-down / response-up order at equal times)
